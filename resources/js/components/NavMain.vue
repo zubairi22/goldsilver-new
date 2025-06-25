@@ -1,27 +1,72 @@
 <script setup lang="ts">
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+    SidebarGroup,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar
+} from '@/components/ui/sidebar';
+import { icons } from 'lucide-vue-next'
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 
 defineProps<{
     items: NavItem[];
 }>();
 
-const page = usePage();
+const { toggleSidebar, state } = useSidebar()
 </script>
 
 <template>
-    <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
-        <SidebarMenu>
-            <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton as-child :is-active="item.href === page.url" :tooltip="item.title">
-                    <Link :href="item.href">
-                        <component :is="item.icon" />
-                        <span>{{ item.title }}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
+    <SidebarGroup class="mt-2">
+        <template v-for="item in items" :key="item.title">
+            <SidebarMenu v-if="item.children?.length === 0">
+                <SidebarMenuItem>
+                    <SidebarMenuButton as-child :is-active="route().current(item.url)">
+                        <Link :href="route(item.url)">
+                            <component :is="icons[item.icon]" />
+                            <span>{{ item.title }}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu v-if="item.children?.length !== 0">
+                <Collapsible :key="item.title" as-child :default-open="route().current(`${item.url}.*`)" class="group/collapsible">
+                    <SidebarMenuItem>
+                        <CollapsibleTrigger as-child>
+                            <SidebarMenuButton :tooltip="item.title">
+                                <component
+                                    :is="icons[item.icon]"
+                                    v-if="item.icon"
+                                    @click="() => state === 'collapsed' && toggleSidebar()"
+                                />
+                                <span>{{ item.title }}</span>
+                                <component
+                                    :is="icons['ChevronRight']"
+                                    class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                                />
+                            </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <SidebarMenuSub>
+                                <SidebarMenuSubItem v-for="subItem in item.children" :key="subItem.title">
+                                    <SidebarMenuSubButton as-child :is-active="route().current(subItem.url)">
+                                        <Link :href="route(subItem.url)">
+                                            <component :is="icons[subItem.icon]" v-if="subItem.icon" />
+                                            <span>{{ subItem.title }}</span>
+                                        </Link>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                            </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </SidebarMenuItem>
+                </Collapsible>
+            </SidebarMenu>
+        </template>
     </SidebarGroup>
 </template>

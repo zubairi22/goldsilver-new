@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
+import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 defineProps<{
     status?: string;
@@ -20,6 +21,12 @@ const form = useForm({
     remember: false,
 });
 
+const isPasswordVisible = ref(false);
+
+const togglePasswordVisibility = () => {
+    isPasswordVisible.value = !isPasswordVisible.value;
+};
+
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
@@ -28,8 +35,15 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
-        <Head title="Log in" />
+    <AuthBase title="Masuk ke Akun Anda" description="Masukkan email dan kata sandi Anda untuk masuk">
+        <Head title="Masuk">
+            <meta property="og:title" content="Masuk - Teman Digital" />
+            <meta property="og:description" content="Login ke akun Anda untuk mengakses undangan, pengaturan, dan fitur lainnya di Teman Digital." />
+            <meta property="og:image" content="https://temandigital.cloud/assets/og-default.png" />
+            <meta property="og:url" content="https://temandigital.cloud/login" />
+            <meta property="og:type" content="website" />
+            <meta name="twitter:card" content="summary_large_image" />
+        </Head>
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
@@ -38,7 +52,7 @@ const submit = () => {
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">Alamat Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -47,47 +61,54 @@ const submit = () => {
                         :tabindex="1"
                         autocomplete="email"
                         v-model="form.email"
-                        placeholder="email@example.com"
+                        placeholder="email@contoh.com"
                     />
                     <InputError :message="form.errors.email" />
                 </div>
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
+                        <Label for="password">Kata Sandi</Label>
                         <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm" :tabindex="5">
-                            Forgot password?
+                            Lupa kata sandi?
                         </TextLink>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        :tabindex="2"
-                        autocomplete="current-password"
-                        v-model="form.password"
-                        placeholder="Password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="isPasswordVisible ? 'text' : 'password'"
+                            required
+                            :tabindex="2"
+                            autocomplete="new-password"
+                            v-model="form.password"
+                            placeholder="Kata sandi"
+                        />
+                        <button
+                            type="button"
+                            @click="togglePasswordVisibility"
+                            class="absolute right-2 top-2 text-sm"
+                            :aria-label="isPasswordVisible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+                        >
+                            <EyeOff class="size-5" v-if="isPasswordVisible"/>
+                            <Eye class="size-5" v-else/>
+                        </button>
+                    </div>
                     <InputError :message="form.errors.password" />
                 </div>
 
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between" :tabindex="3">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-                        <span>Remember me</span>
+                        <Checkbox id="remember" v-model:checked="form.remember" :tabindex="4" />
+                        <span>Ingat saya</span>
                     </Label>
                 </div>
 
                 <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Log in
+                    Masuk
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
-            </div>
         </form>
     </AuthBase>
 </template>

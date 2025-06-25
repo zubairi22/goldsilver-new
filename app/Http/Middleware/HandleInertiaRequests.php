@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Menu;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -37,20 +39,39 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-
-        return [
+        $shared = [
             ...parent::share($request),
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'can' => $request->user() ? $request->user()->getPermissionsViaRoles()->pluck('name') : null,
             ],
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'flash' => [
+                'status' => fn () => $request->session()->get('status'),
+                'message' => fn () => $request->session()->get('message'),
+            ],
         ];
+
+        if (Auth::check()) {
+            $menus = Menu::whereNull('parent_id')->orderBy('sort')->get();
+            $userPermissions = Auth::user()->getAllPermissions()->pluck('id')->toArray();
+
+            $filteredMenus = $menus->filter(function ($menu) use ($userPermissions) {
+                foreach ($menu->permissions as $permission) {
+                    if (in_array($permission->id, $userPermissions)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            $shared['sideBarMenus'] = $filteredMenus->values();
+        }
+
+        return $shared;
     }
 }

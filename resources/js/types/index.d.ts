@@ -12,17 +12,22 @@ export interface BreadcrumbItem {
 
 export interface NavItem {
     title: string;
-    href: string;
+    url: string;
     icon?: LucideIcon;
     isActive?: boolean;
+    children?: {
+        title: string
+        url: string
+        icon: LucideIcon
+    }[]
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     name: string;
-    quote: { message: string; author: string };
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
+    sideBarMenus: any;
 };
 
 export interface User {
