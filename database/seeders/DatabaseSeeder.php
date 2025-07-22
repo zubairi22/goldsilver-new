@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PermissionMenuSeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }

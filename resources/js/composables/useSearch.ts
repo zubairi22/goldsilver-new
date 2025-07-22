@@ -13,7 +13,10 @@ export function useSearch(routeName: string, initialSearch = '', data: any = [],
                 preserveScroll: true,
             });
         } else {
-            router.get(route(routeName, routeParam));
+            router.get(route(routeName, routeParam),{}, {
+                preserveState: true,
+                preserveScroll: true,
+            });
         }
     }, 500);
 
