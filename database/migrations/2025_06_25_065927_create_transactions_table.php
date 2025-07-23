@@ -20,7 +20,6 @@ return new class extends Migration
             $table->decimal('paid_amount', 10);
             $table->decimal('change_amount', 10);
             $table->enum('payment_status', ['paid', 'credit', 'partial'])->default('paid');
-            $table->date('due_date')->nullable();
             $table->string('payment_method')->default('cash');
             $table->timestamps();
         });

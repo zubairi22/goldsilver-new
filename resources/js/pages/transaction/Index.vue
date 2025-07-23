@@ -15,16 +15,20 @@ import { useSearch } from '@/composables/useSearch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Multiselect from '@vueform/multiselect';
+import PageNav from '@/components/PageNav.vue';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 
-defineProps(['products'])
+defineProps(['products', 'customers'])
 
 const { formatRupiah } = useCurrency();
 const { search } = useSearch('transactions.index', '', ['products']);
 
 const form = useForm({
     items: [] as any[],
-    paid_amount: '',
+    paid_amount: '0',
     payment_method: '',
+    customer_id: '',
 });
 
 const addModal = ref(false);
@@ -69,13 +73,13 @@ const confirmAddToCart = () => {
     addModal.value = false;
 };
 
-
 const removeItem = (index: number) => {
     form.items.splice(index, 1);
 };
 
 const paymentModal = ref(false);
 const paymentMethod = ref('cash');
+const customerId = ref('');
 
 const totalPrice = computed(() => {
     return form.items.reduce((sum, item) => sum + item.quantity * item.selling_price, 0);
@@ -87,6 +91,7 @@ const changeAmount = computed(() => {
 
 const submitTransaction = () => {
     form.payment_method = paymentMethod.value;
+    form.customer_id = customerId.value;
 
     form.post(route('transactions.store'), {
         preserveScroll: true,
@@ -98,6 +103,7 @@ const submitTransaction = () => {
             };
 
             form.reset();
+            customerId.value = '';
             paymentModal.value = false;
             successModal.value = true;
         },
@@ -119,7 +125,6 @@ const saveDraft = () => {
     localStorage.setItem('order_drafts', JSON.stringify(drafts));
 
     form.items = []
-
     alert('Order berhasil disimpan sementara!');
 }
 
@@ -140,8 +145,6 @@ function deleteDraft(id: number) {
     localStorage.setItem('order_drafts', JSON.stringify(updated));
     loadDrafts();
 }
-
-
 </script>
 
 <template>
@@ -169,7 +172,7 @@ function deleteDraft(id: number) {
                         <CardContent>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 <div
-                                    v-for="product in products"
+                                    v-for="product in products.data"
                                     :key="product.id"
                                     class="border rounded-lg p-4 shadow-sm hover:shadow-md transition cursor-pointer"
                                     @click="addToCart(product)"
@@ -180,17 +183,20 @@ function deleteDraft(id: number) {
                                     </div>
                                 </div>
                             </div>
+                            <div class="flex justify-center mt-4 overflow-x-auto">
+                                <PageNav :data="products" />
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 <div>
-                    <Card class="flex flex-col h-[calc(100vh-200px)]">
+                    <Card class="flex flex-col h-[calc(100vh-100px)]">
                         <CardHeader>
                             <CardTitle>Keranjang</CardTitle>
                         </CardHeader>
                         <CardContent class="flex-1">
-                            <div class="overflow-x-auto" v-if="form.items.length">
+                            <div class="overflow-x-auto max-h-[calc(100vh-300px)]" v-if="form.items.length">
                                 <Table class="w-full text-sm">
                                     <TableHeader>
                                     <TableRow>
@@ -289,11 +295,13 @@ function deleteDraft(id: number) {
             </DialogHeader>
 
             <div class="space-y-4">
+                <!-- Total -->
                 <div>
                     <div class="text-sm text-gray-500">Total</div>
                     <div class="text-xl font-bold">{{ formatRupiah(totalPrice) }}</div>
                 </div>
 
+                <!-- Metode Pembayaran -->
                 <div>
                     <Label for="method">Metode Pembayaran</Label>
                     <Select v-model="paymentMethod">
@@ -310,6 +318,7 @@ function deleteDraft(id: number) {
                     </Select>
                 </div>
 
+                <!-- Jumlah Bayar -->
                 <div>
                     <Label for="paid_amount">Jumlah Bayar</Label>
                     <div class="flex items-center gap-2">
@@ -328,9 +337,23 @@ function deleteDraft(id: number) {
                     <InputError :message="form.errors.paid_amount" class="mt-1" />
                 </div>
 
+                <template v-if="parseFloat(form.paid_amount || '0') < totalPrice">
+                    <div>
+                        <Label for="customer">Pelanggan</Label>
+                        <Multiselect v-model="customerId" :options="customers" searchable/>
+                        <InputError :message="form.errors.customer_id" class="mt-1" />
+                    </div>
+                </template>
+
                 <div>
-                    <div class="text-sm text-gray-500">Kembalian</div>
-                    <div class="text-lg font-semibold">{{ formatRupiah(changeAmount) }}</div>
+                    <div class="text-sm text-gray-500">
+                        {{ changeAmount >= 0 ? 'Kembalian' : 'Sisa Tagihan' }}
+                    </div>
+                    <div
+                        :class="['text-lg font-semibold', changeAmount < 0 ? 'text-red-600' : '']"
+                    >
+                        {{ formatRupiah(Math.abs(changeAmount)) }}
+                    </div>
                 </div>
             </div>
 
@@ -361,9 +384,14 @@ function deleteDraft(id: number) {
                     <span class="font-semibold">{{ formatRupiah(lastTransaction?.paid ?? 0) }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span>Kembalian:</span>
-                    <span class="font-semibold">{{ formatRupiah(lastTransaction?.change ?? 0) }}</span>
+                    <span>{{ (lastTransaction?.change ?? 0) >= 0 ? 'Kembalian:' : 'Sisa Piutang:' }}</span>
+                    <span :class="['font-semibold', (lastTransaction?.change ?? 0) < 0 ? 'text-red-600' : '']">
+                        {{ formatRupiah(Math.abs(lastTransaction?.change ?? 0)) }}
+                   </span>
                 </div>
+                <Alert class="bg-yellow-600 text-white" v-if="(lastTransaction?.change ?? 0) < 0">
+                    <AlertTitle>Transaksi dengan Kondisi ini akan masuk kedalam menu Piutang</AlertTitle>
+                </Alert>
             </div>
 
             <DialogFooter class="gap-2 mt-4">
@@ -399,3 +427,5 @@ function deleteDraft(id: number) {
     </Dialog>
 
 </template>
+
+<style src="@vueform/multiselect/themes/default.css"/>

@@ -8,26 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table/index.js';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import SearchInput from '@/components/SearchInput.vue';
 import PageNav from '@/components/PageNav.vue';
 import RoleForm from '@/pages/master/role/RoleForm.vue';
 import type { BreadcrumbItem } from '@/types/index.js';
 import { Badge } from '@/components/ui/badge';
-import { useSearch } from '@/composables/useSearch';
 import Heading from '@/components/Heading.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Peran',
-        href: '#',
-    },
+    { title: 'Dashboard', href: '/dashboard', },
+    { title: 'Peran', href: '#', },
 ];
 
-const { roles, permissions } = defineProps(['roles', 'permissions']);
+defineProps(['roles', 'permissions']);
 
 const defaultForm = () => ({
     name: "",

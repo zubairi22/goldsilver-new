@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\DebtsController;
 use App\Http\Controllers\Master\MenusController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\Master\RolesController;
@@ -21,6 +23,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
     Route::resource('transactions', TransactionsController::class)->except(['show', 'create', 'edit']);
     Route::resource('sales', SalesController::class)->except(['show', 'create', 'edit']);
+    Route::resource('debts', DebtsController::class)->except(['show', 'create', 'edit']);
+    Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
+
 
     Route::middleware(['role:super-admin'])->name('master.')->prefix('master')->group(function () {
         Route::resource('users', UsersController::class);

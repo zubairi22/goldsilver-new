@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Transaction\TransactionStoreRequest;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\StockMutation;
 use App\Models\Transaction;
@@ -20,7 +21,8 @@ class TransactionsController extends Controller
     public function index(): Response
     {
         return Inertia::render('transaction/Index', [
-            'products' => Product::with('units')->filter(Request::only('search'))->latest()->take(50)->get(),
+            'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(12),
+            'customers' => Customer::pluck('name', 'id'),
         ]);
     }
 
@@ -48,18 +50,36 @@ class TransactionsController extends Controller
                 $total += $subtotal;
 
                 if ($product->stock < $stockNeeded) {
-                    abort(422, "Stok produk '{$product->name}' tidak mencukupi.");
+                    $this->flashError("Stok produk '{$product->name}' tidak mencukupi.");
+                    Redirect::back();
                 }
+            }
+
+            $paidAmount = $validated['paid_amount'];
+            $paymentStatus = 'paid';
+
+            if ($paidAmount < $total) {
+                $paymentStatus = $paidAmount > 0 ? 'partial' : 'credit';
             }
 
             $transaction = Transaction::create([
                 'user_id' => Auth::id(),
+                'customer_id' => $validated['customer_id'] ?? null,
                 'transaction_number' => Transaction::generateTransactionNumber(),
                 'total_price' => $total,
-                'paid_amount' => $validated['paid_amount'],
-                'change_amount' => $validated['paid_amount'] - $total,
+                'paid_amount' => $paidAmount,
+                'change_amount' => max(0, $paidAmount - $total),
                 'payment_method' => $validated['payment_method'] ?? 'cash',
+                'payment_status' => $paymentStatus,
             ]);
+
+            if ($paidAmount > 0) {
+                $transaction->payments()->create([
+                    'amount' => $paidAmount,
+                    'paid_at' => now(),
+                    'notes' => 'Pembayaran saat transaksi',
+                ]);
+            }
 
             foreach ($validated['items'] as $item) {
                 $product = Product::with(['units' => fn ($q) => $q->where('units.id', $item['unit_id'])])->findOrFail($item['product_id']);

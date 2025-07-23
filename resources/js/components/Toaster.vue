@@ -32,7 +32,7 @@ watchEffect(() => {
         leave-to-class="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95"
     >
         <div v-if="show && message" :class="{ 'bg-emerald-600': status === 'success', 'bg-red-700': status === 'error' }"
-             class="fixed top-8 right-5 z-50 w-[42svh] sm:w-full max-w-md rounded-lg p-4 shadow" role="alert">
+             class="fixed top-8 right-5 z-[100] w-[42svh] sm:w-full max-w-md rounded-lg p-4 shadow" role="alert">
             <div class="flex items-center">
                 <span :class="{ 'bg-emerald-700': status === 'success', 'bg-red-600': status === 'error' }"
                       class="flex rounded-lg p-2">

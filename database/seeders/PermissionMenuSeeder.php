@@ -37,6 +37,12 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 18, 'name' => 'view transaction', 'guard_name' => 'web'],
             ['id' => 19, 'name' => 'create transaction', 'guard_name' => 'web'],
             ['id' => 20, 'name' => 'view sales', 'guard_name' => 'web'],
+            ['id' => 21, 'name' => 'view debts', 'guard_name' => 'web'],
+            ['id' => 22, 'name' => 'settle debts', 'guard_name' => 'web'],
+            ['id' => 23, 'name' => 'view customer', 'guard_name' => 'web'],
+            ['id' => 24, 'name' => 'create customer', 'guard_name' => 'web'],
+            ['id' => 25, 'name' => 'update customer', 'guard_name' => 'web'],
+            ['id' => 26, 'name' => 'delete customer', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);
@@ -66,9 +72,11 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 3, 'title' => 'Pengguna', 'url' => 'master.users.index', 'parent_id' => 2, 'icon' => 'UsersRound', 'sort' => 1],
             ['id' => 4, 'title' => 'Menu', 'url' => 'master.menus.index', 'parent_id' => 2, 'icon' => 'Logs', 'sort' => 2],
             ['id' => 5, 'title' => 'Peran', 'url' => 'master.roles.index', 'parent_id' => 2, 'icon' => 'UserRoundCog', 'sort' => 3],
-            ['id' => 6, 'title' => 'Produk', 'url' => 'products.index', 'parent_id' => null, 'icon' => 'Package', 'sort' => 4],
+            ['id' => 6, 'title' => 'Produk', 'url' => 'products.index', 'parent_id' => null, 'icon' => 'Package', 'sort' => 5],
             ['id' => 7, 'title' => 'Transaksi', 'url' => 'transactions.index', 'parent_id' => null, 'icon' => 'ArrowLeftRight', 'sort' => 3],
             ['id' => 8, 'title' => 'Penjualan', 'url' => 'sales.index', 'parent_id' => null, 'icon' => 'Store', 'sort' => 2],
+            ['id' => 9, 'title' => 'Piutang', 'url' => 'debts.index', 'parent_id' => null, 'icon' => 'FileText', 'sort' => 4],
+            ['id' => 10, 'title' => 'Pelanggan', 'url' => 'customers.index', 'parent_id' => null, 'icon' => 'Users', 'sort' => 6],
         ];
 
         Menu::insert($menus);
@@ -97,6 +105,12 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 21, 'menu_id' => 7, 'permission_id' => 18],
             ['id' => 22, 'menu_id' => 7, 'permission_id' => 19],
             ['id' => 23, 'menu_id' => 8, 'permission_id' => 20],
+            ['id' => 24, 'menu_id' => 9, 'permission_id' => 21],
+            ['id' => 25, 'menu_id' => 9, 'permission_id' => 22],
+            ['id' => 26, 'menu_id' => 10, 'permission_id' => 23],
+            ['id' => 27, 'menu_id' => 10, 'permission_id' => 24],
+            ['id' => 28, 'menu_id' => 10, 'permission_id' => 25],
+            ['id' => 29, 'menu_id' => 10, 'permission_id' => 26],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);

@@ -62,6 +62,16 @@ class Transaction extends Model
         return $this->hasMany(TransactionPayment::class);
     }
 
+    public function scopePaid($query): void
+    {
+        $query->where('payment_status', 'paid');
+    }
+
+    public function scopeNotPaid($query): void
+    {
+        $query->where('payment_status', '!=', 'paid');
+    }
+
     public function scopeFilter($query, array $filters): void
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {

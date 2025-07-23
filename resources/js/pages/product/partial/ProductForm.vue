@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -6,10 +7,9 @@ import InputError from '@/components/InputError.vue';
 import Multiselect from '@vueform/multiselect';
 import { Separator } from '@/components/ui/separator';
 
-const form = defineModel<any>('form');
 defineProps(['categories', 'units'])
 
-console.log(form.value.units);
+const form = defineModel<any>('form');
 
 const addUnit = () => {
     form.value.units.push({
@@ -25,6 +25,36 @@ const addUnit = () => {
 const removeUnit = (index: number) => {
     form.value.units.splice(index, 1);
 };
+
+const getBasePurchasePrice = () => {
+    return Number(form.value.units[0]?.pivot?.purchase_price || 0);
+};
+
+watch(
+    () => form.value.units.map((u: any)=> u.pivot.conversion),
+    () => {
+        const basePrice = getBasePurchasePrice();
+
+        form.value.units.forEach((unit: any, index: number) => {
+            if (index > 0) {
+                unit.pivot.purchase_price = basePrice * unit.pivot.conversion;
+            }
+        });
+    },
+    { deep: true }
+);
+
+watch(
+    () => form.value.units[0]?.pivot?.purchase_price,
+    (newPrice) => {
+        form.value.units.forEach((unit: any, index: number) => {
+            if (index > 0) {
+                unit.pivot.purchase_price = Number(newPrice || 0) * unit.pivot.conversion;
+            }
+        });
+    }
+);
+
 </script>
 
 <template>
@@ -60,32 +90,32 @@ const removeUnit = (index: number) => {
                 <div>
                     <Label for="sku">SKU</Label>
                     <Input id="sku" v-model="unit.pivot.sku" type="text" class="h-10.5" placeholder="Contoh: SK001" />
-                    <InputError class="mt-1" :message="form.errors.sku" />
+                    <InputError :message="form.errors[`units.${index}.pivot.sku`]" />
                 </div>
 
                 <div class="mt-4">
                     <Label for="purchase_price">Harga Beli</Label>
-                    <Input v-model="unit.pivot.purchase_price" placeholder="Contoh: 1000" type="number" min="0" required />
-                    <InputError class="mt-1" :message="form.errors.purchase_price" />
+                    <Input v-model="unit.pivot.purchase_price" placeholder="Contoh: 1000" type="number" min="0" required :readonly="index > 0" />
+                    <InputError :message="form.errors[`units.${index}.pivot.purchase_price`]" />
                 </div>
 
                 <div class="mt-4">
                     <Label for="selling_price">Harga Jual</Label>
                     <Input v-model="unit.pivot.selling_price" placeholder="Contoh: 1000" type="number" min="0" required />
-                    <InputError class="mt-1" :message="form.errors.selling_price" />
+                    <InputError :message="form.errors[`units.${index}.pivot.selling_price`]" />
                 </div>
 
                 <div class="mt-4">
                     <Label for="conversion">Konversi</Label>
                     <Input v-model="unit.pivot.conversion" placeholder="Konversi (misalnya, 10 pcs = 1 set)" type="number" min="1" />
-                    <InputError class="mt-2" :message="form.errors.conversion_id"/>
+                    <InputError :message="form.errors[`units.${index}.pivot.conversion`]" />
                 </div>
                 <div class="col-span-2 mt-4 text-right">
                     <Button @click="removeUnit(index)" variant="destructive">Hapus</Button>
                 </div>
-                <div class="col-span-2 mt-4 text-right">
-                    <Button @click="addUnit" variant="secondary">Tambah Satuan</Button>
-                </div>
+            </div>
+            <div class="col-span-2 mt-4 text-right">
+                <Button @click="addUnit" variant="secondary">Tambah Satuan</Button>
             </div>
         </div>
     </form>

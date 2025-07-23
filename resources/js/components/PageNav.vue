@@ -31,12 +31,12 @@ defineProps<{
 
 <template>
     <Pagination :items-per-page="data.per_page" :total="data.total">
-        <PaginationList class="flex items-center gap-1 float-right pt-4">
-            <Link v-if="data.first_page_url && data.total > data.per_page" :href="data.first_page_url">
+        <PaginationList class="flex flex-wrap justify-center items-center gap-1 pt-4 w-full max-w-full">
+            <Link preserve-scroll preserve-state v-if="data.first_page_url && data.total > data.per_page" :href="data.first_page_url">
                 <PaginationFirst />
             </Link>
             <PaginationFirst v-else />
-            <Link v-if="data.prev_page_url" :href="data.prev_page_url">
+            <Link preserve-scroll preserve-state v-if="data.prev_page_url" :href="data.prev_page_url">
                 <PaginationPrev />
             </Link>
 
@@ -46,7 +46,7 @@ defineProps<{
                     :value="parseInt(link.label)"
                     as-child
                 >
-                    <Link v-if="link.label != data.current_page" :href="link.url">
+                    <Link preserve-scroll preserve-state v-if="link.label != data.current_page" :href="link.url">
                         <Button class="w-10 h-10 p-0" :variant="link.active ? 'default' : 'outline'">
                             {{ link.label }}
                         </Button>
@@ -57,13 +57,13 @@ defineProps<{
                 </PaginationListItem>
             </template>
 
-            <Link v-if="data.next_page_url" :href="data.next_page_url">
+            <Link preserve-scroll preserve-state v-if="data.next_page_url" :href="data.next_page_url">
                 <PaginationNext />
             </Link>
-            <Link v-if="data.last_page_url && data.total > data.per_page" :href="data.last_page_url">
+            <Link preserve-scroll preserve-state v-if="data.last_page_url && data.total > data.per_page" :href="data.last_page_url">
                 <PaginationLast />
             </Link>
-            <PaginationLast v-else />
+            <PaginationLast  v-else />
         </PaginationList>
     </Pagination>
 </template>

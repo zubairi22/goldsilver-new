@@ -14,7 +14,7 @@ class SalesController extends Controller
     public function index(): Response
     {
         return Inertia::render('sale/Index', [
-            'sales' => Transaction::with('items.product', 'items.unit', 'user')->filter(Request::only('search'))->latest()->paginate(25),
+            'sales' => Transaction::with('items.product', 'items.unit', 'user')->filter(Request::only('search'))->paid()->latest()->paginate(25),
         ]);
     }
 }

@@ -117,7 +117,7 @@ const handleDelete = () => {
                     <CardContent>
                         <div class="flex flex-col justify-between md:flex-row mb-2">
                             <Button @click="addProduct">Tambah Produk</Button>
-                            <div class="mb-3 md:text-right">
+                            <div class="mb-3 mt-3 md:mt-0 md:text-right">
                                 <SearchInput v-model="search"/>
                             </div>
                         </div>
