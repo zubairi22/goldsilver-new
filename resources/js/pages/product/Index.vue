@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps(['products', 'categories', 'units']);
 
-const { search } = useSearch('products.index', '', ['products']);
+const { search } = useSearch('outlet.products.index', '', ['products']);
 
 const {formatRupiah} = useCurrency()
 

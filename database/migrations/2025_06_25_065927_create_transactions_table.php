@@ -16,11 +16,18 @@ return new class extends Migration
             $table->string('transaction_number')->unique()->index();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
-            $table->decimal('total_price', 10);
-            $table->decimal('paid_amount', 10);
-            $table->decimal('change_amount', 10);
+            $table->integer('total_price');
+            $table->integer('paid_amount');
+            $table->integer('change_amount');
             $table->enum('payment_status', ['paid', 'credit', 'partial'])->default('paid');
             $table->string('payment_method')->default('cash');
+            $table->unsignedInteger('redeemed_points')->default(0);
+            $table->integer('discount_amount')->default(0);
+            $table->boolean('is_refunded')->default(false);
+            $table->integer('refund_amount')->nullable();
+            $table->text('refund_reason')->nullable();
+            $table->timestamp('refunded_at')->nullable();
+            $table->foreignId('refunded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

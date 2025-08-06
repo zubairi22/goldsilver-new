@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,17 +18,23 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import Multiselect from '@vueform/multiselect';
 import PageNav from '@/components/PageNav.vue';
 import { Alert, AlertTitle } from '@/components/ui/alert';
+import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
+import axios from 'axios';
+import { AppPageProps } from '@/types';
 
-defineProps(['products', 'customers'])
+const { products, customers } = defineProps(['products', 'customers'])
 
 const { formatRupiah } = useCurrency();
-const { search } = useSearch('transactions.index', '', ['products']);
+const { search } = useSearch('cashier.index', '', ['products']);
+const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
 
 const form = useForm({
     items: [] as any[],
     paid_amount: '0',
-    payment_method: '',
+    payment_method: 'cash',
     customer_id: '',
+    discount_amount : 0,
+    redeemed_points : 0,
 });
 
 const addModal = ref(false);
@@ -78,22 +84,42 @@ const removeItem = (index: number) => {
 };
 
 const paymentModal = ref(false);
-const paymentMethod = ref('cash');
 const customerId = ref('');
+const redeemPoints = ref(0);
+const maxRedeemPoints = ref(0);
 
 const totalPrice = computed(() => {
     return form.items.reduce((sum, item) => sum + item.quantity * item.selling_price, 0);
 });
 
-const changeAmount = computed(() => {
-    return parseFloat(form.paid_amount || '0') - totalPrice.value;
+const pointDiscount = computed(() => redeemPoints.value * 1000);
+
+const totalAfterDiscount = computed(() => {
+    return Math.max(0, totalPrice.value - pointDiscount.value);
 });
 
-const submitTransaction = () => {
-    form.payment_method = paymentMethod.value;
-    form.customer_id = customerId.value;
+const changeAmount = computed(() => {
+    return parseFloat(form.paid_amount || '0') - totalAfterDiscount.value;
+});
 
-    form.post(route('transactions.store'), {
+function handlePaymentToggle(val: boolean) {
+    paymentModal.value = val;
+
+    if (!val) {
+        form.payment_method = 'cash';
+        form.paid_amount = 0;
+        customerId.value = '';
+        redeemPoints.value = 0;
+    }
+}
+
+const submitTransaction = () => {
+    form.customer_id = customerId.value;
+    form.discount_amount = pointDiscount.value;
+    form.redeemed_points = redeemPoints.value;
+
+    form.post(route('cashier.store'), {
+        preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
             lastTransaction.value = {
@@ -104,6 +130,7 @@ const submitTransaction = () => {
 
             form.reset();
             customerId.value = '';
+            redeemPoints.value = 0;
             paymentModal.value = false;
             successModal.value = true;
         },
@@ -145,6 +172,80 @@ function deleteDraft(id: number) {
     localStorage.setItem('order_drafts', JSON.stringify(updated));
     loadDrafts();
 }
+
+const handleConnectPrinter = async () => {
+    try {
+        const response = await axios.get(`/api/receipt/${usePage<AppPageProps>().props.flash.transaction_number}`);
+        const receipt = response.data.receipt;
+
+        const connected = isConnected.value || await connectPrinter();
+        if (!connected) return alert('Gagal konek ke printer');
+
+        await printText(receipt);
+    } catch (err) {
+        console.error('Error saat cetak:', err);
+        alert('Gagal ambil atau cetak struk');
+    }
+};
+
+const barcodeBuffer = ref('')
+let scanTimeout: ReturnType<typeof setTimeout> | null = null
+
+window.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (addModal.value || paymentModal.value || draftModal.value || successModal.value) return
+
+    const char = e.key
+
+    if (scanTimeout) clearTimeout(scanTimeout)
+
+    if (char.length === 1 && /[a-zA-Z0-9]/.test(char)) {
+        barcodeBuffer.value += char
+    }
+
+    if (char === 'Enter') {
+        const scanned = barcodeBuffer.value
+        barcodeBuffer.value = ''
+
+        const product = products.data.find((p: any) =>
+            p.units.some((u: any) => u.pivot.sku === scanned)
+        )
+
+        if (product) {
+            const unit = product.units.find((u: any) => u.pivot.sku === scanned)
+
+            const exists = form.items.find((item) =>
+                item.product_id === product.id && item.unit_id === unit.id
+            )
+
+            if (exists) {
+                exists.quantity += 1
+            } else {
+                form.items.push({
+                    product_id: product.id,
+                    unit_id: unit.id,
+                    name: product.name,
+                    unit_name: unit.name,
+                    purchase_price: unit.pivot.purchase_price,
+                    selling_price: unit.pivot.selling_price,
+                    quantity: 1,
+                })
+            }
+        } else {
+            alert(`Produk dengan SKU "${scanned}" tidak ditemukan.`)
+        }
+    }
+
+    scanTimeout = setTimeout(() => {
+        barcodeBuffer.value = ''
+    }, 100)
+})
+
+watch(customerId, (val) => {
+    const customer = customers.find((c: any) => c.id === val);
+    maxRedeemPoints.value = customer?.current_year_point?.points || 0;
+    redeemPoints.value = 0;
+});
+
 </script>
 
 <template>
@@ -165,7 +266,7 @@ function deleteDraft(id: number) {
                             <div class="flex gap-2">
                                 <Input
                                     v-model="search"
-                                    placeholder="Cari produk berdasarkan nama"
+                                    placeholder="Cari produk berdasarkan nama dan sku"
                                 />
                             </div>
                         </CardHeader>
@@ -183,6 +284,7 @@ function deleteDraft(id: number) {
                                     </div>
                                 </div>
                             </div>
+                            <b v-if="!products.total">Produk tidak di Temukan</b>
                             <div class="flex justify-center mt-4 overflow-x-auto">
                                 <PageNav :data="products" />
                             </div>
@@ -287,7 +389,7 @@ function deleteDraft(id: number) {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="paymentModal" @update:open="val => paymentModal = val">
+    <Dialog :open="paymentModal" @update:open="val => handlePaymentToggle(val)">
         <DialogContent @interactOutside.prevent>
             <DialogHeader>
                 <DialogTitle>Pembayaran</DialogTitle>
@@ -295,16 +397,14 @@ function deleteDraft(id: number) {
             </DialogHeader>
 
             <div class="space-y-4">
-                <!-- Total -->
                 <div>
                     <div class="text-sm text-gray-500">Total</div>
                     <div class="text-xl font-bold">{{ formatRupiah(totalPrice) }}</div>
                 </div>
 
-                <!-- Metode Pembayaran -->
                 <div>
                     <Label for="method">Metode Pembayaran</Label>
-                    <Select v-model="paymentMethod">
+                    <Select v-model="form.payment_method">
                         <SelectTrigger class="w-full">
                             <SelectValue placeholder="Pilih metode" />
                         </SelectTrigger>
@@ -313,12 +413,13 @@ function deleteDraft(id: number) {
                                 <SelectItem value="cash">Tunai</SelectItem>
                                 <SelectItem value="qris">QRIS</SelectItem>
                                 <SelectItem value="debit">Debit</SelectItem>
+                                <SelectItem value="deposit">Deposit</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
+                    <InputError :message="form.errors.payment_method" class="mt-1" />
                 </div>
 
-                <!-- Jumlah Bayar -->
                 <div>
                     <Label for="paid_amount">Jumlah Bayar</Label>
                     <div class="flex items-center gap-2">
@@ -337,11 +438,30 @@ function deleteDraft(id: number) {
                     <InputError :message="form.errors.paid_amount" class="mt-1" />
                 </div>
 
-                <template v-if="parseFloat(form.paid_amount || '0') < totalPrice">
+                <div>
+                    <Label for="customer">Pelanggan</Label>
+                    <Multiselect v-model="customerId" value-prop="id" label="name" :options="customers" searchable/>
+                    <InputError :message="form.errors.customer_id" class="mt-1" />
+                </div>
+
+                <template v-if="customerId && maxRedeemPoints > 0">
                     <div>
-                        <Label for="customer">Pelanggan</Label>
-                        <Multiselect v-model="customerId" :options="customers" searchable/>
-                        <InputError :message="form.errors.customer_id" class="mt-1" />
+                        <Label for="redeem_points">Gunakan Poin</Label>
+                        <div class="flex items-center gap-2">
+                            <Input
+                                id="redeem_points"
+                                type="number"
+                                v-model.number="redeemPoints"
+                                :max="maxRedeemPoints"
+                                :min="0"
+                                class="flex-1"
+                                @input="redeemPoints = Math.min(redeemPoints, maxRedeemPoints)"
+                            />
+                            <span class="text-sm text-gray-500">/ {{ maxRedeemPoints }} poin</span>
+                        </div>
+                        <div class="text-sm text-green-600 mt-1">
+                            Potongan: {{ formatRupiah(pointDiscount) }}
+                        </div>
                     </div>
                 </template>
 
@@ -396,7 +516,7 @@ function deleteDraft(id: number) {
 
             <DialogFooter class="gap-2 mt-4">
                 <Button variant="secondary" @click="successModal = false">Tutup</Button>
-<!--                <Button @click="printReceipt">Cetak Struk</Button>-->
+                <Button v-if="(lastTransaction?.change ?? 0) >= 0" @click="handleConnectPrinter()">Cetak Struk</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

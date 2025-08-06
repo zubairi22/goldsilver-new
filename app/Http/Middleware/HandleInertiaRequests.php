@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
@@ -53,6 +52,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
                 'message' => fn () => $request->session()->get('message'),
+                'transaction_number' => fn () => $request->session()->get('transaction_number'),
             ],
         ];
 

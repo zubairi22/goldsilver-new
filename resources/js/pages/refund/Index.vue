@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import PageNav from '@/components/PageNav.vue';
@@ -13,7 +13,6 @@ import { useCurrency } from '@/composables/useCurrency';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ref } from 'vue';
 import {
     Dialog,
@@ -23,55 +22,26 @@ import {
     DialogHeader,
     DialogTitle
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import axios from 'axios';
 import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
-import { LoaderCircle } from 'lucide-vue-next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Penjualan', href: '#' },
+    { title: 'Refund', href: '#' },
 ];
 
-defineProps(['sales']);
+defineProps(['refunds']);
 
 const { formatRupiah } = useCurrency();
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter()
-const { search } = useSearch('transaction.sales.index', '', ['sales']);
+const { search } = useSearch('transaction.refunds.index', '', ['refunds']);
 
 const detailModal = ref(false);
-const refundModal = ref(false);
 const selectedTransaction = ref<any>(null);
 
 function openTransactionModal(trx: any) {
     selectedTransaction.value = trx;
     detailModal.value = true;
-}
-
-const refundForm = useForm({
-    refund_amount: '',
-    refund_reason: ''
-});
-
-function openRefundFromDetail(trx: any) {
-    selectedTransaction.value = trx;
-    refundForm.refund_amount = trx.total_price;
-    refundForm.refund_reason = '';
-    detailModal.value = false;
-    refundModal.value = true;
-}
-
-function submitRefund() {
-    if (!selectedTransaction.value) return;
-
-    refundForm.post(route('sales.refund', selectedTransaction.value.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            refundModal.value = false;
-            selectedTransaction.value = null;
-        },
-    });
 }
 
 async function printReceipt(trx: any) {
@@ -91,11 +61,11 @@ async function printReceipt(trx: any) {
 </script>
 
 <template>
-    <Head title="Penjualan" />
+    <Head title="Refund" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Penjualan" description="Riwayat transaksi berhasil yang sudah terjadi" />
+            <Heading class="mx-4" title="Refund" description="Riwayat transaksi yang di refund" />
             <div class="mx-auto max-w-8xl">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
@@ -113,13 +83,12 @@ async function printReceipt(trx: any) {
                                         <TableHead>Kasir</TableHead>
                                         <TableHead class="text-right">Total</TableHead>
                                         <TableHead class="text-right">Bayar</TableHead>
-                                        <TableHead class="text-right">Diskon</TableHead>
                                         <TableHead class="text-right">Kembali</TableHead>
                                         <TableHead>Metode</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="trx in sales.data" :key="trx.id" @click="openTransactionModal(trx)">
+                                    <TableRow v-for="trx in refunds.data" :key="trx.id" @click="openTransactionModal(trx)">
                                         <TableCell class="align-top">
                                             {{ format(new Date(trx.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
                                         </TableCell>
@@ -133,9 +102,6 @@ async function printReceipt(trx: any) {
                                             {{ formatRupiah(trx.paid_amount) }}
                                         </TableCell>
                                         <TableCell class="text-right align-top">
-                                            {{ formatRupiah(trx.discount_amount) }}
-                                        </TableCell>
-                                        <TableCell class="text-right align-top">
                                             {{ formatRupiah(trx.change_amount) }}
                                         </TableCell>
                                         <TableCell class="align-top">
@@ -143,13 +109,13 @@ async function printReceipt(trx: any) {
                                         </TableCell>
                                     </TableRow>
 
-                                    <TableRow v-if="!sales.total">
-                                        <TableCell colspan="7">Belum ada penjualan.</TableCell>
+                                    <TableRow v-if="!refunds.total">
+                                        <TableCell colspan="7">Belum ada refund.</TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
 
-                            <PageNav :data="sales" />
+                            <PageNav :data="refunds" />
                         </div>
                     </CardContent>
                 </Card>
@@ -158,7 +124,7 @@ async function printReceipt(trx: any) {
     </AppLayout>
 
     <Dialog :open="detailModal" @update:open="(val) => detailModal = val">
-        <DialogContent>
+        <DialogContent @interactOutside.prevent>
             <DialogHeader>
                 <DialogTitle>Detail Transaksi</DialogTitle>
                 <DialogDescription>
@@ -170,7 +136,7 @@ async function printReceipt(trx: any) {
             </DialogHeader>
 
             <div class="space-y-4">
-                <div class="text-sm capitalize">
+                <div class="text-sm">
                     <p><strong>Kasir : </strong> {{ selectedTransaction?.user?.name }}</p>
                     <p><strong>Metode Pembayaran : </strong> {{ selectedTransaction?.payment_method }}</p>
                 </div>
@@ -186,54 +152,15 @@ async function printReceipt(trx: any) {
                 </div>
 
                 <div class="border-t pt-4 space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Total :</span><span>{{ formatRupiah(selectedTransaction?.total_price) }}</span></div>
-                    <div class="flex justify-between"><span>Dibayar :</span><span>{{ formatRupiah(selectedTransaction?.paid_amount) }}</span></div>
-                    <div class="flex justify-between"><span>Diskon :</span><span>{{ formatRupiah(selectedTransaction?.discount_amount) }}</span></div>
-                    <div class="flex justify-between"><span>Kembali :</span><span>{{ formatRupiah(selectedTransaction?.change_amount) }}</span></div>
+                    <div class="flex justify-between"><span>Total:</span><span>{{ formatRupiah(selectedTransaction?.total_price) }}</span></div>
+                    <div class="flex justify-between"><span>Dibayar:</span><span>{{ formatRupiah(selectedTransaction?.paid_amount) }}</span></div>
+                    <div class="flex justify-between"><span>Kembali:</span><span>{{ formatRupiah(selectedTransaction?.change_amount) }}</span></div>
                 </div>
             </div>
 
             <DialogFooter class="mt-6 gap-2">
                 <Button variant="secondary" @click="detailModal = false">Tutup</Button>
-                <Button
-                    v-if="!selectedTransaction?.is_refunded"
-                    variant="destructive"
-                    @click="openRefundFromDetail(selectedTransaction)"
-                >
-                    Refund
-                </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
-
-
-    <Dialog :open="refundModal" @update:open="(val) => refundModal = val">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Refund Transaksi</DialogTitle>
-                <DialogDescription>Masukkan alasan dan jumlah refund.</DialogDescription>
-            </DialogHeader>
-            <div class="space-y-4">
-                <div>
-                    <Label>Jumlah Refund</Label>
-                    <Input type="number" min="0" v-model="refundForm.refund_amount" />
-                </div>
-                <div>
-                    <Label>Alasan Refund</Label>
-                    <Textarea rows="3" v-model="refundForm.refund_reason" />
-                </div>
-            </div>
-            <DialogFooter class="gap-2">
-                <Button variant="secondary" @click="refundModal = false">Batal</Button>
-                <Button
-                    :disabled="refundForm.processing"
-                    @click="submitRefund"
-                >
-                    <LoaderCircle v-if="refundForm.processing" class="h-4 w-4 animate-spin mr-2" />
-                    Konfirmasi Refund
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
 </template>

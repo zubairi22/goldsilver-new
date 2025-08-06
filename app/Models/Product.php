@@ -34,7 +34,10 @@ class Product extends Model
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%');
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('units', function ($q) use ($search) {
+                        $q->where('product_unit.sku', 'like', '%' . $search . '%');
+                    });
             });
         });
     }

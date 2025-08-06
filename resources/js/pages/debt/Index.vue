@@ -60,7 +60,7 @@ const toggleValue = (valueId: number) => {
                                                     @click="toggleValue(customer.id)"
                                                 />
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell @click="toggleValue(customer.id)">
                                                 {{ customer.name}}
                                             </TableCell>
                                             <TableCell class="text-right">
@@ -73,6 +73,7 @@ const toggleValue = (valueId: number) => {
                                                 <Table class="w-full">
                                                     <TableHeader>
                                                         <TableRow>
+                                                            <TableHead class="w-44">Kode</TableHead>
                                                             <TableHead class="w-44">Tanggal</TableHead>
                                                             <TableHead>Kasir</TableHead>
                                                             <TableHead>Produk</TableHead>
@@ -83,6 +84,9 @@ const toggleValue = (valueId: number) => {
                                                     </TableHeader>
                                                     <TableBody>
                                                         <TableRow v-for="trx in customer.transactions" :key="trx.id">
+                                                            <TableCell class="align-top">
+                                                                {{ trx.transaction_number }}
+                                                            </TableCell>
                                                             <TableCell class="align-top">
                                                                 {{ format(new Date(trx.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
                                                             </TableCell>

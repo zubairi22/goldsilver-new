@@ -17,11 +17,18 @@ class Transaction extends Model
         'change_amount',
         'payment_method',
         'payment_status',
-        'due_date',
+        'redeemed_points',
+        'discount',
+        'is_refunded',
+        'refund_amount',
+        'refund_reason',
+        'refunded_at',
+        'refunded_by',
     ];
 
     protected $casts = [
-        'due_date' => 'date',
+        'refunded_at' => 'datetime',
+        'is_refunded' => 'boolean',
     ];
 
     public static function generateTransactionNumber(): string
@@ -40,7 +47,6 @@ class Transaction extends Model
 
         return $prefix . $newNumber;
     }
-
 
     public function user(): BelongsTo
     {
@@ -62,9 +68,19 @@ class Transaction extends Model
         return $this->hasMany(TransactionPayment::class);
     }
 
-    public function scopePaid($query): void
+    public function refundedBy(): BelongsTo
     {
-        $query->where('payment_status', 'paid');
+        return $this->belongsTo(User::class, 'refunded_by');
+    }
+
+    public function scopeSale($query): void
+    {
+        $query->where('payment_status', 'paid')->where('is_refunded', false);
+    }
+
+    public function scopeRefund($query): void
+    {
+        $query->where('is_refunded', true);
     }
 
     public function scopeNotPaid($query): void
@@ -76,7 +92,7 @@ class Transaction extends Model
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
-                $query->where('transaction_number', 'like', '%'.$search.'%');
+                $query->where('transaction_number', 'like', '%' . $search . '%');
             });
         });
     }

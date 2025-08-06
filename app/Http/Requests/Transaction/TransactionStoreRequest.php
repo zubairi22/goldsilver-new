@@ -31,12 +31,15 @@ class TransactionStoreRequest extends FormRequest
             'items.*.purchase_price' => ['required', 'numeric', 'min:0'],
             'items.*.selling_price' => ['required', 'numeric', 'min:0'],
             'paid_amount' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['required', 'in:cash,qris,debit'],
+            'payment_method' => ['required', 'in:cash,qris,debit,deposit'],
             'customer_id' => [
-                Rule::requiredIf(fn () => $this->paid_amount < $this->calculated_total_price),
+                Rule::requiredIf(fn () =>
+                    $this->payment_method === 'deposit' || $this->paid_amount < ($this->calculated_total_price - (float) $this->discount)),
                 'nullable',
                 'exists:customers,id'
             ],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'redeemed_points' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
@@ -52,8 +55,10 @@ class TransactionStoreRequest extends FormRequest
             'items.*.selling_price.required' => 'Harga Jual tidak boleh kosong.',
             'payment_method.in' => 'Metode pembayaran tidak valid.',
 
-            'customer_id.required' => 'Customer wajib dipilih jika pembayaran belum lunas.',
+            'customer_id.required' => 'Customer wajib dipilih.',
             'customer_id.exists' => 'Customer tidak valid.',
+            'discount_amount.min' => 'Diskon tidak boleh negatif.',
+            'redeemed_points.min' => 'Poin yang digunakan minimal 0.',
             'due_date.required_if' => 'Tanggal jatuh tempo wajib diisi jika belum dibayar.',
             'due_date.after_or_equal' => 'Tanggal jatuh tempo minimal hari ini.',
         ];

@@ -11,7 +11,7 @@ import EditButton from '@/components/EditButton.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import PageNav from '@/components/PageNav.vue';
 import Heading from '@/components/Heading.vue';
-import CustomerForm from './CustomerForm.vue'; // Buat file ini
+import CustomerForm from './partial/CustomerForm.vue'; // Buat file ini
 import type { BreadcrumbItem } from '@/types';
 import { useSearch } from '@/composables/useSearch';
 import { LoaderCircle } from 'lucide-vue-next';
@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const { customers } = defineProps(['customers']);
-const { search } = useSearch('customers.index', '', ['customers']);
+const { search } = useSearch('outlet.customers.index', '', ['customers']);
 
 const defaultForm = () => ({
     name: '', phone: '', email: '', address: ''
@@ -47,7 +47,7 @@ const deleteCustomer = (customer: any) => {
 };
 
 const handleAddCustomer = () => {
-    addForm.post(route('customers.store'), {
+    addForm.post(route('outlet.customers.store'), {
         preserveScroll: true,
         onSuccess: () => {
             addCustomerModal.value = false;
@@ -57,7 +57,7 @@ const handleAddCustomer = () => {
 };
 
 const handleEditCustomer = () => {
-    editForm.patch(route('customers.update', editForm.id), {
+    editForm.patch(route('outlet.customers.update', editForm.id), {
         preserveScroll: true,
         onSuccess: () => {
             editCustomerModal.value = false;
@@ -67,7 +67,7 @@ const handleEditCustomer = () => {
 };
 
 const handleDeleteCustomer = () => {
-    router.delete(route('customers.destroy', deleteForm.id), {
+    router.delete(route('outlet.customers.destroy', deleteForm.id), {
         preserveScroll: true,
         onSuccess: () => {
             deleteCustomerModal.value = false;
@@ -104,6 +104,7 @@ const handleDeleteCustomer = () => {
                                         <TableHead>Email</TableHead>
                                         <TableHead>Telepon</TableHead>
                                         <TableHead>Alamat</TableHead>
+                                        <TableHead>Poin</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
                                     </TableRow>
@@ -114,6 +115,7 @@ const handleDeleteCustomer = () => {
                                         <TableCell>{{ customer.email }}</TableCell>
                                         <TableCell>{{ customer.phone }}</TableCell>
                                         <TableCell>{{ customer.address }}</TableCell>
+                                        <TableCell>{{ customer.current_year_point?.points || 0 }}</TableCell>
                                         <TableCell class="px-1">
                                             <EditButton @click="editCustomer(customer)" />
                                         </TableCell>

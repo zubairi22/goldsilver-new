@@ -3,43 +3,44 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
+import { X } from 'lucide-vue-next'
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
-        href: '/settings/profile',
+        title: 'Profil',
+        url: 'profile.edit',
+        icon: X,
     },
     {
-        title: 'Password',
-        href: '/settings/password',
+        title: 'Kata Sandi',
+        url: 'password.edit',
+        icon: X,
     },
     {
-        title: 'Appearance',
-        href: '/settings/appearance',
+        title: 'Tampilan',
+        url: 'appearance',
+        icon: X,
     },
 ];
 
-const page = usePage();
-
-const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.location).pathname : '';
 </script>
 
 <template>
     <div class="px-4 py-6">
-        <Heading title="Settings" description="Manage your profile and account settings" />
+        <Heading title="Pengaturan" description="Kelola profil dan pengaturan akun Anda" />
 
-        <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-y-0 lg:space-x-12">
+        <div class="flex flex-col space-y-8 lg:space-y-0 lg:flex-row lg:space-x-12">
             <aside class="w-full max-w-xl lg:w-48">
-                <nav class="flex flex-col space-y-1 space-x-0">
+                <nav class="flex flex-col space-x-0 space-y-1">
                     <Button
                         v-for="item in sidebarNavItems"
-                        :key="item.href"
+                        :key="item.url"
                         variant="ghost"
-                        :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
+                        :class="['w-full justify-start', { 'bg-muted': route().current(item.url) }]"
                         as-child
                     >
-                        <Link :href="item.href">
+                        <Link :href="route(item.url)">
                             {{ item.title }}
                         </Link>
                     </Button>

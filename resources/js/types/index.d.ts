@@ -26,8 +26,15 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     name: string;
     auth: Auth;
     ziggy: Config & { location: string };
+    flash: Flash;
     sidebarOpen: boolean;
     sideBarMenus: any;
+};
+
+export type Flash = {
+    status: string | null;
+    message: string | null;
+    transaction_number: string | null;
 };
 
 export interface User {

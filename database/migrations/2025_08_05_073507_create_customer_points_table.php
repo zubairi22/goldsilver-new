@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transaction_payments', function (Blueprint $table) {
+        Schema::create('customer_points', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaction_id')->constrained()->cascadeOnDelete();
-            $table->integer('amount');
-            $table->timestamp('paid_at')->useCurrent();
-            $table->text('notes')->nullable();
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->year('year');
+            $table->unsignedInteger('points')->default(0);
             $table->timestamps();
+
+            $table->unique(['customer_id', 'year']);
         });
     }
 
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transaction_payments');
+        Schema::dropIfExists('customer_points');
     }
 };
