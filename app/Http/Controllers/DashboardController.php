@@ -15,8 +15,8 @@ class DashboardController extends Controller
         $mode = $request->query('mode', 'daily');
         $today = Carbon::today();
 
-        $start = $today->copy();
-        $end = $today->copy();
+        $start = $today->copy()->startOfDay();
+        $end = $today->copy()->endOfDay();
 
         if ($mode === 'weekly') {
             $start = $today->copy()->startOfWeek();

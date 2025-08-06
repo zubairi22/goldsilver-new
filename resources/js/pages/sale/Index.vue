@@ -9,7 +9,7 @@ import SearchInput from '@/components/SearchInput.vue';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useSearch } from '@/composables/useSearch';
-import { useCurrency } from '@/composables/useCurrency';
+import { useFormat } from '@/composables/useFormat';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps(['sales']);
 
-const { formatRupiah } = useCurrency();
+const { formatRupiah } = useFormat();
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter()
 const { search } = useSearch('transaction.sales.index', '', ['sales']);
 

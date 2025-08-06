@@ -15,7 +15,7 @@ import ProductForm from '@/pages/product/partial/ProductForm.vue';
 import { useSearch } from '@/composables/useSearch';
 import { LoaderCircle } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
-import { useCurrency } from '@/composables/useCurrency';
+import { useFormat } from '@/composables/useFormat';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -26,7 +26,7 @@ defineProps(['products', 'categories', 'units']);
 
 const { search } = useSearch('outlet.products.index', '', ['products']);
 
-const {formatRupiah} = useCurrency()
+const {formatRupiah} = useFormat()
 
 const defaultForm = () => ({
     name: '',

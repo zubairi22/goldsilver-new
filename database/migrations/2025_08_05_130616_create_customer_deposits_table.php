@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('customer_deposits', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->decimal('amount', 15, 2);
+            $table->integer('amount');
             $table->enum('type', ['top_up', 'used', 'refund']);
             $table->string('description')->nullable();
             $table->timestamps();

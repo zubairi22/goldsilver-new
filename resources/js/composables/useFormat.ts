@@ -1,4 +1,7 @@
-export function useCurrency() {
+import { format } from 'date-fns'
+import { id } from 'date-fns/locale'
+
+export function useFormat() {
     const formatRupiah = (value: number | string): string => {
         const number = typeof value === 'string' ? parseFloat(value) : value;
 
@@ -9,5 +12,9 @@ export function useCurrency() {
         }).format(number);
     };
 
-    return { formatRupiah };
+    function formatDate(dateStr: string) {
+        return format(new Date(dateStr), 'dd MMMM yyyy HH:mm', { locale: id });
+    }
+
+    return { formatRupiah, formatDate };
 }

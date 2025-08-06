@@ -4,7 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreadcrumbItem } from '@/types';
 import HorizontalBarChart from '@/components/HorizontalBarChart.vue';
-import { useCurrency } from '@/composables/useCurrency';
+import { useFormat } from '@/composables/useFormat';
 import { ref, watch } from 'vue';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -16,7 +16,7 @@ const { summary, salesByCategory, topProducts, salesByCashier, lowestStocks } = 
     'lowestStocks',
 ]);
 
-const { formatRupiah } = useCurrency();
+const { formatRupiah } = useFormat();
 
 const categoryLabels = salesByCategory.map((item: any) => item.category);
 const categoryValues = salesByCategory.map((item: any) => item.total);

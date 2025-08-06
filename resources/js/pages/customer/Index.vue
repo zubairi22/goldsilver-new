@@ -1,20 +1,23 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import DeleteButton from '@/components/DeleteButton.vue';
 import EditButton from '@/components/EditButton.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import PageNav from '@/components/PageNav.vue';
 import Heading from '@/components/Heading.vue';
-import CustomerForm from './partial/CustomerForm.vue'; // Buat file ini
+import CustomerForm from './partial/CustomerForm.vue';
 import type { BreadcrumbItem } from '@/types';
 import { useSearch } from '@/composables/useSearch';
 import { LoaderCircle } from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
+import { useFormat } from '@/composables/useFormat';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -23,7 +26,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { customers } = defineProps(['customers']);
 const { search } = useSearch('outlet.customers.index', '', ['customers']);
-
+const { formatRupiah } = useFormat()
 const defaultForm = () => ({
     name: '', phone: '', email: '', address: ''
 });
@@ -103,8 +106,9 @@ const handleDeleteCustomer = () => {
                                         <TableHead>Nama</TableHead>
                                         <TableHead>Email</TableHead>
                                         <TableHead>Telepon</TableHead>
-                                        <TableHead>Alamat</TableHead>
-                                        <TableHead>Poin</TableHead>
+                                        <TableHead class="w-60">Alamat</TableHead>
+                                        <TableHead class="text-center">Poin</TableHead>
+                                        <TableHead class="text-center">Deposit</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
                                     </TableRow>
@@ -115,16 +119,36 @@ const handleDeleteCustomer = () => {
                                         <TableCell>{{ customer.email }}</TableCell>
                                         <TableCell>{{ customer.phone }}</TableCell>
                                         <TableCell>{{ customer.address }}</TableCell>
-                                        <TableCell>{{ customer.current_year_point?.points || 0 }}</TableCell>
-                                        <TableCell class="px-1">
+                                        <TableCell class="text-center">{{ customer.current_year_point?.points || 0 }}</TableCell>
+                                        <TableCell class="text-center">{{ formatRupiah(customer.balance) }}</TableCell>
+                                        <TableCell class="px-2">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger as-child>
+                                                    <Button variant="secondary">
+                                                        <icon name="EllipsisVertical"/>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent class="w-40">
+                                                    <DropdownMenuItem>
+                                                        <Link :href="route('outlet.customer.point', customer)">Detail Poin</Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem>
+                                                        <Link :href="route('outlet.customer.deposit', customer)">Detail Deposit</Link>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                        <TableCell class="px-0.5">
                                             <EditButton @click="editCustomer(customer)" />
                                         </TableCell>
-                                        <TableCell class="px-1">
+                                        <TableCell class="px-0.5">
                                             <DeleteButton @click="deleteCustomer(customer)" />
                                         </TableCell>
                                     </TableRow>
                                     <TableRow v-if="!customers.total">
-                                        <TableCell colspan="6">Pelanggan tidak ditemukan</TableCell>
+                                        <TableCell colspan="8" class="text-center text-gray-500">
+                                            Pelanggan tidak ditemukan.
+                                        </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

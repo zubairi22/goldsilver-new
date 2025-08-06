@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Heading from '@/components/Heading.vue';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { useCurrency } from '@/composables/useCurrency';
+import { useFormat } from '@/composables/useFormat';
 import type { BreadcrumbItem } from '@/types';
 import ChevronButton from '@/components/ChevronButton.vue';
 import { ref } from 'vue';
@@ -18,7 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps(['customers']);
 
-const { formatRupiah } = useCurrency();
+const { formatRupiah } = useFormat();
 
 const openValue = ref<number[]>([]);
 

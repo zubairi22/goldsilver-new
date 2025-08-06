@@ -12,10 +12,9 @@ use App\Http\Controllers\RefundsController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\CashierController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return redirect()->route('login');
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
@@ -25,6 +24,10 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('settings', OutletController::class)->except(['show', 'create', 'edit']);
         Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
+        Route::get('customer/{customer}/point', [CustomersController::class, 'point'])->name('customer.point');
+        Route::get('customer/{customer}/deposit', [CustomersController::class, 'deposit'])->name('customer.deposit');
+        Route::post('customer/{customer}/deposit', [CustomersController::class, 'storeDeposit'])->name('customer.deposit.store');
+        Route::post('customer/{customer}/deposit/refund', [CustomersController::class, 'storeRefund'])->name('customer.deposit.refund');
     });
 
     Route::resource('cashier', CashierController::class)->except(['show', 'create', 'edit']);

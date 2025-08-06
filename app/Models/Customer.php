@@ -11,6 +11,7 @@ class Customer extends Model
         'phone',
         'email',
         'address',
+        'balance',
     ];
 
     public function transactions()
@@ -33,6 +34,11 @@ class Customer extends Model
     public function pointLogs()
     {
         return $this->hasMany(CustomerPointLog::class);
+    }
+
+    public function deposits()
+    {
+        return $this->hasMany(CustomerDeposit::class);
     }
 
     public function scopeFilter($query, array $filters)

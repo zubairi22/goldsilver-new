@@ -9,7 +9,7 @@ import { LoaderCircle } from 'lucide-vue-next';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import DeleteButton from '@/components/DeleteButton.vue';
-import { useCurrency } from '@/composables/useCurrency';
+import { useFormat } from '@/composables/useFormat';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSearch } from '@/composables/useSearch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -24,7 +24,7 @@ import { AppPageProps } from '@/types';
 
 const { products, customers } = defineProps(['products', 'customers'])
 
-const { formatRupiah } = useCurrency();
+const { formatRupiah } = useFormat();
 const { search } = useSearch('cashier.index', '', ['products']);
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
 
