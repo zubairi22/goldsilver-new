@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader } from '
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/InputError.vue';
-import SearchInput from '@/components/SearchInput.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 
 const { customer } = defineProps(['customer', 'deposits']);
@@ -39,7 +38,7 @@ const refundForm = useForm({
 const addModal = ref(false);
 const refundModal = ref(false);
 
-const submitDeposit = () => {
+const handleDeposit = () => {
     form.post(route('outlet.customer.deposit.store', customer.id), {
         preserveScroll: true,
         onSuccess: () => {
@@ -49,7 +48,7 @@ const submitDeposit = () => {
     });
 };
 
-const submitRefund = () => {
+const handleRefund = () => {
     refundForm.post(route('outlet.customer.deposit.refund', customer.id), {
         preserveScroll: true,
         onSuccess: () => {
@@ -140,7 +139,7 @@ const submitRefund = () => {
 
             <DialogFooter class="pt-4">
                 <Button variant="secondary" @click="addModal = false">Batal</Button>
-                <Button :disabled="form.processing" @click="submitDeposit">
+                <Button :disabled="form.processing" @click="handleDeposit">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Simpan
                 </Button>
@@ -170,7 +169,7 @@ const submitRefund = () => {
 
             <DialogFooter class="pt-4">
                 <Button variant="secondary" @click="refundModal = false">Batal</Button>
-                <Button :disabled="refundForm.processing" @click="submitRefund">
+                <Button :disabled="refundForm.processing" @click="handleRefund">
                     <LoaderCircle v-if="refundForm.processing" class="h-4 w-4 animate-spin" />
                     Refund
                 </Button>

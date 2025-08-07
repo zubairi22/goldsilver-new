@@ -17,7 +17,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::name('outlet.')->prefix('outlet')->group(function () {
@@ -37,9 +37,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('sales/{transaction}/refund', [SalesController::class, 'refund'])->name('sales.refund');
         Route::resource('refunds', RefundsController::class)->except(['show', 'create', 'edit']);
         Route::resource('debts', DebtsController::class)->except(['show', 'create', 'edit']);
+        Route::post('debt/{customer}/settlement', [DebtsController::class, 'settleDebt'])->name('debt.settle');
+        Route::get('debt/{transaction}/generate-invoice', [DebtsController::class, 'generateInvoice'])->name('debt.invoice');
     });
 
-    Route::middleware(['role:super-admin'])->name('master.')->prefix('master')->group(function () {
+    Route::middleware('role:super-admin')->name('master.')->prefix('master')->group(function () {
         Route::resource('users', UsersController::class);
         Route::resource('menus', MenusController::class);
         Route::resource('roles', RolesController::class);

@@ -26,7 +26,7 @@ class CashierController extends Controller
         return Inertia::render('cashier/Index', [
             'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(12),
             'customers' => Customer::with('currentYearPoint:id,customer_id,points,year')
-                ->select('id', 'name')
+                ->select(['id', 'name'])
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -135,6 +135,8 @@ class CashierController extends Controller
             'change_amount' => max(0, $paid - $finalTotal),
             'payment_method' => $data['payment_method'] ?? 'cash',
             'payment_status' => $status,
+            'settled_at' => $status === 'paid' ? now() : null,
+            'settled_by' => $status === 'paid' ? auth()->id() : null,
         ]);
     }
 

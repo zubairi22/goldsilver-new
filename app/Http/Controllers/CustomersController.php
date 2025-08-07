@@ -77,7 +77,7 @@ class CustomersController extends Controller
         ]);
 
         $this->flashSuccess('Deposit berhasil ditambahkan.');
-        return back();
+        return Redirect::back();
     }
 
     public function storeRefund(CustomerRefundRequest $request, Customer $customer): RedirectResponse
@@ -86,7 +86,7 @@ class CustomersController extends Controller
 
         if ($customer->balance < $validated['amount']) {
             $this->flashError('Saldo pelanggan tidak mencukupi untuk refund.');
-            return back();
+            return Redirect::back();
         }
 
         CustomerDeposit::create([
@@ -99,6 +99,6 @@ class CustomersController extends Controller
         $customer->decrement('balance', $validated['amount']);
 
         $this->flashSuccess('Refund berhasil dilakukan.');
-        return back();
+        return Redirect::back();
     }
 }
