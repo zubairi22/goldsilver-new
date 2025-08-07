@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -39,7 +39,7 @@ const form = useForm({
 
 const settlementModal = ref(false);
 const detailModal = ref(false);
-const selectedPayment = ref(null)
+const selectedPayment = ref()
 
 const settleDebt = (customer: any) => {
     form.customer_id = customer.id;
@@ -153,9 +153,11 @@ const handleSettlement = () => {
                                                                         <DropdownMenuItem>
                                                                             <span @click="detailPayment(trx)">Detail Pembayaran</span>
                                                                         </DropdownMenuItem>
-                                                                        <DropdownMenuItem>
-                                                                            <Link :href="route('outlet.customer.deposit', customer)">Detail Deposit</Link>
-                                                                        </DropdownMenuItem>
+                                                                        <a target="_blank" :href="route('transaction.debt.invoice', trx)">
+                                                                            <DropdownMenuItem>
+                                                                                Invoice
+                                                                            </DropdownMenuItem>
+                                                                        </a>
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             </TableCell>

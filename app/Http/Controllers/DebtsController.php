@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Debt\DebtSettlementRequest;
 use App\Models\Customer;
+use App\Models\Outlet;
 use App\Models\Transaction;
 use App\Models\TransactionPayment;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -90,6 +91,8 @@ class DebtsController extends Controller
 
     public function generateInvoice(Transaction $transaction)
     {
+        $outlet = Outlet::first();
+
         $transaction->load([
             'customer',
             'items.product.units',
@@ -97,6 +100,6 @@ class DebtsController extends Controller
             'payments'
         ]);
 
-        return PDF::loadView('invoice', compact('transaction'))->stream('invoice_' . $transaction['transaction_number'] . '.pdf');
+        return PDF::loadView('invoice', compact('outlet', 'transaction'))->stream('invoice_' . $transaction['transaction_number'] . '.pdf');
     }
 }

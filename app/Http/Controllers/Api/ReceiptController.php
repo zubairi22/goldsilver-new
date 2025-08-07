@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Outlet;
 use App\Models\Transaction;
 
 class ReceiptController extends Controller
 {
     public function show($transactionNumber)
     {
-        $trx = Transaction::with(['items.product', 'items.unit'])->where('number', $transactionNumber)->firstOrFail();
+        $outlet = Outlet::first();
 
-        $qrContent = $trx->number;
+        $trx = Transaction::with(['items.product', 'items.unit'])->where('transaction_number', $transactionNumber)->firstOrFail();
+
+        $qrContent = $trx->transaction_number;
 
         $lines = [];
 
         $lines[] = '! 0 200 200 1000 1';
         $lines[] = 'CENTER';
-        $lines[] = 'TEXT 4 0 0 20 ' . strtoupper($trx->store_name ?? 'TOKO KITA');
-        $lines[] = 'TEXT 2 0 0 60 ' . ($trx->store_phone ?? '08xxxxxxx');
+        $lines[] = 'TEXT 4 0 0 20 ' . strtoupper($outlet->name ?? 'TOKO KITA');
+        $lines[] = 'TEXT 2 0 0 60 ' . ($outlet->phone_number ?? '08xxxxxxx');
         $lines[] = 'TEXT 2 0 0 90 -------------------------------';
         $lines[] = 'LEFT';
 

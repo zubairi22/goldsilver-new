@@ -82,10 +82,10 @@
     <tr>
         <td class="no-border" style="width: 30%; vertical-align: top;">
             <strong>Outlet</strong><br>
-            {{ $transaction->store_name ?? 'Toko Mulia Stationary&fancy' }}<br>
-            {{ $transaction->store_address ?? 'jl. pasar martapura' }}<br>
-            {{ $transaction->store_email ?? 'muliastoreprime@gmail.com' }}<br>
-            {{ $transaction->store_phone ?? '082350588844' }}
+            {{ $outlet->name ?? 'Toko' }}<br>
+            {{ $outlet->address ?? 'Jalan' }}<br>
+            {{ $outlet->email ?? 'admin@temantekno.com' }}<br>
+            {{ $outlet->phone_number ?? '08XX XXXX XXXX' }}
         </td>
 
         <td class="no-border" style="width: 30%; vertical-align: top;">

@@ -21,7 +21,8 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::name('outlet.')->prefix('outlet')->group(function () {
-        Route::resource('settings', OutletController::class)->except(['show', 'create', 'edit']);
+        Route::get('settings', [OutletController::class, 'index'])->name('settings.index');
+        Route::patch('settings', [OutletController::class, 'update'])->name('settings.update');
         Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
         Route::get('customer/{customer}/point', [CustomersController::class, 'point'])->name('customer.point');
