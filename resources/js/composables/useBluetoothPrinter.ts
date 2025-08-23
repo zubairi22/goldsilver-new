@@ -1,17 +1,27 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 export function useBluetoothPrinter() {
     const characteristic = ref<BluetoothRemoteGATTCharacteristic | null>(null);
+    const deviceRef = ref<BluetoothDevice | null>(null);
 
-    const connectPrinter = async (): Promise<boolean> => {
+    const connectPrinter = async (reconnect = false): Promise<boolean> => {
         try {
-            const device = await navigator.bluetooth.requestDevice({
-                acceptAllDevices: true,
-                optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'],
-            });
+            let device = deviceRef.value;
+
+            if (!device || reconnect) {
+
+                device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'],
+                });
+                deviceRef.value = device;
+            }
 
             const server = await device.gatt?.connect();
-            if (!server) console.error('Bluetooth GATT server not available');
+            if (!server) {
+                console.error('Bluetooth GATT server not available');
+                return false;
+            }
 
             const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
             characteristic.value = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
@@ -43,6 +53,6 @@ export function useBluetoothPrinter() {
     return {
         connectPrinter,
         printText,
-        isConnected: characteristic,
+        isConnected: computed(() => !!characteristic.value),
     };
 }

@@ -107,7 +107,7 @@ function handlePaymentToggle(val: boolean) {
 
     if (!val) {
         form.payment_method = 'cash';
-        form.paid_amount = 0;
+        form.paid_amount = '0';
         customerId.value = '';
         redeemPoints.value = 0;
     }
@@ -173,8 +173,12 @@ function deleteDraft(id: number) {
     loadDrafts();
 }
 
+const isPrinting = ref(false);
+
 const handleConnectPrinter = async () => {
     try {
+        isPrinting.value = true;
+
         const response = await axios.get(`/api/receipt/${usePage<AppPageProps>().props.flash.transaction_number}`);
         const receipt = response.data.receipt;
 
@@ -185,6 +189,8 @@ const handleConnectPrinter = async () => {
     } catch (err) {
         console.error('Error saat cetak:', err);
         alert('Gagal ambil atau cetak struk');
+    } finally {
+        isPrinting.value = false;
     }
 };
 
@@ -516,7 +522,7 @@ watch(customerId, (val) => {
 
             <DialogFooter class="gap-2 mt-4">
                 <Button variant="secondary" @click="successModal = false">Tutup</Button>
-                <Button v-if="(lastTransaction?.change ?? 0) >= 0" @click="handleConnectPrinter()">Cetak Struk</Button>
+                <Button v-if="(lastTransaction?.change ?? 0) >= 0" :disabled="isPrinting" @click="handleConnectPrinter()">Cetak Struk</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

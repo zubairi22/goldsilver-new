@@ -22,9 +22,7 @@ class ReceiptController extends Controller
             ->where('transaction_number', $transactionNumber)
             ->firstOrFail();
 
-        $qrContent = $trx->transaction_number;
-
-        $subtotalGross   = (int) ($trx->total ?? 0);
+        $subtotalGross   = (int) ($trx->total_price ?? 0);
         $discount        = (int) ($trx->discount_amount ?? 0);
         $totalAfterDisc  = (int) ($trx->total_price ?? ($subtotalGross - $discount));
         $refundedTotal   = (int) ($trx->refunded_total ?? 0);
@@ -33,91 +31,64 @@ class ReceiptController extends Controller
         $paidAmountAfterRefund = max(0, (int) ($trx->paid_amount ?? 0) - $refundedTotal);
 
         $lines = [];
-        $lines[] = '! 0 200 200 1000 1';
-        $lines[] = 'CENTER';
-        $lines[] = 'TEXT 4 0 0 20 ' . strtoupper($outlet->name ?? 'TOKO KITA');
-        $lines[] = 'TEXT 2 0 0 60 ' . ($outlet->phone_number ?? '08xxxxxxx');
-        $lines[] = 'TEXT 2 0 0 90 -------------------------------';
-        $lines[] = 'LEFT';
-
-        $y = 110;
-        $printedCount = 0;
+        $lines[] = strtoupper($outlet->name ?? 'TOKO KITA');
+        $lines[] = $outlet->phone_number ?? '08xxxxxxx';
+        $lines[] = str_repeat('-', 48);
 
         foreach ($trx->items as $item) {
-            $name       = substr($item->product->name ?? '-', 0, 24);
-            $unitName   = $item->unit->name ?? '-';
-            $soldQty    = (int) ($item->quantity ?? $item->qty ?? 0);
-            $refQty     = (int) ($item->refunded_qty ?? 0);
-            $netQty     = max(0, $soldQty - $refQty);
+            $name     = substr($item->product->name ?? '-', 0, 24);
+            $unitName = $item->unit->name ?? '-';
+            $soldQty  = (int) ($item->quantity ?? $item->qty ?? 0);
+            $refQty   = (int) ($item->refunded_qty ?? 0);
+            $netQty   = max(0, $soldQty - $refQty);
 
             if (!$includeRefund && $netQty <= 0) {
                 continue;
             }
 
-            $unitPrice  = (int) ($item->selling_price ?? $item->price ?? round(($item->subtotal ?? 0) / max(1, $soldQty)));
-            $lineTotal  = $unitPrice * $netQty;
+            $unitPrice = (int) ($item->selling_price ?? $item->price ?? round(($item->subtotal ?? 0) / max(1, $soldQty)));
+            $lineTotal = $unitPrice * $netQty;
 
-            $lines[] = "TEXT 0 0 0 {$y} {$netQty} {$unitName} {$name}";
-            $y += 20;
-            $lines[] = "TEXT 0 0 0 {$y} Rp " . number_format($lineTotal, 0, ',', '.');
-            $y += 30;
-
-            $printedCount++;
+            $lines[] = $this->formatLine("{$netQty} {$name}", "Rp" . number_format($lineTotal, 0, ',', '.'), 48);
+            $lines[] = $this->formatLine("({$unitName})",'');
         }
 
-        $lines[] = "TEXT 2 0 0 {$y} -------------------------------";
-        $y += 20;
-
-        if ($trx->total !== null) {
-            $lines[] = "TEXT 0 0 0 {$y} Subtotal " . $printedCount . " Produk (Gross)";
-            $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format($subtotalGross, 0, ',', '.');
-            $y += 20;
-            $lines[] = "TEXT 0 0 0 {$y} Diskon";
-            $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format($discount, 0, ',', '.');
-            $y += 20;
-        } else {
-            $lines[] = "TEXT 0 0 0 {$y} Total (Setelah Diskon)";
-            $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format($totalAfterDisc, 0, ',', '.');
-            $y += 20;
-        }
-
-        if ($includeRefund) {
-            $lines[] = "TEXT 0 0 0 {$y} Refund";
-            $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format($refundedTotal, 0, ',', '.');
-            $y += 20;
-        }
-
-        $lines[] = "TEXT 0 0 0 {$y} Total (Net)";
-        $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format($netGrandTotal, 0, ',', '.');
-        $y += 30;
-
-        $lines[] = "TEXT 0 0 0 {$y} Dibayar";
-        $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format($paidAmountAfterRefund, 0, ',', '.');
-        $y += 20;
-        $lines[] = "TEXT 0 0 0 {$y} Kembalian";
-        $lines[] = "TEXT 0 0 280 {$y} Rp " . number_format((int) ($trx->change_amount ?? 0), 0, ',', '.');
-        $y += 40;
-
-        $lines[] = 'CENTER';
-        $lines[] = "TEXT 0 0 0 {$y} *RETUR BARANG/BATAL WAJIB BAWA STRUK*";
-        $y += 20;
-        $lines[] = "TEXT 0 0 0 {$y} (MAKS 1x24 JAM). BARANG RUSAK TIDAK DAPAT DIRETUR";
-        $y += 40;
-
-        $lines[] = "QRCODE 120 {$y} M 2 U 6";
-        $lines[] = $qrContent;
-        $y += 170;
-
-        $lines[] = "TEXT 0 0 0 {$y} Terbayar  " . $trx->created_at->format('d M y H:i');
-        $y += 20;
-        $lines[] = "TEXT 0 0 0 {$y} Dicetak: " . ($trx->user->name ?? '-');
-
-        $lines[] = 'FORM';
-        $lines[] = 'PRINT';
+        $lines[] = str_repeat('-', 48);
+        $lines[] = $this->formatLine("Subtotal", "Rp " . number_format($subtotalGross, 0, ',', '.'), 48);
+        // $lines[] = formatLine("Diskon", "Rp " . number_format($discount, 0, ',', '.'), 48);
+        // if ($includeRefund) {
+        //     $lines[] = formatLine("Refund", "Rp " . number_format($refundedTotal, 0, ',', '.'), 48);
+        // }
+        $lines[] = $this->formatLine("Total", "Rp " . number_format($netGrandTotal, 0, ',', '.'), 48);
+        // $lines[] = formatLine("Dibayar", "Rp " . number_format($paidAmountAfterRefund, 0, ',', '.'), 48);
+        // $lines[] = formatLine("Kembali", "Rp " . number_format((int) ($trx->change_amount ?? 0), 0, ',', '.'), 48);
+        $lines[] = str_repeat('-', 48);
+        $lines[] = '';
+        $lines[] = '*RETUR BARANG/BATAL WAJIB BAWA STRUK';
+        $lines[] = '(MAKSIMAL 1x24 JAM). BARANG RUSAK TIDAK';
+        $lines[] = 'DAPAT DIRETUR*';
+        $lines[] = '';
+        $lines[] = $trx->transaction_number;
+        $lines[] = '';
+        $lines[] = str_repeat('-', 48);
+        $lines[] = '';
+        $lines[] = "Terbayar  : " . $trx->created_at->format('d M y H:i');
+        $lines[] = "Dicetak   : " . ($trx->user->name ?? '-');
 
         return response()->json([
             'receipt' => implode("\n", $lines),
         ]);
+    }
+
+    function formatLine($left, $right, $width = 48) {
+        $left = trim($left);
+        $right = trim($right);
+
+        if (strlen($left) > ($width - strlen($right))) {
+            $left = substr($left, 0, $width - strlen($right) - 1);
+        }
+
+        return $left . str_repeat(' ', $width - strlen($left) - strlen($right)) . $right;
     }
 
 }
