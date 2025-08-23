@@ -55,6 +55,10 @@ class HandleInertiaRequests extends Middleware
                 'message' => fn () => $request->session()->get('message'),
                 'transaction_number' => fn () => $request->session()->get('transaction_number'),
             ],
+            'og' => [
+                'title' => Outlet::first()->name ?? config('app.name'),
+                'image' => public_path('/logo.png'),
+            ]
         ];
 
         if (Auth::check()) {

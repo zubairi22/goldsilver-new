@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <meta property="og:title" content="{{ $page['props']['og']['title'] ?? 'Teman Dagang' }}">
-        <meta property="og:description" content="{{ $page['props']['og']['description'] ?? 'Solusi Mempermudah Proses Dagang Anda' }}">
         <meta property="og:image" content="{{ $page['props']['og']['image'] ?? asset('assets/og-default.png') }}">
         <meta property="og:url" content="{{ $page['props']['og']['url'] ?? url()->full() }}">
 
