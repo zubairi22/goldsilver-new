@@ -29,6 +29,7 @@ class CashierController extends Controller
                 ->select(['id', 'name'])
                 ->orderBy('name')
                 ->get(),
+            'productsAll' => Product::with('units')->get(),
         ]);
     }
 

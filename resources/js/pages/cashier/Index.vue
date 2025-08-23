@@ -22,7 +22,7 @@ import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
 import { AppPageProps } from '@/types';
 
-const { products, customers } = defineProps(['products', 'customers'])
+const { products, customers, productsAll } = defineProps(['products', 'customers', 'productsAll'])
 
 const { formatRupiah } = useFormat();
 const { search } = useSearch('cashier.index', '', ['products']);
@@ -212,7 +212,7 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
         const scanned = barcodeBuffer.value
         barcodeBuffer.value = ''
 
-        const product = products.data.find((p: any) =>
+        const product = productsAll.find((p: any) =>
             p.units.some((u: any) => u.pivot.sku === scanned)
         )
 
