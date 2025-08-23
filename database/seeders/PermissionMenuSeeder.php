@@ -56,16 +56,16 @@ class PermissionMenuSeeder extends Seeder
 
         $admin = User::factory()->create([
             'name' => 'Admin',
-            'email' => 'admin@temantekno.com',
+            'email' => 'admin@tokomulia.com',
         ]);
         $admin->assignRole($role);
 
         $roleUser = Role::create(['name' => 'User']);
-        $roleUser->syncPermissions([1, 15, 19, 20, 21, 23, 24, 25, 26]);
+        $roleUser->syncPermissions([1, 19, 20, 21, 23, 24, 25, 26]);
 
         $user = User::factory()->create([
             'name' => 'Kasir 1',
-            'email' => 'kasir@temantekno.com',
+            'email' => 'kasir@tokomulia.com',
         ]);
         $user->assignRole($roleUser);
 

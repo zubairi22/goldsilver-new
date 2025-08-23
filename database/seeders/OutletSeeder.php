@@ -1,0 +1,23 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Outlet;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class OutletSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        Outlet::create(
+            [
+                'name' => 'Toko Mulia Stationary&fancy',
+                'phone_number' => '082350588844'
+            ]
+        );
+    }
+}

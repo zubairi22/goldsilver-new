@@ -22,7 +22,7 @@ import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
 import { AppPageProps } from '@/types';
 
-const { products, customers, productsAll } = defineProps(['products', 'customers', 'productsAll'])
+const { products, customers } = defineProps(['products', 'customers'])
 
 const { formatRupiah } = useFormat();
 const { search } = useSearch('cashier.index', '', ['products']);
@@ -197,54 +197,59 @@ const handleConnectPrinter = async () => {
 const barcodeBuffer = ref('')
 let scanTimeout: ReturnType<typeof setTimeout> | null = null
 
-window.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (addModal.value || paymentModal.value || draftModal.value || successModal.value) return
+window.addEventListener('keydown', (e) => {
+    if (addModal.value || paymentModal.value || draftModal.value || successModal.value) return;
 
-    const char = e.key
+    const char = e.key;
 
-    if (scanTimeout) clearTimeout(scanTimeout)
+    if (scanTimeout) clearTimeout(scanTimeout);
 
     if (char.length === 1 && /[a-zA-Z0-9]/.test(char)) {
-        barcodeBuffer.value += char
+        barcodeBuffer.value += char;
     }
 
     if (char === 'Enter') {
-        const scanned = barcodeBuffer.value
-        barcodeBuffer.value = ''
+        const scanned = barcodeBuffer.value;
+        barcodeBuffer.value = '';
 
-        const product = productsAll.find((p: any) =>
-            p.units.some((u: any) => u.pivot.sku === scanned)
-        )
+        fetch(`/api/products/search?sku=${scanned}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.product) {
+                    const product = data.product;
+                    const unit = product.units.find((u: any) => u.pivot.sku === scanned);
 
-        if (product) {
-            const unit = product.units.find((u: any) => u.pivot.sku === scanned)
+                    const exists = form.items.find((item) =>
+                        item.product_id === product.id && item.unit_id === unit.id
+                    );
 
-            const exists = form.items.find((item) =>
-                item.product_id === product.id && item.unit_id === unit.id
-            )
-
-            if (exists) {
-                exists.quantity += 1
-            } else {
-                form.items.push({
-                    product_id: product.id,
-                    unit_id: unit.id,
-                    name: product.name,
-                    unit_name: unit.name,
-                    purchase_price: unit.pivot.purchase_price,
-                    selling_price: unit.pivot.selling_price,
-                    quantity: 1,
-                })
-            }
-        } else {
-            alert(`Produk dengan SKU "${scanned}" tidak ditemukan.`)
-        }
+                    if (exists) {
+                        exists.quantity += 1;
+                    } else {
+                        form.items.push({
+                            product_id: product.id,
+                            unit_id: unit.id,
+                            name: product.name,
+                            unit_name: unit.name,
+                            purchase_price: unit.pivot.purchase_price,
+                            selling_price: unit.pivot.selling_price,
+                            quantity: 1,
+                        });
+                    }
+                } else {
+                    alert(`Produk dengan SKU "${scanned}" tidak ditemukan.`);
+                }
+            })
+            .catch((error) => {
+                alert('Terjadi kesalahan saat mengambil data produk.');
+                console.error(error);
+            });
     }
 
     scanTimeout = setTimeout(() => {
-        barcodeBuffer.value = ''
-    }, 100)
-})
+        barcodeBuffer.value = '';
+    }, 100);
+});
 
 watch(customerId, (val) => {
     const customer = customers.find((c: any) => c.id === val);

@@ -12,6 +12,7 @@ use App\Models\StockMutation;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -29,7 +30,6 @@ class CashierController extends Controller
                 ->select(['id', 'name'])
                 ->orderBy('name')
                 ->get(),
-            'productsAll' => Product::with('units')->get(),
         ]);
     }
 

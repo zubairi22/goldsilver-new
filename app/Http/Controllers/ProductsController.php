@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -40,6 +41,8 @@ class ProductsController extends Controller
 
         $product->units()->attach($unitData);
 
+        Cache::forget('products_all');
+
         $this->flashSuccess('Produk berhasil ditambahkan.');
         return Redirect::back();
     }
@@ -59,6 +62,8 @@ class ProductsController extends Controller
         }
 
         $product->units()->sync($unitData);
+
+        Cache::forget('products_all');
 
         $this->flashSuccess('Produk berhasil diperbarui.');
         return Redirect::back();

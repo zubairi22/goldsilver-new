@@ -36,14 +36,7 @@ const submit = () => {
 
 <template>
     <AuthBase title="Masuk ke Akun Anda" description="Masukkan email dan kata sandi Anda untuk masuk">
-        <Head title="Masuk">
-            <meta property="og:title" content="Masuk - Teman Digital" />
-            <meta property="og:description" content="Login ke akun Anda untuk mengakses undangan, pengaturan, dan fitur lainnya di Teman Digital." />
-            <meta property="og:image" content="https://temandigital.cloud/assets/og-default.png" />
-            <meta property="og:url" content="https://temandigital.cloud/login" />
-            <meta property="og:type" content="website" />
-            <meta name="twitter:card" content="summary_large_image" />
-        </Head>
+        <Head title="Masuk"/>
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
