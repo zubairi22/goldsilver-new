@@ -33,30 +33,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 defineProps(['refunds']);
 
 const { formatRupiah } = useFormat();
-const { connectPrinter, printText, isConnected } = useBluetoothPrinter()
 const { search } = useSearch('transaction.refunds.index', '', ['refunds']);
 
 const detailModal = ref(false);
-const selectedTransaction = ref<any>(null);
+const selectedRefund = ref<any>(null);
 
-function openTransactionModal(trx: any) {
-    selectedTransaction.value = trx;
+function openRefundModal(rf: any) {
+    selectedRefund.value = rf;
     detailModal.value = true;
-}
-
-async function printReceipt(trx: any) {
-    try {
-        const response = await axios.get(`/api/receipt/${trx.transaction_number}`)
-        const receipt = response.data.receipt;
-
-        const connected = isConnected.value || await connectPrinter()
-        if (!connected) return alert('Gagal konek ke printer')
-
-        await printText(receipt)
-    } catch (err) {
-        console.error('Error saat cetak struk:', err)
-        alert('Gagal mengambil atau mencetak struk')
-    }
 }
 </script>
 
@@ -79,33 +63,31 @@ async function printReceipt(trx: any) {
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead class="w-44">Tanggal</TableHead>
-                                        <TableHead>Kasir</TableHead>
-                                        <TableHead class="text-right">Total</TableHead>
-                                        <TableHead class="text-right">Bayar</TableHead>
-                                        <TableHead class="text-right">Kembali</TableHead>
+                                        <TableHead class="w-40">Tgl Refund</TableHead>
+                                        <TableHead>No Refund</TableHead>
+                                        <TableHead>No Transaksi</TableHead>
+                                        <TableHead>Diproses Oleh</TableHead>
                                         <TableHead>Metode</TableHead>
+                                        <TableHead class="text-right">Item</TableHead>
+                                        <TableHead class="text-right">Total Refund</TableHead>
+                                        <TableHead>Status</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="trx in refunds.data" :key="trx.id" @click="openTransactionModal(trx)">
+                                    <TableRow v-for="rf in refunds.data" :key="rf.id" @click="openRefundModal(rf)">
                                         <TableCell class="align-top">
-                                            {{ format(new Date(trx.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
+                                            {{ format(new Date(rf.refunded_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
                                         </TableCell>
+                                        <TableCell class="align-top">{{ rf.refund_number }}</TableCell>
+                                        <TableCell class="align-top">{{ rf.transaction?.transaction_number }}</TableCell>
+                                        <TableCell class="align-top">{{ rf.user.name || '-' }}</TableCell>
+                                        <TableCell class="align-top"><Badge>{{ rf.refund_method }}</Badge></TableCell>
+                                        <TableCell class="text-right align-top">{{ rf.items_count }} ({{ rf.total_qty || 0 }})</TableCell>
+                                        <TableCell class="text-right align-top">{{ formatRupiah(rf.total_amount) }}</TableCell>
                                         <TableCell class="align-top">
-                                            {{ trx.user?.name || '-' }}
-                                        </TableCell>
-                                        <TableCell class="text-right align-top">
-                                            {{ formatRupiah(trx.total_price) }}
-                                        </TableCell>
-                                        <TableCell class="text-right align-top">
-                                            {{ formatRupiah(trx.paid_amount) }}
-                                        </TableCell>
-                                        <TableCell class="text-right align-top">
-                                            {{ formatRupiah(trx.change_amount) }}
-                                        </TableCell>
-                                        <TableCell class="align-top">
-                                            <Badge>{{ trx.payment_method || '-' }}</Badge>
+                                            <Badge :variant="rf.transaction?.refund_status === 'full' ? 'destructive' : rf.transaction?.refund_status === 'partial' ? 'secondary' : 'outline'">
+                                                {{ rf.transaction?.refund_status || 'none' }}
+                                            </Badge>
                                         </TableCell>
                                     </TableRow>
 
@@ -124,42 +106,56 @@ async function printReceipt(trx: any) {
     </AppLayout>
 
     <Dialog :open="detailModal" @update:open="(val) => detailModal = val">
-        <DialogContent @interactOutside.prevent>
+        <DialogContent>
             <DialogHeader>
-                <DialogTitle>Detail Transaksi</DialogTitle>
-                <DialogDescription>
-                    No: {{ selectedTransaction?.transaction_number }}<br>
-                    Tanggal: {{ format(new Date(selectedTransaction?.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
+                <DialogTitle>Detail Refund</DialogTitle>
+                <DialogDescription class="space-y-1">
+                    <div>No Refund: {{ selectedRefund?.refund_number }}</div>
+                    <div>Tgl: {{ format(new Date(selectedRefund?.refunded_at), 'dd MMM yyyy HH:mm', { locale: id }) }}</div>
+                    <div>Transaksi: {{ selectedRefund?.transaction?.transaction_number }}</div>
+                    <div>Diproses oleh: {{ selectedRefund?.user?.name || '-' }}</div>
+                    <div>Metode: <b class="capitalize">{{ selectedRefund?.refund_method }}</b> <span v-if="selectedRefund?.external_reference">({{ selectedRefund?.external_reference }})</span></div>
+                    <div v-if="selectedRefund?.reason">Alasan: {{ selectedRefund?.reason }}</div>
                 </DialogDescription>
-
-                <Button variant="secondary" @click="printReceipt(selectedTransaction)">Cetak Struk</Button>
             </DialogHeader>
 
             <div class="space-y-4">
-                <div class="text-sm">
-                    <p><strong>Kasir : </strong> {{ selectedTransaction?.user?.name }}</p>
-                    <p><strong>Metode Pembayaran : </strong> {{ selectedTransaction?.payment_method }}</p>
-                </div>
-
                 <div>
-                    <p class="font-semibold mb-1">Produk:</p>
-                    <ul class="text-sm space-y-1">
-                        <li v-for="item in selectedTransaction?.items" :key="item.id" class="flex justify-between">
-                            <span>{{ item.product?.name }} ({{ item.unit?.name }})</span>
-                            <span>x{{ item.quantity }}</span>
-                        </li>
-                    </ul>
+                    <Table class="w-full">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Produk</TableHead>
+                                <TableHead class="text-right">Qty</TableHead>
+                                <TableHead class="text-right">Subtotal</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="ri in selectedRefund?.items" :key="ri.id">
+                                <TableCell>{{ ri.transaction_item?.product?.name }} ({{ ri.transaction_item?.unit?.name }})</TableCell>
+                                <TableCell class="text-right">x{{ ri.quantity }}</TableCell>
+                                <TableCell class="text-right">{{ formatRupiah(ri.amount) }}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
 
-                <div class="border-t pt-4 space-y-1 text-sm">
-                    <div class="flex justify-between"><span>Total:</span><span>{{ formatRupiah(selectedTransaction?.total_price) }}</span></div>
-                    <div class="flex justify-between"><span>Dibayar:</span><span>{{ formatRupiah(selectedTransaction?.paid_amount) }}</span></div>
-                    <div class="flex justify-between"><span>Kembali:</span><span>{{ formatRupiah(selectedTransaction?.change_amount) }}</span></div>
+                <div class="border-t pt-3 text-sm space-y-1">
+                    <div class="flex justify-between"><span>Total Refund:</span><span class="font-semibold">{{ formatRupiah(selectedRefund?.total_amount || 0) }}</span></div>
+                    <div class="flex justify-between"><span>Status Transaksi:</span>
+                        <span>
+            <Badge :variant="selectedRefund?.transaction?.refund_status === 'full' ? 'destructive' : selectedRefund?.transaction?.refund_status === 'partial' ? 'secondary' : 'outline'">
+              {{ selectedRefund?.transaction?.refund_status || 'none' }}
+            </Badge>
+          </span>
+                    </div>
+                    <div class="flex justify-between"><span>Sudah Refund (akumulasi):</span><span>{{ formatRupiah(selectedRefund?.transaction?.refunded_total || 0) }}</span></div>
+                    <div class="flex justify-between"><span>Total Transaksi (gross):</span><span>{{ formatRupiah(selectedRefund?.transaction?.total_price || 0) }}</span></div>
+                    <div class="flex justify-between font-semibold"><span>Sisa Refundable:</span><span>{{ formatRupiah(Math.max(0, (selectedRefund?.transaction?.total_price || 0) - (selectedRefund?.transaction?.refunded_total || 0))) }}</span></div>
                 </div>
             </div>
 
             <DialogFooter class="mt-6 gap-2">
-                <Button variant="secondary" @click="detailModal = false">Tutup</Button>
+                <Button variant="secondary" @click="detailModal=false">Tutup</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

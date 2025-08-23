@@ -25,11 +25,8 @@ return new class extends Migration
             $table->unsignedInteger('redeemed_points')->default(0);
             $table->timestamp('settled_at')->nullable();
             $table->foreignId('settled_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->boolean('is_refunded')->default(false);
-            $table->integer('refund_amount')->nullable();
-            $table->text('refund_reason')->nullable();
-            $table->timestamp('refunded_at')->nullable();
-            $table->foreignId('refunded_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('refunded_total')->default(0);
+            $table->enum('refund_status', ['none','partial','full'])->default('none')->index();
             $table->timestamps();
         });
     }

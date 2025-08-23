@@ -8,6 +8,7 @@ import OutletLayout from '@/layouts/outlet/Layout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 import { type BreadcrumbItem } from '@/types';
 import HeadingSmall from '@/components/HeadingSmall.vue';
+import InputError from '@/components/InputError.vue';
 
 const { outlet } = defineProps(['outlet']);
 
@@ -43,21 +44,25 @@ const submit = () => {
                     <div class="grid gap-2">
                         <Label for="name">Nama Outlet</Label>
                         <Input id="name" class="mt-1 block w-full" v-model="form.name" required placeholder="Nama outlet" />
+                        <InputError :message="form.errors.name" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="address">Alamat Outlet</Label>
-                        <Input id="address" class="mt-1 block w-full" v-model="form.address" required placeholder="Alamat outlet" />
+                        <Input id="address" class="mt-1 block w-full" v-model="form.address" placeholder="Alamat outlet" />
+                        <InputError :message="form.errors.address" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="phone_number">Nomor Telepon</Label>
-                        <Input id="phone_number" class="mt-1 block w-full" v-model="form.phone_number" required placeholder="Nomor telepon outlet" />
+                        <Input id="phone_number" class="mt-1 block w-full" v-model="form.phone_number"  placeholder="Nomor telepon outlet" />
+                        <InputError :message="form.errors.phone_number" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="email">Alamat Email</Label>
-                        <Input id="email" type="email" class="mt-1 block w-full" v-model="form.email" required placeholder="Alamat email outlet" />
+                        <Input id="email" type="email" class="mt-1 block w-full" v-model="form.email"  placeholder="Alamat email outlet" />
+                        <InputError :message="form.errors.email" />
                     </div>
 
                     <div class="flex items-center gap-4">

@@ -6,6 +6,7 @@ use App\Http\Requests\Debt\DebtSettlementRequest;
 use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\Transaction;
+use App\Models\TransactionInvoice;
 use App\Models\TransactionPayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,8 @@ class DebtsController extends Controller
         });
 
         return Inertia::render('debt/Index', [
-            'customers' => $customers
+            'customers' => $customers,
+            'invoices' => TransactionInvoice::with('transaction')->where('status', '!=', 'paid')->orderBy('due_date')->get()
         ]);
     }
 
@@ -76,6 +78,12 @@ class DebtsController extends Controller
                 $transaction->payment_status = 'paid';
                 $transaction->settled_at = now();
                 $transaction->settled_by = auth()->id();
+
+                if ($transaction->invoice) {
+                    $transaction->invoice->update([
+                        'status' => 'paid',
+                    ]);
+                }
             } else {
                 $transaction->payment_status = 'partial';
             }
@@ -89,17 +97,39 @@ class DebtsController extends Controller
         return Redirect::back();
     }
 
-    public function generateInvoice(Transaction $transaction)
+    public function generateInvoice(Request $request, Transaction $transaction)
     {
-        $outlet = Outlet::first();
-
-        $transaction->load([
-            'customer',
-            'items.product.units',
-            'items.unit',
-            'payments'
+        $request->validate([
+            'due_date_days' => 'required|integer|min:1',
         ]);
 
-        return PDF::loadView('invoice', compact('outlet', 'transaction'))->stream('invoice_' . $transaction['transaction_number'] . '.pdf');
+        $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' . str_pad($transaction->id, 4, '0', STR_PAD_LEFT);
+
+        $dueDate = now()->addDays($request->input('due_date_days'));
+
+        TransactionInvoice::updateOrCreate(
+            [
+                'invoice_number' => $invoiceNumber,
+            ],
+            [
+                'transaction_id' => $transaction->id,
+                'due_date' => $dueDate,
+                'status' => 'unpaid',
+        ]);
+
+        $this->flashSuccess('Invoice berhasil dibuat.');
+        return Redirect::back();
     }
+
+    public function viewInvoice(Transaction $transaction)
+    {
+        $invoice = TransactionInvoice::where('transaction_id', $transaction->id)->first();
+
+        $transaction->load(['customer', 'items.product.units', 'items.unit', 'payments']);
+        $outlet = Outlet::first();
+
+        return PDF::loadView('invoice', compact('outlet', 'transaction', 'invoice'))
+            ->stream('invoice_' . $invoice->invoice_number . '.pdf');
+    }
+
 }

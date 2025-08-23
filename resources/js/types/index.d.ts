@@ -13,12 +13,12 @@ export interface BreadcrumbItem {
 export interface NavItem {
     title: string;
     url: string;
-    icon?: LucideIcon;
+    icon: string;
     isActive?: boolean;
     children?: {
         title: string
         url: string
-        icon: LucideIcon
+        icon: string
     }[]
 }
 
@@ -43,6 +43,7 @@ export interface User {
     email: string;
     avatar?: string;
     email_verified_at: string | null;
+    roles: string[];
     created_at: string;
     updated_at: string;
 }

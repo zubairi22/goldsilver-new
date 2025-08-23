@@ -39,7 +39,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('refunds', RefundsController::class)->except(['show', 'create', 'edit']);
         Route::resource('debts', DebtsController::class)->except(['show', 'create', 'edit']);
         Route::post('debt/{customer}/settlement', [DebtsController::class, 'settleDebt'])->name('debt.settle');
-        Route::get('debt/{transaction}/generate-invoice', [DebtsController::class, 'generateInvoice'])->name('debt.invoice');
+        Route::post('debt/{transaction}/generate-invoice', [DebtsController::class, 'generateInvoice'])->name('debt.invoice.generate');
+        Route::get('debt/{transaction}/view-invoice', [DebtsController::class, 'viewInvoice'])->name('debt.invoice.view');
     });
 
     Route::middleware('role:super-admin')->name('master.')->prefix('master')->group(function () {

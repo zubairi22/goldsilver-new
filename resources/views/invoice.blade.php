@@ -68,7 +68,7 @@
         </td>
         <td class="no-border border-left padding-left ">
             <strong>Jatuh Tempo</strong><br>
-            {{ \Carbon\Carbon::parse($transaction->due_date)->translatedFormat('d F Y') }}
+            {{ \Carbon\Carbon::parse($invoice->due_date)->translatedFormat('d F Y') }}
         </td>
         <td class="no-border title" colspan="2">
             Invoice Penjualan

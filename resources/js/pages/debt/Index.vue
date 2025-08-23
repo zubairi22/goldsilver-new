@@ -22,13 +22,14 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import Icon from '@/components/Icon.vue';
+import { Badge } from '@/components/ui/badge';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Piutang', href: '#' },
 ];
 
-defineProps(['customers']);
+defineProps(['customers', 'invoices']);
 
 const { formatRupiah, formatDate } = useFormat();
 
@@ -37,8 +38,16 @@ const form = useForm({
     settlement_amount: 0,
 })
 
+const invoiceForm = useForm({
+    transaction_id : '',
+    due_date_days: 1,
+})
+
 const settlementModal = ref(false);
 const detailModal = ref(false);
+const invoiceModal = ref(false);
+const invoiceListModal = ref(false);
+
 const selectedPayment = ref()
 
 const settleDebt = (customer: any) => {
@@ -49,6 +58,11 @@ const settleDebt = (customer: any) => {
 const detailPayment = (transaction: any) => {
     selectedPayment.value = transaction;
     detailModal.value = true
+}
+
+const generateInvoice = (transaction: any) => {
+    invoiceForm.transaction_id = transaction.id;
+    invoiceModal.value = true
 }
 
 const openValue = ref<number[]>([]);
@@ -71,6 +85,16 @@ const handleSettlement = () => {
     });
 };
 
+const handleGenerateInvoice = () => {
+    invoiceForm.post(route('transaction.debt.invoice.generate', invoiceForm.transaction_id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            invoiceModal.value = false;
+            invoiceForm.reset();
+        },
+    });
+};
+
 </script>
 
 <template>
@@ -78,7 +102,12 @@ const handleSettlement = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Piutang" description="Riwayat transaksi yang masih berstatus belum lunas" />
+            <div class="flex items-center justify-between">
+                <Heading class="mx-4" title="Piutang" description="Riwayat transaksi yang masih berstatus belum lunas" />
+                <Button class="mx-4" variant="outline" size="lg" @click="invoiceListModal = true">
+                    Daftar Invoice
+                </Button>
+            </div>
             <div class="mx-auto max-w-8xl">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
@@ -153,11 +182,9 @@ const handleSettlement = () => {
                                                                         <DropdownMenuItem>
                                                                             <span @click="detailPayment(trx)">Detail Pembayaran</span>
                                                                         </DropdownMenuItem>
-                                                                        <a target="_blank" :href="route('transaction.debt.invoice', trx)">
-                                                                            <DropdownMenuItem>
-                                                                                Invoice
-                                                                            </DropdownMenuItem>
-                                                                        </a>
+                                                                        <DropdownMenuItem @click="generateInvoice(trx)">
+                                                                            Buat Invoice
+                                                                        </DropdownMenuItem>
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             </TableCell>
@@ -241,4 +268,70 @@ const handleSettlement = () => {
         </DialogContent>
     </Dialog>
 
+    <Dialog :open="invoiceModal" @update:open="(val) => invoiceModal = val">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Buat Invoice</DialogTitle>
+                <DialogDescription>Masukkan berapa hari invoice harus dilunasi</DialogDescription>
+            </DialogHeader>
+
+            <div>
+                <Label for="settlement_amount">Tenor Invoice</Label>
+                <Input v-model="invoiceForm.due_date_days" type="number" min="1" required />
+                <InputError class="mt-2" :message="invoiceForm.errors.due_date_days" />
+            </div>
+
+            <DialogFooter>
+                <Button variant="secondary" @click="invoiceModal = false">Batal</Button>
+                <Button :disabled="invoiceForm.processing" @click="handleGenerateInvoice">
+                    <LoaderCircle v-if="invoiceForm.processing" class="h-4 w-4 animate-spin" />
+                    Buat Invoice
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="invoiceListModal" @update:open="(val) => invoiceListModal = val">
+        <DialogContent class="sm:max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Daftar Invoice</DialogTitle>
+            </DialogHeader>
+
+            <div>
+                <Table class="mt-2">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead class="w-44">Nomor Invoice</TableHead>
+                            <TableHead>Tanggal Jatuh Tempo</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead class="w-8"/>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="invoice in invoices" :key="invoice.id">
+                            <TableCell>{{ invoice.invoice_number }}</TableCell>
+                            <TableCell>{{ formatDate(invoice.due_date) }}</TableCell>
+                            <TableCell>
+                                <Badge
+                                    :variant="invoice.status === 'paid' ? 'success' : invoice.status === 'unpaid' ? 'destructive' : 'warning'" >
+                                    {{ invoice.status }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                <Button>
+                                    <a :href="route('transaction.debt.invoice.view', invoice)" target="_blank">
+                                        Unduh Invoice
+                                    </a>
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <DialogFooter>
+                <Button variant="secondary" @click="invoiceListModal = false">Tutup</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TransactionItem extends Model
 {
@@ -22,5 +23,10 @@ class TransactionItem extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function refundItems(): HasMany
+    {
+        return $this->hasMany(TransactionRefundItem::class);
     }
 }

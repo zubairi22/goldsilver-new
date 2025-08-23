@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
+use App\Models\Outlet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
@@ -40,7 +41,7 @@ class HandleInertiaRequests extends Middleware
     {
         $shared = [
             ...parent::share($request),
-            'name' => config('app.name'),
+            'name' => Outlet::first()->name ?? config('app.name'),
             'auth' => [
                 'user' => $request->user(),
                 'can' => $request->user() ? $request->user()->getPermissionsViaRoles()->pluck('name') : null,
@@ -57,19 +58,21 @@ class HandleInertiaRequests extends Middleware
         ];
 
         if (Auth::check()) {
-            $menus = Menu::whereNull('parent_id')->orderBy('sort')->get();
             $userPermissions = Auth::user()->getAllPermissions()->pluck('id')->toArray();
 
-            $filteredMenus = $menus->filter(function ($menu) use ($userPermissions) {
-                foreach ($menu->permissions as $permission) {
-                    if (in_array($permission->id, $userPermissions)) {
-                        return true;
-                    }
-                }
-                return false;
-            });
+            $menus = Menu::whereNull('parent_id')
+                ->whereHas('permissions', function ($query) use ($userPermissions) {
+                    $query->whereIn('permissions.id', $userPermissions);
+                })
+                ->with(['children' => function ($query) use ($userPermissions) {
+                    $query->whereHas('permissions', function ($query) use ($userPermissions) {
+                        $query->whereIn('permissions.id', $userPermissions);
+                    });
+                }])
+                ->orderBy('sort')
+                ->get();
 
-            $shared['sideBarMenus'] = $filteredMenus->values();
+            $shared['sideBarMenus'] = $menus;
         }
 
         return $shared;

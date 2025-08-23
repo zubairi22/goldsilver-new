@@ -14,6 +14,7 @@ import {
 import { icons } from 'lucide-vue-next'
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
+import Icon from '@/components/Icon.vue';
 
 defineProps<{
     items: NavItem[];
@@ -29,7 +30,7 @@ const { toggleSidebar, state } = useSidebar()
                 <SidebarMenuItem>
                     <SidebarMenuButton as-child :is-active="route().current(item.url)">
                         <Link :href="route(item.url)">
-                            <component :is="icons[item.icon]" />
+                            <icon :name="item.icon"/>
                             <span>{{ item.title }}</span>
                         </Link>
                     </SidebarMenuButton>
@@ -40,8 +41,8 @@ const { toggleSidebar, state } = useSidebar()
                     <SidebarMenuItem>
                         <CollapsibleTrigger as-child>
                             <SidebarMenuButton :tooltip="item.title">
-                                <component
-                                    :is="icons[item.icon]"
+                                <icon
+                                    :name="item.icon"
                                     v-if="item.icon"
                                     @click="() => state === 'collapsed' && toggleSidebar()"
                                 />
@@ -57,7 +58,7 @@ const { toggleSidebar, state } = useSidebar()
                                 <SidebarMenuSubItem v-for="subItem in item.children" :key="subItem.title">
                                     <SidebarMenuSubButton as-child :is-active="route().current(subItem.url)">
                                         <Link :href="route(subItem.url)">
-                                            <component :is="icons[subItem.icon]" v-if="subItem.icon" />
+                                            <icon :name="subItem.icon" v-if="subItem.icon" />
                                             <span>{{ subItem.title }}</span>
                                         </Link>
                                     </SidebarMenuSubButton>
