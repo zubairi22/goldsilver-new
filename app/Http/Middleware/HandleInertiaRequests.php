@@ -62,7 +62,7 @@ class HandleInertiaRequests extends Middleware
         ];
 
         if (Auth::check()) {
-            $userPermissions = Auth::user()->getAllPermissions()->pluck('id')->toArray();
+            $userPermissions = Auth::user()->getAllPermissions()->pluck('id');
 
             $menus = Menu::whereNull('parent_id')
                 ->whereHas('permissions', function ($query) use ($userPermissions) {

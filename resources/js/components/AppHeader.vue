@@ -5,7 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
+import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
@@ -96,12 +96,12 @@ const activeItemStyles = computed(
                                     class="relative flex h-full items-center"
                                 >
                                     <Link :href="route(item.url)">
-                                        <NavigationMenuLink
+                                        <div
                                             :class="[navigationMenuTriggerStyle(), activeItemStyles(item.url), 'h-9 cursor-pointer px-3']"
                                         >
                                             <icon v-if="item.icon" :name="item.icon" class="mr-2 h-4 w-4" />
                                             {{ item.title }}
-                                        </NavigationMenuLink>
+                                        </div>
                                     </Link>
                                     <div
                                         v-if="route().current(item.url)"
@@ -115,7 +115,7 @@ const activeItemStyles = computed(
                                 >
                                     <DropdownMenu>
                                         <DropdownMenuTrigger as-child>
-                                            <NavigationMenuLink
+                                            <div
                                                 :class="[navigationMenuTriggerStyle(), 'h-9 cursor-pointer px-3 flex items-center']"
                                             >
                                                 <icon v-if="item.icon" :name="item.icon" class="mr-2 h-4 w-4" />
@@ -126,7 +126,7 @@ const activeItemStyles = computed(
                                                     v-if="route().current(`${item.url}.*`)"
                                                     class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"
                                                 />
-                                            </NavigationMenuLink>
+                                            </div>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="start" class="w-48 mt-2 z-50">
                                             <Link

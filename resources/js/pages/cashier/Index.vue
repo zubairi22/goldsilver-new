@@ -133,6 +133,10 @@ const submitTransaction = () => {
             redeemPoints.value = 0;
             paymentModal.value = false;
             successModal.value = true;
+
+            if (draftId.value) {
+                deleteDraft(draftId.value);
+            }
         },
     });
 };
@@ -155,6 +159,7 @@ const saveDraft = () => {
     alert('Order berhasil disimpan sementara!');
 }
 
+const draftId = ref<number | null>(null);
 const draftList = ref<any[]>([])
 
 function loadDrafts() {
@@ -162,6 +167,7 @@ function loadDrafts() {
 }
 
 function loadDraftItems(draft: any) {
+    draftId.value = draft.id;
     form.items = draft.items;
     draftModal.value = false;
 }
@@ -545,6 +551,7 @@ watch(customerId, (val) => {
                         <div>
                             <div class="text-sm font-semibold">{{ draft.note }}</div>
                             <div class="text-xs text-gray-500">{{ draft.items.length }} item</div>
+                            <div class="text-xs font-semibold text-gray-500">{{ formatRupiah(draft.items.reduce((sum: any, item: any) => sum + item.quantity * item.selling_price, 0)) }}</div>
                         </div>
                         <div class="flex gap-2">
                             <Button size="sm" @click="loadDraftItems(draft)">Gunakan</Button>

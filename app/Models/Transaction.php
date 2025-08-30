@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 
 class Transaction extends Model
 {
@@ -132,5 +134,16 @@ class Transaction extends Model
                 $q->where('transaction_number', 'like', '%' . $search . '%');
             });
         });
+    }
+
+    public function scopeByUser(Builder $query): Builder
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('super-admin')) {
+            return $query;
+        }
+
+        return $query->where('user_id', $user->id);
     }
 }
