@@ -38,7 +38,7 @@ const chartOptions = {
     scales: {
         x: {
             ticks: {
-                callback: (value) => {
+                callback: (value: any) => {
                     return `${props.prefix ?? ''}${Number(value).toLocaleString()}${props.suffix ?? ''}`
                 }
             }
@@ -48,7 +48,7 @@ const chartOptions = {
         legend: { display: false },
         tooltip: {
             callbacks: {
-                label: ctx =>
+                label: (ctx: any) =>
                     `${props.prefix ?? ''}${ctx.raw.toLocaleString()}${props.suffix ?? ''}`
             }
         }

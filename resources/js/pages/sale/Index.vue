@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import PageNav from '@/components/PageNav.vue';
@@ -14,7 +14,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,9 @@ import axios from 'axios';
 import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import { LoaderCircle } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -37,6 +40,33 @@ const { search } = useSearch('transaction.sales.index', '', ['sales']);
 const detailModal = ref(false);
 const refundModal = ref(false);
 const selectedTransaction = ref<any>(null);
+
+const payment_method = ref<'all' | 'cash' | 'qris' | 'debit' | 'deposit'>('all');
+const mode = ref<'daily' | 'weekly' | 'monthly'>('daily');
+const date = ref();
+
+const applyFilters = () => {
+    const params: Record<string, string> = {};
+
+    if (payment_method.value !== 'all') {
+        params.payment_method = payment_method.value;
+    }
+
+    if (date.value && date.value[0] && date.value[1]) {
+        params.mode = 'custom';
+        params.start = date.value[0];
+        params.end = date.value[1];
+    } else {
+        params.mode = mode.value;
+    }
+
+    router.get(route('transaction.sales.index'), params, {
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
+
+watch([payment_method, mode, date], applyFilters);
 
 function openTransactionModal(trx: any) {
     selectedTransaction.value = trx;
@@ -94,21 +124,21 @@ function submitRefund() {
                 .map((it: any) => ({
                     transaction_item_id: it.transaction_item_id,
                     quantity: it.refund_qty,
-                }))
+                }));
             return {
                 reason: data.reason,
                 refund_method: data.refund_method,
                 external_reference: data.external_reference || undefined,
                 items,
-            }
+            };
         })
         .post(route('transaction.sales.refund', selectedTransaction.value.id), {
             preserveScroll: true,
             onSuccess: () => {
-                refundModal.value = false
-                selectedTransaction.value = null
+                refundModal.value = false;
+                selectedTransaction.value = null;
             },
-        })
+        });
 }
 
 async function printReceipt(trx: any) {
@@ -136,6 +166,43 @@ async function printReceipt(trx: any) {
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+                            <div class="w-32">
+                                <Select v-model="payment_method">
+                                    <SelectTrigger id="payment_method">
+                                        <SelectValue placeholder="Pilih Metode Pembayaran" />
+                                    </SelectTrigger>
+                                    <SelectContent class="w-32">
+                                        <SelectGroup>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="qris">QRIS</SelectItem>
+                                            <SelectItem value="debit">Debit</SelectItem>
+                                            <SelectItem value="deposit">Deposit</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div class="flex items-center gap-x-4">
+                                <div class="w-32">
+                                    <Select v-model="mode">
+                                        <SelectTrigger id="mode">
+                                            <SelectValue placeholder="Pilih Mode" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="daily">Hari Ini</SelectItem>
+                                                <SelectItem value="weekly">Minggu Ini</SelectItem>
+                                                <SelectItem value="monthly">Bulan Ini</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <VueDatePicker v-model="date" range :enable-time-picker="false" model-type="yyyy-MM-dd" locale="id" />
+                                </div>
+                            </div>
+                        </div>
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
                             <div />
                             <div class="mb-3 md:text-right">
@@ -159,11 +226,7 @@ async function printReceipt(trx: any) {
                                 </TableHeader>
 
                                 <TableBody>
-                                    <TableRow
-                                        v-for="trx in sales.data"
-                                        :key="trx.id"
-                                        @click="openTransactionModal(trx)"
-                                    >
+                                    <TableRow v-for="trx in sales.data" :key="trx.id" @click="openTransactionModal(trx)">
                                         <TableCell class="align-top">
                                             {{ format(new Date(trx.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
                                         </TableCell>
@@ -178,7 +241,7 @@ async function printReceipt(trx: any) {
 
                                         <TableCell
                                             class="text-right align-top"
-                                            :class="(trx.refunded_total || 0) > 0 ? 'text-destructive font-medium' : ''"
+                                            :class="(trx.refunded_total || 0) > 0 ? 'font-medium text-destructive' : ''"
                                         >
                                             {{ formatRupiah(trx.refunded_total || 0) }}
                                         </TableCell>
@@ -199,7 +262,7 @@ async function printReceipt(trx: any) {
                                             {{ formatRupiah(trx.change_amount) }}
                                         </TableCell>
 
-                                        <TableCell class="align-top text-center">
+                                        <TableCell class="text-center align-top">
                                             <Badge>{{ trx.payment_method || '-' }}</Badge>
                                         </TableCell>
                                     </TableRow>
@@ -298,7 +361,7 @@ async function printReceipt(trx: any) {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="refundModal" @update:open="(v)=>refundModal=v">
+    <Dialog :open="refundModal" @update:open="(v) => (refundModal = v)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Refund Item</DialogTitle>
@@ -360,23 +423,19 @@ async function printReceipt(trx: any) {
                     <InputError :message="refundForm.errors.reason" class="mt-1" />
                 </div>
 
-                <div class="flex justify-between items-center border-t pt-3">
+                <div class="flex items-center justify-between border-t pt-3">
                     <span class="font-semibold">Perkiraan Total Refund</span>
-                    <span class="font-bold text-right">{{ formatRupiah(estimateTotalRefund) }}</span>
+                    <span class="text-right font-bold">{{ formatRupiah(estimateTotalRefund) }}</span>
                 </div>
             </div>
 
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="refundModal = false">Batal</Button>
-                <Button
-                    :disabled="refundForm.processing || estimateTotalRefund <= 0"
-                    @click="submitRefund"
-                >
-                    <LoaderCircle v-if="refundForm.processing" class="h-4 w-4 animate-spin mr-2" />
+                <Button :disabled="refundForm.processing || estimateTotalRefund <= 0" @click="submitRefund">
+                    <LoaderCircle v-if="refundForm.processing" class="mr-2 h-4 w-4 animate-spin" />
                     Konfirmasi Refund
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
-
 </template>

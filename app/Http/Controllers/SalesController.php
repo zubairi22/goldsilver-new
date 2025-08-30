@@ -10,15 +10,22 @@ use App\Models\TransactionRefund;
 use App\Models\TransactionRefundItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SalesController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $filters = [
+            'search'         => $request->input('search'),
+            'mode'           => $request->input('mode', 'daily'),
+            'start'          => $request->input('start'),
+            'end'            => $request->input('end'),
+            'payment_method' => $request->input('payment_method', 'all'),
+        ];
+
         return Inertia::render('sale/Index', [
             'sales' => Transaction::with([
                 'items' => function ($q) {
@@ -27,9 +34,10 @@ class SalesController extends Controller
                 },
                 'user',
             ])
-                ->filter(Request::only('search'))
+                ->filter($filters)
+                ->byUser()
                 ->latest()
-                ->paginate(25),
+                ->paginate(20),
         ]);
     }
 

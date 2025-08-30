@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class Transaction extends Model
@@ -133,6 +134,45 @@ class Transaction extends Model
             $query->where(function ($q) use ($search) {
                 $q->where('transaction_number', 'like', '%' . $search . '%');
             });
+        });
+
+        $query->when(
+            ($filters['payment_method'] ?? null) && $filters['payment_method'] !== 'all',
+            function ($query) use ($filters) {
+                $method = $filters['payment_method'];
+
+                $query->where(function ($q) use ($method) {
+                    $q->Where('payment_method', $method);
+                });
+            }
+        );
+
+        $query->when($filters['mode'] ?? null, function ($query, $mode) use ($filters) {
+            $today = Carbon::today();
+            $start = $today->copy()->startOfDay();
+            $end   = $today->copy()->endOfDay();
+
+            if ($mode === 'weekly') {
+                $start = $today->copy()->startOfWeek();
+                $end   = $today->copy()->endOfDay();
+            } elseif ($mode === 'monthly') {
+                $start = $today->copy()->startOfMonth();
+                $end   = $today->copy()->endOfDay();
+            } elseif ($mode === 'custom') {
+                if (!empty($filters['start'])) {
+                    $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
+                }
+                if (!empty($filters['end'])) {
+                    $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
+                }
+                if ($start && !$end) {
+                    $end = $today->copy()->endOfDay();
+                }
+            }
+
+            if ($start && $end) {
+                $query->whereBetween('created_at', [$start, $end]);
+            }
         });
     }
 

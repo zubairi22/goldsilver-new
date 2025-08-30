@@ -5,38 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $mode = $request->query('mode', 'daily');
-        $today = Carbon::today();
+        $filters = [
+            'mode'           => $request->input('mode', 'daily'),
+            'start'          => $request->input('start'),
+            'end'            => $request->input('end'),
+            'payment_method' => $request->input('payment_method', 'all'),
+        ];
 
-        $start = $today->copy()->startOfDay();
-        $end   = $today->copy()->endOfDay();
-
-        if ($mode === 'weekly') {
-            $start = $today->copy()->startOfWeek();
-            $end   = $today->copy()->endOfDay();
-        } elseif ($mode === 'monthly') {
-            $start = $today->copy()->startOfMonth();
-            $end   = $today->copy()->endOfDay();
-        } elseif ($mode === 'custom') {
-            $data = $request->validate([
-                'start' => ['required', 'date_format:Y-m-d'],
-                'end'   => ['nullable', 'date_format:Y-m-d'],
-            ]);
-
-            $start = Carbon::createFromFormat('Y-m-d', $data['start'])?->startOfDay();
-            $end   = isset($data['end'])
-                ? Carbon::createFromFormat('Y-m-d', $data['end'])?->endOfDay()
-                : $today->copy()->endOfDay();
-        }
-
-        $base = Transaction::whereBetween('created_at', [$start, $end])->byUser();
+        $base = Transaction::byUser()->filter($filters);
 
         $pm = $request->query('payment_method', 'all');
 
