@@ -22,7 +22,7 @@ import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
 import { AppPageProps } from '@/types';
 
-const { products, customers } = defineProps(['products', 'customers'])
+const { products, customers } = defineProps(['products', 'customers', 'paymentMethods'])
 
 const { formatRupiah } = useFormat();
 const { search } = useSearch('cashier.index', '', ['products']);
@@ -31,7 +31,7 @@ const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
 const form = useForm({
     items: [] as any[],
     paid_amount: '0',
-    payment_method: 'cash',
+    payment_method_id: 1,
     customer_id: '',
     discount_amount : 0,
     redeemed_points : 0,
@@ -106,7 +106,7 @@ function handlePaymentToggle(val: boolean) {
     paymentModal.value = val;
 
     if (!val) {
-        form.payment_method = 'cash';
+        form.payment_method_id = 1;
         form.paid_amount = '0';
         customerId.value = '';
         redeemPoints.value = 0;
@@ -142,25 +142,46 @@ const submitTransaction = () => {
 };
 
 const draftModal = ref(false)
+const draftId = ref<number | null>(null);
+const draftList = ref<any[]>([])
 
 const saveDraft = () => {
     if (form.items.length === 0) return alert('Tidak ada item untuk disimpan.');
 
-    const drafts = JSON.parse(localStorage.getItem('order_drafts') || '[]');
+    const drafts: any[] = JSON.parse(localStorage.getItem('order_drafts') || '[]');
+    const now = Date.now();
+
+    if (draftId.value) {
+        const idx = drafts.findIndex((d: any) => d.id === draftId.value);
+        if (idx !== -1) {
+            drafts[idx] = {
+                ...drafts[idx],
+                items: JSON.parse(JSON.stringify(form.items)),
+                note: drafts[idx].note || ('Order sementara ' + new Date(now).toLocaleString()),
+                updated_at: now,
+            };
+            localStorage.setItem('order_drafts', JSON.stringify(drafts));
+            alert('Draft diperbarui!');
+            form.items = [];
+            draftId.value = null;
+            return;
+        }
+    }
+
+    const newId = now;
     drafts.push({
-        id: Date.now(),
-        items: form.items,
-        note: 'Order sementara ' + new Date().toLocaleString()
+        id: newId,
+        items: JSON.parse(JSON.stringify(form.items)),
+        note: 'Order sementara ' + new Date(now).toLocaleString(),
+        created_at: now,
+        updated_at: now,
     });
-
     localStorage.setItem('order_drafts', JSON.stringify(drafts));
-
-    form.items = []
+    draftId.value = newId;
     alert('Order berhasil disimpan sementara!');
-}
+    form.items = [];
+};
 
-const draftId = ref<number | null>(null);
-const draftList = ref<any[]>([])
 
 function loadDrafts() {
     draftList.value = JSON.parse(localStorage.getItem('order_drafts') || '[]');
@@ -177,6 +198,9 @@ function deleteDraft(id: number) {
     const updated = drafts.filter((d: any) => d.id !== id);
     localStorage.setItem('order_drafts', JSON.stringify(updated));
     loadDrafts();
+    if (draftId.value === id) {
+        draftId.value = null;
+    }
 }
 
 const isPrinting = ref(false);
@@ -276,8 +300,8 @@ watch(customerId, (val) => {
                     Daftar Order
                 </Button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                <div class="md:col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="md:col-span-3">
                     <Card>
                         <CardHeader>
                             <div class="flex gap-2">
@@ -295,8 +319,11 @@ watch(customerId, (val) => {
                                     class="border rounded-lg p-4 shadow-sm hover:shadow-md transition cursor-pointer"
                                     @click="addToCart(product)"
                                 >
-                                    <div class="text-base font-medium">{{ product.name }}</div>
-                                    <div class="mt-2 text-lg font-semibold text-green-600">
+                                    <div class="text-base font-medium line-clamp-3 min-h-[2.5rem]" :title="product.name">
+                                        {{ product.name }}
+                                    </div>
+
+                                    <div class="mt-auto text-md font-semibold text-green-700">
                                         {{ formatRupiah(product.units[0].pivot.selling_price) }}
                                     </div>
                                 </div>
@@ -309,8 +336,8 @@ watch(customerId, (val) => {
                     </Card>
                 </div>
 
-                <div>
-                    <Card class="flex flex-col h-[calc(100vh-100px)]">
+                <div class="md:col-span-2">
+                    <Card class="flex flex-col h-[80vh]">
                         <CardHeader>
                             <CardTitle>Keranjang</CardTitle>
                         </CardHeader>
@@ -319,19 +346,42 @@ watch(customerId, (val) => {
                                 <Table class="w-full text-sm">
                                     <TableHeader>
                                     <TableRow>
-                                        <TableHead/>
+                                        <TableHead class="w-12"/>
                                         <TableHead class="text-start">Produk</TableHead>
-                                        <TableHead class="text-center">Harga</TableHead>
+                                        <TableHead class="text-center">Subtotal</TableHead>
                                         <TableHead class="w-8"/>
                                     </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                     <TableRow v-for="(item, index) in form.items" :key="index" >
                                         <TableCell class="text-center">
-                                            {{ item.quantity }}
+                                            <div class="inline-flex items-center gap-2 justify-center" @click.stop>
+                                                <Button
+                                                    size="icon"
+                                                    class="h-7 w-7"
+                                                    @click.stop="item.quantity = Math.max(1, Math.floor(Number(item.quantity || 1)) - 1)"
+                                                >
+                                                    -
+                                                </Button>
+
+                                                <span class="w-8 text-center tabular-nums select-none">{{ item.quantity }}</span>
+
+                                                <Button
+                                                    size="icon"
+                                                    class="h-7 w-7"
+                                                    @click.stop="item.quantity = Math.floor(Number(item.quantity || 0)) + 1"
+                                                >
+                                                    +
+                                                </Button>
+                                            </div>
                                         </TableCell>
-                                        <TableCell>{{ item.name }} ({{ item.unit_name }})</TableCell>
-                                        <TableCell class="text-end">{{ formatRupiah(item.selling_price) }}</TableCell>
+                                        <TableCell>
+                                            <div class="flex flex-col leading-tight whitespace-normal break-words">
+                                                <span class="font-medium">{{ item.name }}</span>
+                                                <span class="text-xs text-muted-foreground">{{ item.unit_name }}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell class="text-center">{{ formatRupiah(item.quantity * item.selling_price) }}</TableCell>
                                         <TableCell>
                                             <DeleteButton size="sm" @click="removeItem(index)">Hapus</DeleteButton>
                                         </TableCell>
@@ -350,11 +400,12 @@ watch(customerId, (val) => {
                             </div>
 
                             <Button
-                                class="w-full"
+                                class="w-full h-12 text-lg flex justify-between items-center"
                                 :disabled="form.items.length === 0"
                                 @click="paymentModal = true"
                             >
-                                Bayar
+                                <span>Bayar</span>
+                                <span>{{ formatRupiah(totalPrice) }}</span>
                             </Button>
                         </div>
                     </Card>
@@ -421,20 +472,23 @@ watch(customerId, (val) => {
 
                 <div>
                     <Label for="method">Metode Pembayaran</Label>
-                    <Select v-model="form.payment_method">
+                    <Select v-model="form.payment_method_id">
                         <SelectTrigger class="w-full">
-                            <SelectValue placeholder="Pilih metode" />
+                            <SelectValue placeholder="Pilih Metode Pembayaran" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent class="w-60">
                             <SelectGroup>
-                                <SelectItem value="cash">Tunai</SelectItem>
-                                <SelectItem value="qris">QRIS</SelectItem>
-                                <SelectItem value="debit">Debit</SelectItem>
-                                <SelectItem value="deposit">Deposit</SelectItem>
+                                <SelectItem
+                                    v-for="pm in paymentMethods"
+                                    :key="pm.id"
+                                    :value="pm.id"
+                                >
+                                    {{ pm.name }}
+                                </SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
-                    <InputError :message="form.errors.payment_method" class="mt-1" />
+                    <InputError :message="form.errors.payment_method_id" class="mt-1" />
                 </div>
 
                 <div>

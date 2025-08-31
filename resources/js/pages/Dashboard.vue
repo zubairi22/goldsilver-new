@@ -17,6 +17,7 @@ const { summary, salesByCategory, topProducts, salesByCashier, lowestStocks } = 
     'topProducts',
     'salesByCashier',
     'lowestStocks',
+    'paymentMethods'
 ]);
 
 const { formatRupiah } = useFormat();
@@ -35,15 +36,15 @@ const stockValues = lowestStocks.map((item: any) => item.stock);
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
-const payment_method = ref<'all' | 'cash' | 'qris' | 'debit' | 'deposit'>('all')
+const payment_method_id = ref<any>('all')
 const mode = ref<'daily' | 'weekly' | 'monthly'>('daily')
 const date = ref();
 
 const applyFilters = () => {
     const params: Record<string, string> = {}
 
-    if (payment_method.value !== 'all') {
-        params.payment_method = payment_method.value
+    if (payment_method_id.value !== 'all') {
+        params.payment_method_id = payment_method_id.value
     }
 
     if (date.value && date.value[0] && date.value[1]) {
@@ -60,7 +61,7 @@ const applyFilters = () => {
     })
 }
 
-watch([payment_method, mode, date], applyFilters)
+watch([payment_method_id, mode, date], applyFilters)
 
 </script>
 
@@ -68,18 +69,21 @@ watch([payment_method, mode, date], applyFilters)
     <Head title="Dashboard" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex flex-wrap justify-between items-center gap-4 px-8 pt-8 mb-4">
-            <div class="w-32">
-                <Select v-model="payment_method">
+            <div class="w-52">
+                <Select v-model="payment_method_id">
                     <SelectTrigger id="payment_method">
                         <SelectValue placeholder="Pilih Metode Pembayaran" />
                     </SelectTrigger>
-                    <SelectContent class="w-32">
+                    <SelectContent class="w-52">
                         <SelectGroup>
                             <SelectItem value="all">Semua</SelectItem>
-                            <SelectItem value="cash">Cash</SelectItem>
-                            <SelectItem value="qris">QRIS</SelectItem>
-                            <SelectItem value="debit">Debit</SelectItem>
-                            <SelectItem value="deposit">Deposit</SelectItem>
+                            <SelectItem
+                                v-for="pm in paymentMethods"
+                                :key="pm.id"
+                                :value="pm.id"
+                            >
+                                {{ pm.name }}
+                            </SelectItem>
                         </SelectGroup>
                     </SelectContent>
                 </Select>
@@ -88,7 +92,7 @@ watch([payment_method, mode, date], applyFilters)
                 <div class="w-32">
                     <Select v-model="mode">
                         <SelectTrigger id="mode">
-                            <SelectValue placeholder="Pilih Mode" />
+                            <SelectValue placeholder="Pilih Mode"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>

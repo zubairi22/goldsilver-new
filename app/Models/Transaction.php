@@ -19,7 +19,7 @@ class Transaction extends Model
         'total_price',
         'paid_amount',
         'change_amount',
-        'payment_method',
+        'payment_method_id',
         'payment_status',
         'redeemed_points',
         'discount_amount',
@@ -59,6 +59,11 @@ class Transaction extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 
     public function items(): HasMany
@@ -137,12 +142,12 @@ class Transaction extends Model
         });
 
         $query->when(
-            ($filters['payment_method'] ?? null) && $filters['payment_method'] !== 'all',
+            ($filters['payment_method_id'] ?? null) && $filters['payment_method_id'] !== 'all',
             function ($query) use ($filters) {
-                $method = $filters['payment_method'];
+                $method = $filters['payment_method_id'];
 
                 $query->where(function ($q) use ($method) {
-                    $q->Where('payment_method', $method);
+                    $q->Where('payment_method_id', $method);
                 });
             }
         );
@@ -160,10 +165,10 @@ class Transaction extends Model
                 $end   = $today->copy()->endOfDay();
             } elseif ($mode === 'custom') {
                 if (!empty($filters['start'])) {
-                    $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
+                    $start = Carbon::createFromFormat('Y-m-d', $filters['start'])?->startOfDay();
                 }
                 if (!empty($filters['end'])) {
-                    $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
+                    $end = Carbon::createFromFormat('Y-m-d', $filters['end'])?->endOfDay();
                 }
                 if ($start && !$end) {
                     $end = $today->copy()->endOfDay();

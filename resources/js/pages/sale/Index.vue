@@ -31,7 +31,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Penjualan', href: '#' },
 ];
 
-defineProps(['sales']);
+defineProps(['sales', 'paymentMethods']);
 
 const { formatRupiah } = useFormat();
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
@@ -41,15 +41,15 @@ const detailModal = ref(false);
 const refundModal = ref(false);
 const selectedTransaction = ref<any>(null);
 
-const payment_method = ref<'all' | 'cash' | 'qris' | 'debit' | 'deposit'>('all');
+const payment_method_id = ref<any>('all');
 const mode = ref<'daily' | 'weekly' | 'monthly'>('daily');
 const date = ref();
 
 const applyFilters = () => {
     const params: Record<string, string> = {};
 
-    if (payment_method.value !== 'all') {
-        params.payment_method = payment_method.value;
+    if (payment_method_id.value !== 'all') {
+        params.payment_method_id = payment_method_id.value;
     }
 
     if (date.value && date.value[0] && date.value[1]) {
@@ -66,7 +66,7 @@ const applyFilters = () => {
     });
 };
 
-watch([payment_method, mode, date], applyFilters);
+watch([payment_method_id, mode, date], applyFilters);
 
 function openTransactionModal(trx: any) {
     selectedTransaction.value = trx;
@@ -167,18 +167,21 @@ async function printReceipt(trx: any) {
                 <Card class="py-4 md:mx-4">
                     <CardContent>
                         <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
-                            <div class="w-32">
-                                <Select v-model="payment_method">
-                                    <SelectTrigger id="payment_method">
+                            <div class="w-52">
+                                <Select v-model="payment_method_id">
+                                    <SelectTrigger id="payment_method_id">
                                         <SelectValue placeholder="Pilih Metode Pembayaran" />
                                     </SelectTrigger>
-                                    <SelectContent class="w-32">
+                                    <SelectContent class="w-52">
                                         <SelectGroup>
                                             <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="cash">Cash</SelectItem>
-                                            <SelectItem value="qris">QRIS</SelectItem>
-                                            <SelectItem value="debit">Debit</SelectItem>
-                                            <SelectItem value="deposit">Deposit</SelectItem>
+                                            <SelectItem
+                                                v-for="pm in paymentMethods"
+                                                :key="pm.id"
+                                                :value="pm.id"
+                                            >
+                                                {{ pm.name }}
+                                            </SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
@@ -263,7 +266,7 @@ async function printReceipt(trx: any) {
                                         </TableCell>
 
                                         <TableCell class="text-center align-top">
-                                            <Badge>{{ trx.payment_method || '-' }}</Badge>
+                                            <Badge>{{ trx.payment_method.name }}</Badge>
                                         </TableCell>
                                     </TableRow>
 
@@ -296,7 +299,7 @@ async function printReceipt(trx: any) {
             <div class="space-y-4">
                 <div class="text-sm capitalize">
                     <p><strong>Kasir : </strong> {{ selectedTransaction?.user?.name }}</p>
-                    <p><strong>Metode Pembayaran : </strong> {{ selectedTransaction?.payment_method }}</p>
+                    <p><strong>Metode Pembayaran : </strong> {{ selectedTransaction?.payment_method.name }}</p>
                     <p class="mt-1">
                         <strong>Status Refund : </strong>
                         <Badge

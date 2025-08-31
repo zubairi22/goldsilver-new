@@ -19,7 +19,7 @@ class ProductsController extends Controller
     public function index(): Response
     {
         return Inertia::render('product/Index', [
-            'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(),
+            'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(10),
             'categories' => Category::pluck('name', 'id'),
             'units' => Unit::pluck('name', 'id'),
         ]);

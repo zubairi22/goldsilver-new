@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -12,10 +13,10 @@ class DashboardController extends Controller
     public function __invoke(Request $request)
     {
         $filters = [
-            'mode'           => $request->input('mode', 'daily'),
-            'start'          => $request->input('start'),
-            'end'            => $request->input('end'),
-            'payment_method' => $request->input('payment_method', 'all'),
+            'mode'              => $request->input('mode', 'daily'),
+            'start'             => $request->input('start'),
+            'end'               => $request->input('end'),
+            'payment_method_id' => $request->input('payment_method_id', 'all'),
         ];
 
         $base = Transaction::byUser()->filter($filters);
@@ -82,6 +83,7 @@ class DashboardController extends Controller
             'topProducts'     => $topProducts,
             'salesByCashier'  => $salesByCashier,
             'lowestStocks'    => $lowestStocks,
+            'paymentMethods'  => PaymentMethod::active()->get(),
         ]);
     }
 }

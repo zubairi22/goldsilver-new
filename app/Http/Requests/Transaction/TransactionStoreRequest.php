@@ -31,7 +31,7 @@ class TransactionStoreRequest extends FormRequest
             'items.*.purchase_price' => ['required', 'numeric', 'min:0'],
             'items.*.selling_price' => ['required', 'numeric', 'min:0'],
             'paid_amount' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['required', 'in:cash,qris,debit,deposit'],
+            'payment_method_id' => ['required', 'exists:payment_methods,id'],
             'customer_id' => [
                 Rule::requiredIf(fn () =>
                     $this->payment_method === 'deposit' || $this->paid_amount < ($this->calculated_total_price - (float) $this->discount)),
@@ -53,7 +53,7 @@ class TransactionStoreRequest extends FormRequest
             'items.*.quantity.min' => 'Jumlah minimal 1.',
             'items.*.purchase_price.required' => 'Harga Beli tidak boleh kosong.',
             'items.*.selling_price.required' => 'Harga Jual tidak boleh kosong.',
-            'payment_method.in' => 'Metode pembayaran tidak valid.',
+            'payment_method_id.exists' => 'Metode pembayaran tidak valid.',
 
             'customer_id.required' => 'Customer wajib dipilih.',
             'customer_id.exists' => 'Customer tidak valid.',

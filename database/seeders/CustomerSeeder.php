@@ -28,17 +28,9 @@ class CustomerSeeder extends Seeder
             CustomerPoint::create([
                 'customer_id' => $customer->id,
                 'year' => now()->year,
-                'points' => $customerData['point'],
+                'points' => 0,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
-            ]);
-
-            CustomerPointLog::create([
-                'customer_id' => $customer->id,
-                'type' => 'earn',
-                'points' => $customerData['point'],
-                'description' => 'Point Hasil Migrasi Majoo',
-                'created_at' => Carbon::now(),
             ]);
         }
     }

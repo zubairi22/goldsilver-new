@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Pelanggan', href: '#' },
 ];
 
-const { customers } = defineProps(['customers']);
+const { customers } = defineProps(['customers', 'auth']);
 const { search } = useSearch('outlet.customers.index', '', ['customers']);
 const { formatRupiah } = useFormat()
 const defaultForm = () => ({
@@ -121,7 +121,7 @@ const handleDeleteCustomer = () => {
                                         <TableCell>{{ customer.address }}</TableCell>
                                         <TableCell class="text-center">{{ customer.current_year_point?.points || 0 }}</TableCell>
                                         <TableCell class="text-center">{{ formatRupiah(customer.balance) }}</TableCell>
-                                        <TableCell class="px-2">
+                                        <TableCell v-if="auth.can.includes('delete customer')" class="px-2">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger as-child>
                                                     <Button variant="secondary">
@@ -138,10 +138,10 @@ const handleDeleteCustomer = () => {
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
-                                        <TableCell class="px-0.5">
+                                        <TableCell  class="px-0.5">
                                             <EditButton @click="editCustomer(customer)" />
                                         </TableCell>
-                                        <TableCell class="px-0.5">
+                                        <TableCell v-if="auth.can.includes('delete customer')" class="px-0.5">
                                             <DeleteButton @click="deleteCustomer(customer)" />
                                         </TableCell>
                                     </TableRow>

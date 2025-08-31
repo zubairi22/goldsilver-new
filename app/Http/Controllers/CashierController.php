@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\CustomerDeposit;
 use App\Models\CustomerPoint;
 use App\Models\CustomerPointLog;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\StockMutation;
 use App\Models\Transaction;
@@ -25,11 +26,12 @@ class CashierController extends Controller
     public function index(): Response
     {
         return Inertia::render('cashier/Index', [
-            'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(12),
+            'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(12)->onEachSide(2),
             'customers' => Customer::with('currentYearPoint:id,customer_id,points,year')
                 ->select(['id', 'name'])
                 ->orderBy('name')
                 ->get(),
+            'paymentMethods' => PaymentMethod::active()->get(),
         ]);
     }
 
@@ -65,7 +67,8 @@ class CashierController extends Controller
                     $this->handlePoints($transaction, $total, $redeemedPoints);
                 }
 
-                if ($validated['payment_method'] === 'deposit') {
+                $paymentMethod = PaymentMethod::findOrFail($validated['payment_method_id']);
+                if ($paymentMethod->code === 'deposit') {
                     $this->deductDeposit($validated['customer_id'], $finalTotal, $transaction->transaction_number);
                 }
             });
@@ -108,7 +111,8 @@ class CashierController extends Controller
 
     protected function checkDepositBalance(array $validated, float $finalTotal): void
     {
-        if ($validated['payment_method'] === 'deposit') {
+        $paymentMethod = PaymentMethod::findOrFail($validated['payment_method_id']);
+        if ($paymentMethod->code === 'deposit') {
             $customer = Customer::findOrFail($validated['customer_id']);
             if ($customer->balance < $finalTotal) {
                 throw new \Exception("Saldo deposit pelanggan tidak mencukupi.");
@@ -134,7 +138,7 @@ class CashierController extends Controller
             'redeemed_points' => $redeemedPoints,
             'paid_amount' => $paid,
             'change_amount' => max(0, $paid - $finalTotal),
-            'payment_method' => $data['payment_method'] ?? 'cash',
+            'payment_method_id' => $data['payment_method_id'],
             'payment_status' => $status,
             'settled_at' => $status === 'paid' ? now() : null,
             'settled_by' => $status === 'paid' ? auth()->id() : null,

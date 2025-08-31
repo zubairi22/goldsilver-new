@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Sale\SaleRefundRequest;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\StockMutation;
 use App\Models\Transaction;
@@ -19,11 +20,11 @@ class SalesController extends Controller
     public function index(Request $request): Response
     {
         $filters = [
-            'search'         => $request->input('search'),
-            'mode'           => $request->input('mode', 'daily'),
-            'start'          => $request->input('start'),
-            'end'            => $request->input('end'),
-            'payment_method' => $request->input('payment_method', 'all'),
+            'search'            => $request->input('search'),
+            'mode'              => $request->input('mode', 'daily'),
+            'start'             => $request->input('start'),
+            'end'               => $request->input('end'),
+            'payment_method_id' => $request->input('payment_method_id', 'all'),
         ];
 
         return Inertia::render('sale/Index', [
@@ -33,11 +34,14 @@ class SalesController extends Controller
                         ->withSum('refundItems as refunded_qty', 'quantity');
                 },
                 'user',
+                'paymentMethod',
             ])
+                ->sale()
                 ->filter($filters)
                 ->byUser()
                 ->latest()
                 ->paginate(20),
+            'paymentMethods' => PaymentMethod::active()->get(),
         ]);
     }
 

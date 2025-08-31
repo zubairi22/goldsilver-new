@@ -19,7 +19,7 @@ class CustomersController extends Controller
     public function index(): Response
     {
         return Inertia::render('customer/Index', [
-            'customers' => Customer::with('currentYearPoint')->filter(Request::only('search'))->latest()->paginate(),
+            'customers' => Customer::with('currentYearPoint')->filter(Request::only('search'))->latest()->paginate(10),
         ]);
     }
 
