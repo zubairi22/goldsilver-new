@@ -17,16 +17,19 @@ class ProductUnitSeeder extends Seeder
 
         foreach ($data as $row) {
             $productName = trim($row['Nama Produk']);
-            $product = Product::where('name', $productName)->first();
+            $productSku = trim($row['Satuan #1']);
+            $product = Product::firstWhere('name', $productName);
 
-            if (!$product) {
-                $productId = Product::insertGetId([
-                    'name' => $productName,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            } else {
-                $productId = $product->id;
+            if ($product) {
+                $exists = $product->units()->wherePivot('sku', $productSku)->exists();
+                if ($exists) {
+                    $productId = $product->id;
+                } else {
+                    $otherProduct = Product::where('name', $productName)
+                        ->whereDoesntHave('units')
+                        ->first();
+                    $productId = $otherProduct->id;
+                }
             }
 
             $processUnit = function ($unitName, $sku, $purchasePrice, $sellingPrice, $conversion) use ($productId) {

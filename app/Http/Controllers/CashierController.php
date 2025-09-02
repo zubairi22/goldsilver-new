@@ -25,12 +25,20 @@ class CashierController extends Controller
 {
     public function index(): Response
     {
+        $products = Product::with('units')
+            ->filter(Request::only('search'))
+            ->latest()->paginate(12)
+            ->onEachSide(2)
+            ->withQueryString();
+
+        $customers = Customer::with('currentYearPoint:id,customer_id,points,year')
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('cashier/Index', [
-            'products' => Product::with('units')->filter(Request::only('search'))->latest()->paginate(12)->onEachSide(2),
-            'customers' => Customer::with('currentYearPoint:id,customer_id,points,year')
-                ->select(['id', 'name'])
-                ->orderBy('name')
-                ->get(),
+            'products' => $products,
+            'customers' => $customers,
             'paymentMethods' => PaymentMethod::active()->get(),
         ]);
     }

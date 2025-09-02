@@ -65,9 +65,21 @@ class PermissionMenuSeeder extends Seeder
 
         $user = User::factory()->create([
             'name' => 'Kasir 1',
-            'email' => 'kasir@tokomulia.com',
+            'email' => 'kasir1@tokomulia.com',
         ]);
         $user->assignRole($roleUser);
+
+        $user2 = User::factory()->create([
+            'name' => 'Kasir 2',
+            'email' => 'kasir2@tokomulia.com',
+        ]);
+        $user2->assignRole($roleUser);
+
+        $user3 = User::factory()->create([
+            'name' => 'Kasir 3',
+            'email' => 'kasir3@tokomulia.com',
+        ]);
+        $user3->assignRole($roleUser);
 
         $menus = [
             ['id' => 1, 'title' => 'Dashboard', 'url' => 'dashboard', 'parent_id' => null, 'icon' => 'LayoutDashboard', 'sort' => 1],

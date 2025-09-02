@@ -30,6 +30,7 @@ class RefundsController extends Controller
                 ->withSum('items as total_qty', 'quantity')
                 ->filter(Request::only('search'))
                 ->latest()
+                ->byUser()
                 ->paginate(25),
         ]);
     }

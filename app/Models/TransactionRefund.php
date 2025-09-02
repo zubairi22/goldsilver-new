@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionRefund extends Model
 {
@@ -63,5 +65,16 @@ class TransactionRefund extends Model
                 $q->where('refund_number', 'like', '%' . $search . '%');
             });
         });
+    }
+
+    public function scopeByUser(Builder $query): Builder
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('super-admin')) {
+            return $query;
+        }
+
+        return $query->where('refunded_by', $user->id);
     }
 }

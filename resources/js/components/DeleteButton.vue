@@ -1,4 +1,4 @@
-EditButton.vue<template>
+<template>
     <Button class="p-3" variant="destructive" :disabled="disabled">
         <Trash/>
     </Button>

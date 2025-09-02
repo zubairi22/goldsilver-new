@@ -15,6 +15,7 @@ import { useSearch } from '@/composables/useSearch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import Multiselect from '@vueform/multiselect';
 import PageNav from '@/components/PageNav.vue';
 import { Alert, AlertTitle } from '@/components/ui/alert';
@@ -43,6 +44,8 @@ const selectedProduct = ref<any>(null);
 const selectedUnitId = ref<number | null>(null);
 const quantity = ref(1);
 
+const editCartItemIndex = ref<number|null>(null)
+
 const successModal = ref(false);
 const lastTransaction = ref<{ total: number; paid: number; change: number } | null>(null);
 
@@ -53,28 +56,53 @@ const addToCart = (product: any) => {
     addModal.value = true;
 };
 
+const editItemCart = (item: any, index: number) => {
+    editCartItemIndex.value = index
+
+    selectedProduct.value = item.product;
+    selectedUnitId.value = item.unit_id;
+    quantity.value = item.quantity;
+    addModal.value = true;
+};
+
 const confirmAddToCart = () => {
     if (!selectedProduct.value || !selectedUnitId.value) return;
-
     const unit = selectedProduct.value.units.find((u: any) => u.id === selectedUnitId.value);
     if (!unit) return;
 
-    const exists = form.items.find((item) => item.product_id === selectedProduct.value.id && item.unit_id === unit.id);
+    const qty = Math.max(1, Number(quantity.value) || 1);
 
-    if (exists) {
-        exists.quantity += quantity.value;
-    } else {
-        form.items.push({
-            product_id: selectedProduct.value.id,
-            unit_id: unit.id,
-            name: selectedProduct.value.name,
-            unit_name: unit.name,
-            purchase_price: unit.pivot.purchase_price,
-            selling_price: unit.pivot.selling_price,
-            quantity: quantity.value,
-        });
+    const item = {
+        product_id: selectedProduct.value.id,
+        unit_id: unit.id,
+        name: selectedProduct.value.name,
+        unit_name: unit.name,
+        purchase_price: unit.pivot.purchase_price,
+        selling_price: unit.pivot.selling_price,
+        quantity: qty,
+        product: selectedProduct.value,
     }
 
+    if (editCartItemIndex.value !== null) {
+        const existsIndex = form.items.findIndex((it: any) => it.product_id === item.product_id && it.unit_id === item.unit_id);
+        if (existsIndex === editCartItemIndex.value) {
+            form.items.splice(existsIndex, 1, item);
+        } else if (existsIndex !== -1) {
+            form.items[existsIndex].quantity = form.items[existsIndex].quantity + qty;
+            form.items.splice(editCartItemIndex.value, 1);
+        } else {
+            form.items.splice(editCartItemIndex.value, 1, item);
+        }
+    } else {
+        const existsIndex = form.items.findIndex((it: any) => it.product_id === item.product_id && it.unit_id === item.unit_id);
+        if (existsIndex !== -1) {
+            form.items[existsIndex].quantity = Number(form.items[existsIndex].quantity || 0) + qty;
+        } else {
+            form.items.push(item);
+        }
+    }
+
+    editCartItemIndex.value = null
     addModal.value = false;
 };
 
@@ -181,17 +209,17 @@ const saveDraft = () => {
     form.items = [];
 };
 
-function loadDrafts() {
+const loadDrafts = () => {
     draftList.value = JSON.parse(localStorage.getItem('order_drafts') || '[]');
 }
 
-function loadDraftItems(draft: any) {
+const loadDraftItems = (draft: any) => {
     draftId.value = draft.id;
     form.items = draft.items;
     draftModal.value = false;
 }
 
-function deleteDraft(id: number) {
+const deleteDraft = (id: number) => {
     const drafts = JSON.parse(localStorage.getItem('order_drafts') || '[]');
     const updated = drafts.filter((d: any) => d.id !== id);
     localStorage.setItem('order_drafts', JSON.stringify(updated));
@@ -361,27 +389,13 @@ watch(customerId, (val) => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        <TableRow v-for="(item, index) in form.items" :key="index">
+                                        <TableRow
+                                            v-for="(item, index) in form.items"
+                                            :key="index"
+                                            @click="editItemCart(item, index)"
+                                        >
                                             <TableCell class="text-center px-0">
-                                                <div class="inline-flex items-center justify-center" @click.stop>
-                                                    <Button
-                                                        size="icon"
-                                                        class="h-7 w-7"
-                                                        @click.stop="item.quantity = Math.max(1, Math.floor(Number(item.quantity || 1)) - 1)"
-                                                    >
-                                                        -
-                                                    </Button>
-
-                                                    <span class="w-8 text-center tabular-nums select-none">{{ item.quantity }}</span>
-
-                                                    <Button
-                                                        size="icon"
-                                                        class="h-7 w-7"
-                                                        @click.stop="item.quantity = Math.floor(Number(item.quantity || 0)) + 1"
-                                                    >
-                                                        +
-                                                    </Button>
-                                                </div>
+                                                {{ item.quantity }}
                                             </TableCell>
                                             <TableCell>
                                                 <div class="flex flex-col leading-tight break-words whitespace-normal">
@@ -390,7 +404,7 @@ watch(customerId, (val) => {
                                                 </div>
                                             </TableCell>
                                             <TableCell class="text-center px-0">{{ formatRupiah(item.quantity * item.selling_price) }}</TableCell>
-                                            <TableCell class="px-2">
+                                            <TableCell class="px-2" @click.stop>
                                                 <DeleteButton @click="removeItem(index)">Hapus</DeleteButton>
                                             </TableCell>
                                         </TableRow>
@@ -401,7 +415,25 @@ watch(customerId, (val) => {
                         </CardContent>
                         <div class="-mb-6 flex flex-col gap-2 border-t p-4">
                             <div class="flex items-center justify-between gap-2">
-                                <DeleteButton variant="destructive" size="sm" @click="form.items = []" />
+                                <AlertDialog>
+                                    <AlertDialogTrigger>
+                                        <DeleteButton size="sm"/>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Hapus isi keranjang?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Keranjang akan dikosongkan
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                            <AlertDialogAction variant="destructive" @click="form.items = []">
+                                                Hapus
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                                 <Button class="flex-1" variant="outline" size="sm" @click="saveDraft"> Simpan Order </Button>
                             </div>
 

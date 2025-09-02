@@ -29,11 +29,11 @@ class OutletSeeder extends Seeder
             ['name' => 'QRIS BCA', 'code' => 'qris_bca', 'is_active' => true],
             ['name' => 'QRIS Mandiri', 'code' => 'qris_mandiri', 'is_active' => true],
 
-            ['name' => 'Transfer Bank Kalsel', 'code' => 'bank_transfer_kalsel', 'is_active' => true],
-            ['name' => 'Transfer BNI', 'code' => 'bank_transfer_bni', 'is_active' => true],
-            ['name' => 'Transfer BRI', 'code' => 'bank_transfer_bri', 'is_active' => true],
-            ['name' => 'Transfer BCA', 'code' => 'bank_transfer_bca', 'is_active' => true],
-            ['name' => 'Transfer Mandiri','code' => 'bank_transfer_mandiri', 'is_active' => true],
+            ['name' => 'Transfer Bank Kalsel', 'code' => 'transfer_kalsel', 'is_active' => true],
+            ['name' => 'Transfer BNI', 'code' => 'transfer_bni', 'is_active' => true],
+            ['name' => 'Transfer BRI', 'code' => 'transfer_bri', 'is_active' => true],
+            ['name' => 'Transfer BCA', 'code' => 'transfer_bca', 'is_active' => true],
+            ['name' => 'Transfer Mandiri','code' => 'transfer_mandiri', 'is_active' => true],
 
             ['name' => 'Deposit', 'code' => 'deposit', 'is_active' => true],
         ];
@@ -49,7 +49,10 @@ class OutletSeeder extends Seeder
         }
 
         $defaults = [
-            ['name' => 'Kas', 'code' => 'cash', 'type' => 'cash'],
+            ['name' => 'Kas', 'code' => 'cash_cashier', 'type' => 'cash'],
+            ['name' => 'Bank Kalsel', 'code' => 'bank_kalsel', 'type' => 'bank'],
+            ['name' => 'BNI', 'code' => 'bni', 'type' => 'bank'],
+            ['name' => 'BRI', 'code' => 'bri', 'type' => 'bank'],
             ['name' => 'BCA', 'code' => 'bca', 'type' => 'bank'],
             ['name' => 'Mandiri', 'code' => 'mandiri', 'type' => 'bank'],
         ];
