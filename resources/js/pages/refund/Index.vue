@@ -32,7 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps(['refunds']);
 
-const { formatRupiah } = useFormat();
+const { formatRupiah, formatDate } = useFormat();
 const { search } = useSearch('transaction.refunds.index', '', ['refunds']);
 
 const detailModal = ref(false);
@@ -66,29 +66,23 @@ function openRefundModal(rf: any) {
                                         <TableHead class="w-40">Tgl Refund</TableHead>
                                         <TableHead>No Refund</TableHead>
                                         <TableHead>No Transaksi</TableHead>
-                                        <TableHead>Diproses Oleh</TableHead>
-                                        <TableHead>Metode</TableHead>
-                                        <TableHead class="text-right">Item</TableHead>
-                                        <TableHead class="text-right">Total Refund</TableHead>
-                                        <TableHead>Status</TableHead>
+                                        <TableHead class="text-center">Diproses Oleh</TableHead>
+                                        <TableHead class="text-center">Akun Keuangan</TableHead>
+                                        <TableHead class="text-center">Item</TableHead>
+                                        <TableHead class="text-center">Total Refund</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     <TableRow v-for="rf in refunds.data" :key="rf.id" @click="openRefundModal(rf)">
                                         <TableCell class="align-top">
-                                            {{ format(new Date(rf.refunded_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
+                                            {{ formatDate(rf.refunded_at, 'dd MMM yyyy HH:mm') }}
                                         </TableCell>
                                         <TableCell class="align-top">{{ rf.refund_number }}</TableCell>
                                         <TableCell class="align-top">{{ rf.transaction?.transaction_number }}</TableCell>
-                                        <TableCell class="align-top">{{ rf.user.name || '-' }}</TableCell>
-                                        <TableCell class="align-top"><Badge>{{ rf.refund_method }}</Badge></TableCell>
-                                        <TableCell class="text-right align-top">{{ rf.items_count }} ({{ rf.total_qty || 0 }})</TableCell>
-                                        <TableCell class="text-right align-top">{{ formatRupiah(rf.total_amount) }}</TableCell>
-                                        <TableCell class="align-top">
-                                            <Badge :variant="rf.transaction?.refund_status === 'full' ? 'destructive' : rf.transaction?.refund_status === 'partial' ? 'secondary' : 'outline'">
-                                                {{ rf.transaction?.refund_status || 'none' }}
-                                            </Badge>
-                                        </TableCell>
+                                        <TableCell class="text-center">{{ rf.user.name || '-' }}</TableCell>
+                                        <TableCell class="text-center"><Badge>{{ rf.financial_account.name }}</Badge></TableCell>
+                                        <TableCell class="text-center align-top">{{ rf.items_count }} ({{ rf.total_qty || 0 }})</TableCell>
+                                        <TableCell class="text-center">{{ formatRupiah(rf.total_amount) }}</TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="!refunds.total">
@@ -96,7 +90,6 @@ function openRefundModal(rf: any) {
                                     </TableRow>
                                 </TableBody>
                             </Table>
-
                             <PageNav :data="refunds" />
                         </div>
                     </CardContent>
@@ -108,13 +101,12 @@ function openRefundModal(rf: any) {
     <Dialog :open="detailModal" @update:open="(val) => detailModal = val">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Detail Refund</DialogTitle>
+                <DialogTitle>{{ selectedRefund?.refund_number }}</DialogTitle>
                 <DialogDescription class="space-y-1">
-                    <div>No Refund: {{ selectedRefund?.refund_number }}</div>
-                    <div>Tgl: {{ format(new Date(selectedRefund?.refunded_at), 'dd MMM yyyy HH:mm', { locale: id }) }}</div>
+                    <div>Tgl: {{ formatDate(selectedRefund?.refunded_at, 'dd MMM yyyy HH:mm') }}</div>
                     <div>Transaksi: {{ selectedRefund?.transaction?.transaction_number }}</div>
                     <div>Diproses oleh: {{ selectedRefund?.user?.name || '-' }}</div>
-                    <div>Metode: <b class="capitalize">{{ selectedRefund?.refund_method }}</b> <span v-if="selectedRefund?.external_reference">({{ selectedRefund?.external_reference }})</span></div>
+                    <div>Akun Keuangan: {{ selectedRefund?.financial_account.name }} <span v-if="selectedRefund?.external_reference">({{ selectedRefund?.external_reference }})</span></div>
                     <div v-if="selectedRefund?.reason">Alasan: {{ selectedRefund?.reason }}</div>
                 </DialogDescription>
             </DialogHeader>
@@ -141,13 +133,6 @@ function openRefundModal(rf: any) {
 
                 <div class="border-t pt-3 text-sm space-y-1">
                     <div class="flex justify-between"><span>Total Refund:</span><span class="font-semibold">{{ formatRupiah(selectedRefund?.total_amount || 0) }}</span></div>
-                    <div class="flex justify-between"><span>Status Transaksi:</span>
-                        <span>
-            <Badge :variant="selectedRefund?.transaction?.refund_status === 'full' ? 'destructive' : selectedRefund?.transaction?.refund_status === 'partial' ? 'secondary' : 'outline'">
-              {{ selectedRefund?.transaction?.refund_status || 'none' }}
-            </Badge>
-          </span>
-                    </div>
                     <div class="flex justify-between"><span>Sudah Refund (akumulasi):</span><span>{{ formatRupiah(selectedRefund?.transaction?.refunded_total || 0) }}</span></div>
                     <div class="flex justify-between"><span>Total Transaksi (gross):</span><span>{{ formatRupiah(selectedRefund?.transaction?.total_price || 0) }}</span></div>
                     <div class="flex justify-between font-semibold"><span>Sisa Refundable:</span><span>{{ formatRupiah(Math.max(0, (selectedRefund?.transaction?.total_price || 0) - (selectedRefund?.transaction?.refunded_total || 0))) }}</span></div>

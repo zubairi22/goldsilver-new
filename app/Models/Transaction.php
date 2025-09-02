@@ -120,7 +120,7 @@ class Transaction extends Model
     public function scopeSale($query): void
     {
         $query->where('payment_status', 'paid')
-            ->where('refund_status', 'none');
+            ->where('refund_status', '!=', 'full');
     }
 
     public function scopeRefund($query): void

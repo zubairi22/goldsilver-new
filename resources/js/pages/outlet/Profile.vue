@@ -37,7 +37,7 @@ const submit = () => {
         <Head title="Profil Outlet" />
 
         <OutletLayout>
-            <div class="flex flex-col space-y-6">
+            <div class="flex flex-col space-y-6 max-w-xl">
                 <HeadingSmall title="Informasi Profil Outlet" description="Perbarui nama, alamat, telepon, dan email outlet Anda" />
 
                 <form @submit.prevent="submit" class="space-y-6">

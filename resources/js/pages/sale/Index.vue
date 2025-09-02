@@ -31,7 +31,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Penjualan', href: '#' },
 ];
 
-defineProps(['sales', 'paymentMethods']);
+defineProps(['sales', 'paymentMethods', 'financialAccounts']);
 
 const { formatRupiah } = useFormat();
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
@@ -77,7 +77,7 @@ const net = (trx: any) => Math.max(0, (trx.total_price || 0) - (trx.refunded_tot
 
 const refundForm = useForm({
     reason: '',
-    refund_method: 'cash',
+    financial_account_id: 1,
     external_reference: '',
     items: <any>[],
 });
@@ -89,7 +89,7 @@ function openRefundFromDetail(trx: any) {
     refundForm.clearErrors();
 
     refundForm.reason = '';
-    refundForm.refund_method = 'cash';
+    refundForm.financial_account_id = 1;
     refundForm.external_reference = '';
     refundForm.items = (trx.items || []).map((it: any) => ({
         transaction_item_id: it.id,
@@ -127,12 +127,12 @@ function submitRefund() {
                 }));
             return {
                 reason: data.reason,
-                refund_method: data.refund_method,
+                financial_account_id: data.financial_account_id,
                 external_reference: data.external_reference || undefined,
                 items,
             };
         })
-        .post(route('transaction.sales.refund', selectedTransaction.value.id), {
+        .post(route('transaction.refunds.store', selectedTransaction.value.id), {
             preserveScroll: true,
             onSuccess: () => {
                 refundModal.value = false;
@@ -275,7 +275,6 @@ async function printReceipt(trx: any) {
                                     </TableRow>
                                 </TableBody>
                             </Table>
-
                             <PageNav :data="sales" />
                         </div>
                     </CardContent>
@@ -377,8 +376,8 @@ async function printReceipt(trx: any) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Produk</TableHead>
-                                <TableHead class="text-right">Qty</TableHead>
-                                <TableHead class="text-right">Qty Refund</TableHead>
+                                <TableHead class="text-center w-20">Qty</TableHead>
+                                <TableHead class="text-right w-48">Qty Refund</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -387,16 +386,35 @@ async function printReceipt(trx: any) {
                                     <div class="font-medium">{{ it.product_name }}</div>
                                     <div class="text-xs text-muted-foreground">{{ it.unit_name }}</div>
                                 </TableCell>
-                                <TableCell class="text-right">
+                                <TableCell class="text-center">
                                     {{ Math.max(0, it.quantity_sold - (it.refunded_qty || 0)) }}
                                 </TableCell>
                                 <TableCell class="text-right">
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        :max="Math.max(0, it.quantity_sold - (it.refunded_qty || 0))"
-                                        v-model.number="refundForm.items[idx].refund_qty"
-                                    />
+                                    <div class="inline-flex items-center justify-center gap-2" @click.stop>
+                                        <Button
+                                            size="icon"
+                                            class="h-7 w-7"
+                                            @click.stop="refundForm.items[idx].refund_qty = Math.max(0, (refundForm.items[idx].refund_qty || 0) - 1)"
+                                        >
+                                            -
+                                        </Button>
+
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            class="text-center"
+                                            :max="Math.max(0, it.quantity_sold - (it.refunded_qty || 0))"
+                                            v-model.number="refundForm.items[idx].refund_qty"
+                                        />
+
+                                        <Button
+                                            size="icon"
+                                            class="h-7 w-7"
+                                            @click.stop="refundForm.items[idx].refund_qty = Math.min((refundForm.items[idx].refund_qty || 0) + 1,Math.max(0, it.quantity_sold - (it.refunded_qty || 0)))"
+                                        >
+                                            +
+                                        </Button>
+                                    </div>
                                     <InputError :message="(refundForm.errors as any)[`items.${idx}.quantity`]" class="mt-1" />
                                 </TableCell>
                             </TableRow>
@@ -409,13 +427,28 @@ async function printReceipt(trx: any) {
 
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="md:col-span-1">
-                        <Label>Metode Pengembalian</Label>
-                        <Input v-model="refundForm.refund_method" placeholder="cash/transfer/ewallet" />
-                        <InputError :message="refundForm.errors.refund_method" class="mt-1" />
+                        <Label>Akun Keuangan</Label>
+                        <Select class="w-42" v-model="refundForm.financial_account_id">
+                            <SelectTrigger id="refund">
+                                <SelectValue placeholder="Pilih Akun Keuangan" />
+                            </SelectTrigger>
+                            <SelectContent class="w-42">
+                                <SelectGroup>
+                                    <SelectItem
+                                        v-for="fa in financialAccounts"
+                                        :key="fa.id"
+                                        :value="fa.id"
+                                    >
+                                        {{ fa.name }}
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                        <InputError :message="refundForm.errors.financial_account_id" class="mt-1" />
                     </div>
                     <div class="md:col-span-2">
                         <Label>Referensi Eksternal (opsional)</Label>
-                        <Input v-model="refundForm.external_reference" placeholder="No. transfer / ref e-wallet" />
+                        <Input class="h-10" v-model="refundForm.external_reference" placeholder="No. transfer / ref e-wallet" />
                         <InputError :message="refundForm.errors.external_reference" class="mt-1" />
                     </div>
                 </div>
@@ -427,7 +460,7 @@ async function printReceipt(trx: any) {
                 </div>
 
                 <div class="flex items-center justify-between border-t pt-3">
-                    <span class="font-semibold">Perkiraan Total Refund</span>
+                    <span class="font-semibold">Total Refund</span>
                     <span class="text-right font-bold">{{ formatRupiah(estimateTotalRefund) }}</span>
                 </div>
             </div>

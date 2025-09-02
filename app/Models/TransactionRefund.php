@@ -12,7 +12,7 @@ class TransactionRefund extends Model
         'refund_number',
         'transaction_id',
         'total_amount',
-        'refund_method',
+        'financial_account_id',
         'external_reference',
         'reason',
         'refunded_by',
@@ -32,6 +32,11 @@ class TransactionRefund extends Model
     public function items(): HasMany
     {
         return $this->hasMany(TransactionRefundItem::class);
+    }
+
+    public function financialAccount(): BelongsTo
+    {
+        return $this->belongsTo(FinancialAccount::class);
     }
 
     public function user(): BelongsTo

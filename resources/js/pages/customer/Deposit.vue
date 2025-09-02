@@ -14,11 +14,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/InputError.vue';
 import { LoaderCircle } from 'lucide-vue-next';
+import CurrencyInput from '@/components/CurrencyInput.vue';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
-const { customer } = defineProps(['customer', 'deposits']);
+const { customer } = defineProps(['customer', 'deposits', 'financialAccounts']);
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Pelanggan', href: '/outlet/customers' },
     { title: 'Detail Deposit', href: '/#' },
 ];
@@ -26,13 +28,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 const { formatDate, formatRupiah } = useFormat();
 
 const form = useForm({
-    amount: '',
+    amount: 0,
     description: '',
+    financial_account_id: 1,
+    external_reference: '',
 });
 
 const refundForm = useForm({
-    amount: '',
+    amount: 0,
     description: '',
+    financial_account_id: 1,
+    external_reference: '',
 });
 
 const addModal = ref(false);
@@ -57,6 +63,7 @@ const handleRefund = () => {
         },
     });
 };
+
 </script>
 
 <template>
@@ -64,12 +71,12 @@ const handleRefund = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Detail Deposit" :description="'Daftar Riwayat Deposit dari ' + customer.name"  />
+            <Heading class="mx-4" title="Detail Deposit" :description="'Daftar Riwayat Deposit dari ' + customer.name" />
 
-            <div class="mx-auto max-w-8xl">
+            <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-                        <div class="flex flex-col justify-between md:flex-row mb-2">
+                        <div class="mb-2 flex flex-col justify-between md:flex-row">
                             <div class="mb-3 md:mb-0">
                                 <Button @click="addModal = true">Tambah Deposit</Button>
                             </div>
@@ -84,29 +91,36 @@ const handleRefund = () => {
                                     <TableRow>
                                         <TableHead class="w-20 text-center">#</TableHead>
                                         <TableHead>Tanggal</TableHead>
-                                        <TableHead>Jenis</TableHead>
+                                        <TableHead class="text-center">Jenis</TableHead>
                                         <TableHead class="text-center">Nominal</TableHead>
+                                        <TableHead class="text-center">Akun Keuangan</TableHead>
                                         <TableHead>Deskripsi</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     <TableRow v-for="(deposit, index) in deposits.data" :key="deposit.id">
                                         <TableCell class="text-center">{{ index + 1 }}</TableCell>
-                                        <TableCell>{{ formatDate(deposit.created_at) }}</TableCell>
-                                        <TableCell>
-                                            <Badge :variant="deposit.type === 'top_up' ? 'success' : deposit.type === 'used' ? 'warning' : 'destructive'">
-                                                {{ deposit.type === 'top_up' ? 'Top Up' : deposit.type === 'used' ? 'Digunakan' : 'Refund'  }}
+                                        <TableCell>{{ formatDate(deposit.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
+                                        <TableCell class="text-center">
+                                            <Badge
+                                                :variant="deposit.type === 'top_up' ? 'success' : deposit.type === 'used' ? 'warning' : 'destructive'"
+                                            >
+                                                {{ deposit.type === 'top_up' ? 'Top Up' : deposit.type === 'used' ? 'Digunakan' : 'Refund' }}
                                             </Badge>
                                         </TableCell>
                                         <TableCell class="text-center font-bold">
                                             {{ formatRupiah(deposit.amount) }}
                                         </TableCell>
+                                        <TableCell class="text-center">
+                                            {{ deposit.financial_account.name }}
+                                            <template v-if="deposit.external_reference">
+                                                (Ref: {{ deposit.external_reference }})
+                                            </template>
+                                        </TableCell>
                                         <TableCell>{{ deposit.description || '-' }}</TableCell>
                                     </TableRow>
                                     <TableRow v-if="!deposits.data.length">
-                                        <TableCell colspan="5" class="text-center text-gray-500">
-                                            Belum ada riwayat deposit.
-                                        </TableCell>
+                                        <TableCell colspan="5" class="text-center text-gray-500"> Belum ada riwayat deposit. </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -117,7 +131,7 @@ const handleRefund = () => {
         </div>
     </AppLayout>
 
-    <Dialog :open="addModal" @update:open="val => addModal = val">
+    <Dialog :open="addModal" @update:open="(val) => (addModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Tambah Deposit</DialogTitle>
@@ -126,20 +140,48 @@ const handleRefund = () => {
             <div class="space-y-4">
                 <div>
                     <Label for="amount">Jumlah Deposit</Label>
-                    <Input v-model="form.amount" id="amount" type="number" min="0" class="w-full" />
+                    <CurrencyInput v-model="form.amount" />
                     <InputError :message="form.errors.amount" />
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="md:col-span-1">
+                        <Label>Akun Keuangan</Label>
+                        <Select class="w-42" v-model="form.financial_account_id">
+                            <SelectTrigger id="refund">
+                                <SelectValue placeholder="Pilih Akun Keuangan" />
+                            </SelectTrigger>
+                            <SelectContent class="w-42">
+                                <SelectGroup>
+                                    <SelectItem
+                                        v-for="fa in financialAccounts"
+                                        :key="fa.id"
+                                        :value="fa.id"
+                                    >
+                                        {{ fa.name }}
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                        <InputError :message="form.errors.financial_account_id" class="mt-1" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <Label>Referensi Eksternal (opsional)</Label>
+                        <Input class="h-10" v-model="form.external_reference" placeholder="No. transfer / ref e-wallet" />
+                        <InputError :message="form.errors.external_reference" class="mt-1" />
+                    </div>
                 </div>
 
                 <div>
                     <Label for="description">Deskripsi</Label>
-                    <Input v-model="form.description" id="description" class="w-full" />
+                    <Textarea rows="3" v-model="form.description" />
                     <InputError :message="form.errors.description" />
                 </div>
             </div>
 
             <DialogFooter class="pt-4">
                 <Button variant="secondary" @click="addModal = false">Batal</Button>
-                <Button :disabled="form.processing" @click="handleDeposit">
+                <Button :disabled="form.processing || form.amount === 0 || form.amount === null" @click="handleDeposit">
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Simpan
                 </Button>
@@ -147,7 +189,7 @@ const handleRefund = () => {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="refundModal" @update:open="val => refundModal = val">
+    <Dialog :open="refundModal" @update:open="(val) => (refundModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Refund</DialogTitle>
@@ -156,25 +198,52 @@ const handleRefund = () => {
             <div class="space-y-4">
                 <div>
                     <Label for="amount">Jumlah Refund</Label>
-                    <Input v-model="refundForm.amount" id="amount" type="number" min="1000" class="w-full" />
+                    <CurrencyInput v-model="refundForm.amount" />
                     <InputError :message="refundForm.errors.amount" />
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-3">
+                    <div class="md:col-span-1">
+                        <Label>Akun Keuangan</Label>
+                        <Select class="w-42" v-model="refundForm.financial_account_id">
+                            <SelectTrigger id="refund">
+                                <SelectValue placeholder="Pilih Akun Keuangan" />
+                            </SelectTrigger>
+                            <SelectContent class="w-42">
+                                <SelectGroup>
+                                    <SelectItem
+                                        v-for="fa in financialAccounts"
+                                        :key="fa.id"
+                                        :value="fa.id"
+                                    >
+                                        {{ fa.name }}
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                        <InputError :message="refundForm.errors.financial_account_id" class="mt-1" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <Label>Referensi Eksternal (opsional)</Label>
+                        <Input class="h-10" v-model="refundForm.external_reference" placeholder="No. transfer / ref e-wallet" />
+                        <InputError :message="refundForm.errors.external_reference" class="mt-1" />
+                    </div>
                 </div>
 
                 <div>
                     <Label for="description">Deskripsi</Label>
-                    <Input v-model="refundForm.description" id="description" class="w-full" />
+                    <Textarea rows="3" v-model="refundForm.description" />
                     <InputError :message="refundForm.errors.description" />
                 </div>
             </div>
 
             <DialogFooter class="pt-4">
                 <Button variant="secondary" @click="refundModal = false">Batal</Button>
-                <Button :disabled="refundForm.processing" @click="handleRefund">
+                <Button :disabled="refundForm.processing || refundForm.amount === 0 || refundForm.amount === null" @click="handleRefund">
                     <LoaderCircle v-if="refundForm.processing" class="h-4 w-4 animate-spin" />
                     Refund
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
-
 </template>

@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->integer('amount');
-            $table->enum('type', ['top_up', 'used', 'refund']);
+            $table->foreignId('financial_account_id')->nullable()->constrained('financial_accounts')->nullOnDelete();
+            $table->string('external_reference')->nullable();
             $table->string('description')->nullable();
+            $table->enum('type', ['top_up', 'used', 'refund']);
             $table->timestamps();
         });
     }

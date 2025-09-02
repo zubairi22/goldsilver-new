@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\FinancialAccount;
 use App\Models\Outlet;
 use App\Models\PaymentMethod;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -43,6 +44,22 @@ class OutletSeeder extends Seeder
                     'name'       => $row['name'],
                     'code'       => $row['code'],
                     'is_active'  => $row['is_active'],
+                ]
+            );
+        }
+
+        $defaults = [
+            ['name' => 'Kas', 'code' => 'cash', 'type' => 'cash'],
+            ['name' => 'BCA', 'code' => 'bca', 'type' => 'bank'],
+            ['name' => 'Mandiri', 'code' => 'mandiri', 'type' => 'bank'],
+        ];
+
+        foreach ($defaults as $row) {
+            FinancialAccount::create(
+                [
+                    'name'       => $row['name'],
+                    'code'       => $row['code'],
+                    'type'       => $row['type'],
                 ]
             );
         }

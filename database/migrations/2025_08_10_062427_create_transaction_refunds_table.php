@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('transaction_refunds', function (Blueprint $table) {
             $table->id();
-
             $table->string('refund_number')->unique()->index();
             $table->foreignId('transaction_id')->constrained()->cascadeOnDelete();
             $table->unsignedBigInteger('total_amount')->default(0)->index();
-            $table->string('refund_method')->default('cash');
+            $table->foreignId('financial_account_id')->nullable()->constrained('financial_accounts')->nullOnDelete();
             $table->string('external_reference')->nullable();
             $table->text('reason')->nullable();
             $table->foreignId('refunded_by')->constrained('users')->cascadeOnDelete();

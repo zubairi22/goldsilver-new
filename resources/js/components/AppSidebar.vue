@@ -11,9 +11,9 @@ const page = usePage<AppPageProps>();
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
+        <SidebarHeader class="bg-primary rounded-t-lg">
             <SidebarMenu>
-                <SidebarMenuItem>
+                <SidebarMenuItem class="text-primary-foreground" >
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
                             <AppLogo />
@@ -23,11 +23,11 @@ const page = usePage<AppPageProps>();
             </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent class="bg-primary text-primary-foreground">
             <NavMain :items="page.props.sideBarMenus" />
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter class="bg-primary text-primary-foreground rounded-b-lg">
             <NavUser />
         </SidebarFooter>
     </Sidebar>

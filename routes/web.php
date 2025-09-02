@@ -3,8 +3,10 @@
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtsController;
+use App\Http\Controllers\FinancialAccountController;
 use App\Http\Controllers\Master\MenusController;
 use App\Http\Controllers\OutletController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\Master\RolesController;
 use App\Http\Controllers\Master\UsersController;
@@ -23,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::name('outlet.')->prefix('outlet')->group(function () {
         Route::get('settings', [OutletController::class, 'index'])->name('settings.index');
         Route::patch('settings', [OutletController::class, 'update'])->name('settings.update');
+        Route::resource('financial-accounts', FinancialAccountController::class)->except(['show', 'create', 'edit']);
+        Route::resource('payment-methods', PaymentMethodController::class)->except(['show', 'create', 'edit']);
+
         Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
         Route::get('customer/{customer}/point', [CustomersController::class, 'point'])->name('customer.point');
@@ -35,8 +40,8 @@ Route::middleware('auth')->group(function () {
 
     Route::name('transaction.')->prefix('transaction')->group(function () {
         Route::resource('sales', SalesController::class)->except(['show', 'create', 'edit']);
-        Route::post('sales/{transaction}/refund', [SalesController::class, 'refund'])->name('sales.refund');
-        Route::resource('refunds', RefundsController::class)->except(['show', 'create', 'edit']);
+        Route::resource('refunds', RefundsController::class)->except(['show', 'create', 'edit', 'store']);
+        Route::post('refund/{transaction}', [RefundsController::class, 'store'])->name('refunds.store');
         Route::resource('debts', DebtsController::class)->except(['show', 'create', 'edit']);
         Route::post('debt/{customer}/settlement', [DebtsController::class, 'settleDebt'])->name('debt.settle');
         Route::post('debt/{transaction}/generate-invoice', [DebtsController::class, 'generateInvoice'])->name('debt.invoice.generate');

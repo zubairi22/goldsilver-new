@@ -10,17 +10,12 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Profil',
         url: 'profile.edit',
-        icon: X,
+        icon: 'X',
     },
     {
         title: 'Kata Sandi',
         url: 'password.edit',
-        icon: X,
-    },
-    {
-        title: 'Tampilan',
-        url: 'appearance',
-        icon: X,
+        icon: 'X',
     },
 ];
 

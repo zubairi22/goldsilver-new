@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import InputError from '@/components/InputError.vue';
 import Multiselect from '@vueform/multiselect';
 import { Separator } from '@/components/ui/separator';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 
 defineProps(['categories', 'units'])
 
@@ -16,7 +17,7 @@ const addUnit = () => {
         id: null,
         pivot: {
             sku: '',
-            price: '0',
+            price: 0,
             conversion: 1,
         }
     });
@@ -95,13 +96,13 @@ watch(
 
                 <div class="mt-4">
                     <Label for="purchase_price">Harga Beli</Label>
-                    <Input v-model="unit.pivot.purchase_price" placeholder="Contoh: 1000" type="number" min="0" required :readonly="index > 0" />
+                    <CurrencyInput v-model="unit.pivot.purchase_price" :disabled="index > 0"/>
                     <InputError :message="form.errors[`units.${index}.pivot.purchase_price`]" />
                 </div>
 
                 <div class="mt-4">
                     <Label for="selling_price">Harga Jual</Label>
-                    <Input v-model="unit.pivot.selling_price" placeholder="Contoh: 1000" type="number" min="0" required />
+                    <CurrencyInput v-model="unit.pivot.selling_price"/>
                     <InputError :message="form.errors[`units.${index}.pivot.selling_price`]" />
                 </div>
 

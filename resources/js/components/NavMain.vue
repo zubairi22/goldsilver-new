@@ -56,12 +56,12 @@ const { toggleSidebar, state } = useSidebar()
                         <CollapsibleContent>
                             <SidebarMenuSub>
                                 <SidebarMenuSubItem v-for="subItem in item.children" :key="subItem.title">
-                                    <SidebarMenuSubButton as-child :is-active="route().current(subItem.url)">
+                                    <SidebarMenuButton as-child :is-active="route().current(subItem.url)">
                                         <Link :href="route(subItem.url)">
                                             <icon :name="subItem.icon" v-if="subItem.icon" />
                                             <span>{{ subItem.title }}</span>
                                         </Link>
-                                    </SidebarMenuSubButton>
+                                    </SidebarMenuButton>
                                 </SidebarMenuSubItem>
                             </SidebarMenuSub>
                         </CollapsibleContent>

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,8 +21,9 @@ import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
 import { AppPageProps } from '@/types';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 
-const { products, customers } = defineProps(['products', 'customers', 'paymentMethods'])
+const { products, customers } = defineProps(['products', 'customers', 'paymentMethods']);
 
 const { formatRupiah } = useFormat();
 const { search } = useSearch('cashier.index', '', ['products']);
@@ -30,20 +31,20 @@ const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
 
 const form = useForm({
     items: [] as any[],
-    paid_amount: '0',
+    paid_amount: 0,
     payment_method_id: 1,
     customer_id: '',
-    discount_amount : 0,
-    redeemed_points : 0,
+    discount_amount: 0,
+    redeemed_points: 0,
 });
 
 const addModal = ref(false);
-const selectedProduct = ref<any>(null)
+const selectedProduct = ref<any>(null);
 const selectedUnitId = ref<number | null>(null);
 const quantity = ref(1);
 
 const successModal = ref(false);
-const lastTransaction = ref<{ total: number; paid: number; change: number; } | null>(null);
+const lastTransaction = ref<{ total: number; paid: number; change: number } | null>(null);
 
 const addToCart = (product: any) => {
     selectedProduct.value = product;
@@ -58,9 +59,7 @@ const confirmAddToCart = () => {
     const unit = selectedProduct.value.units.find((u: any) => u.id === selectedUnitId.value);
     if (!unit) return;
 
-    const exists = form.items.find((item) =>
-        item.product_id === selectedProduct.value.id && item.unit_id === unit.id
-    );
+    const exists = form.items.find((item) => item.product_id === selectedProduct.value.id && item.unit_id === unit.id);
 
     if (exists) {
         exists.quantity += quantity.value;
@@ -99,7 +98,7 @@ const totalAfterDiscount = computed(() => {
 });
 
 const changeAmount = computed(() => {
-    return parseFloat(form.paid_amount || '0') - totalAfterDiscount.value;
+    return (form.paid_amount || 0) - totalAfterDiscount.value;
 });
 
 function handlePaymentToggle(val: boolean) {
@@ -107,7 +106,7 @@ function handlePaymentToggle(val: boolean) {
 
     if (!val) {
         form.payment_method_id = 1;
-        form.paid_amount = '0';
+        form.paid_amount = 0;
         customerId.value = '';
         redeemPoints.value = 0;
     }
@@ -124,7 +123,7 @@ const submitTransaction = () => {
         onSuccess: () => {
             lastTransaction.value = {
                 total: totalPrice.value,
-                paid: parseFloat(form.paid_amount),
+                paid: form.paid_amount,
                 change: changeAmount.value,
             };
 
@@ -141,9 +140,9 @@ const submitTransaction = () => {
     });
 };
 
-const draftModal = ref(false)
+const draftModal = ref(false);
 const draftId = ref<number | null>(null);
-const draftList = ref<any[]>([])
+const draftList = ref<any[]>([]);
 
 const saveDraft = () => {
     if (form.items.length === 0) return alert('Tidak ada item untuk disimpan.');
@@ -157,7 +156,7 @@ const saveDraft = () => {
             drafts[idx] = {
                 ...drafts[idx],
                 items: JSON.parse(JSON.stringify(form.items)),
-                note: drafts[idx].note || ('Order sementara ' + new Date(now).toLocaleString()),
+                note: drafts[idx].note || 'Order sementara ' + new Date(now).toLocaleString(),
                 updated_at: now,
             };
             localStorage.setItem('order_drafts', JSON.stringify(drafts));
@@ -181,7 +180,6 @@ const saveDraft = () => {
     alert('Order berhasil disimpan sementara!');
     form.items = [];
 };
-
 
 function loadDrafts() {
     draftList.value = JSON.parse(localStorage.getItem('order_drafts') || '[]');
@@ -212,7 +210,7 @@ const handleConnectPrinter = async () => {
         const response = await axios.get(`/api/receipt/${usePage<AppPageProps>().props.flash.transaction_number}`);
         const receipt = response.data.receipt;
 
-        const connected = isConnected.value || await connectPrinter();
+        const connected = isConnected.value || (await connectPrinter());
         if (!connected) return alert('Gagal konek ke printer');
 
         await printText(receipt);
@@ -224,10 +222,10 @@ const handleConnectPrinter = async () => {
     }
 };
 
-const barcodeBuffer = ref('')
-let scanTimeout: ReturnType<typeof setTimeout> | null = null
+const barcodeBuffer = ref('');
+let scanTimeout: ReturnType<typeof setTimeout> | null = null;
 
-window.addEventListener('keydown', (e) => {
+const handleScannerBuffer = (e: KeyboardEvent) => {
     if (addModal.value || paymentModal.value || draftModal.value || successModal.value) return;
 
     const char = e.key;
@@ -243,15 +241,13 @@ window.addEventListener('keydown', (e) => {
         barcodeBuffer.value = '';
 
         fetch(`/api/products/search?sku=${scanned}`)
-            .then(response => response.json())
-            .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
                 if (data.success && data.product) {
                     const product = data.product;
                     const unit = product.units.find((u: any) => u.pivot.sku === scanned);
 
-                    const exists = form.items.find((item) =>
-                        item.product_id === product.id && item.unit_id === unit.id
-                    );
+                    const exists = form.items.find((item) => item.product_id === product.id && item.unit_id === unit.id);
 
                     if (exists) {
                         exists.quantity += 1;
@@ -279,6 +275,15 @@ window.addEventListener('keydown', (e) => {
     scanTimeout = setTimeout(() => {
         barcodeBuffer.value = '';
     }, 100);
+};
+
+onMounted(() => {
+    window.addEventListener('keydown', handleScannerBuffer);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleScannerBuffer);
+    if (scanTimeout) clearTimeout(scanTimeout);
 });
 
 watch(customerId, (val) => {
@@ -286,50 +291,53 @@ watch(customerId, (val) => {
     maxRedeemPoints.value = customer?.current_year_point?.points || 0;
     redeemPoints.value = 0;
 });
-
 </script>
 
 <template>
     <Head title="Kasir" />
 
     <AppLayout>
-        <div class="py-6 px-4">
+        <div class="px-4 py-6">
             <div class="flex items-center justify-between">
                 <Heading title="Transaksi Kasir" description="Lakukan transaksi penjualan produk" />
-                <Button variant="outline" size="lg" @click="draftModal = true; loadDrafts()">
+                <Button
+                    variant="outline"
+                    size="lg"
+                    @click="
+                        draftModal = true;
+                        loadDrafts();
+                    "
+                >
                     Daftar Order
                 </Button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                 <div class="md:col-span-3">
                     <Card>
                         <CardHeader>
                             <div class="flex gap-2">
-                                <Input
-                                    v-model="search"
-                                    placeholder="Cari produk berdasarkan nama dan sku"
-                                />
+                                <Input v-model="search" placeholder="Cari produk berdasarkan nama dan sku" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                                 <div
                                     v-for="product in products.data"
                                     :key="product.id"
-                                    class="border rounded-lg p-4 shadow-sm hover:shadow-md transition cursor-pointer"
+                                    class="cursor-pointer rounded-lg border p-4 shadow-sm transition hover:shadow-md"
                                     @click="addToCart(product)"
                                 >
-                                    <div class="text-base font-medium line-clamp-3 min-h-[2.5rem]" :title="product.name">
+                                    <div class="line-clamp-3 min-h-[2.5rem] text-base font-medium" :title="product.name">
                                         {{ product.name }}
                                     </div>
 
-                                    <div class="mt-auto text-md font-semibold text-green-700">
+                                    <div class="text-md mt-auto font-semibold text-green-700">
                                         {{ formatRupiah(product.units[0].pivot.selling_price) }}
                                     </div>
                                 </div>
                             </div>
                             <b v-if="!products.total">Produk tidak di Temukan</b>
-                            <div class="flex justify-center mt-4 overflow-x-auto">
+                            <div class="mt-4 flex justify-center overflow-x-auto">
                                 <PageNav :data="products" />
                             </div>
                         </CardContent>
@@ -337,70 +345,68 @@ watch(customerId, (val) => {
                 </div>
 
                 <div class="md:col-span-2">
-                    <Card class="flex flex-col h-[80vh]">
+                    <Card class="flex min-h-[28rem] h-[39rem] flex-col">
                         <CardHeader>
-                            <CardTitle>Keranjang</CardTitle>
+                            <CardTitle class="pb-0">Keranjang</CardTitle>
                         </CardHeader>
                         <CardContent class="flex-1">
-                            <div class="overflow-x-auto max-h-[calc(100vh-300px)]" v-if="form.items.length">
+                            <div class="max-h-[26rem] overflow-y-auto" v-if="form.items.length">
                                 <Table class="w-full text-sm">
                                     <TableHeader>
-                                    <TableRow>
-                                        <TableHead class="w-12"/>
-                                        <TableHead class="text-start">Produk</TableHead>
-                                        <TableHead class="text-center">Subtotal</TableHead>
-                                        <TableHead class="w-8"/>
-                                    </TableRow>
+                                        <TableRow>
+                                            <TableHead class="h-8 w-12" />
+                                            <TableHead class="h-8 text-start">Produk</TableHead>
+                                            <TableHead class="h-8 text-center">Subtotal</TableHead>
+                                            <TableHead class="h-8 w-8" />
+                                        </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                    <TableRow v-for="(item, index) in form.items" :key="index" >
-                                        <TableCell class="text-center">
-                                            <div class="inline-flex items-center gap-2 justify-center" @click.stop>
-                                                <Button
-                                                    size="icon"
-                                                    class="h-7 w-7"
-                                                    @click.stop="item.quantity = Math.max(1, Math.floor(Number(item.quantity || 1)) - 1)"
-                                                >
-                                                    -
-                                                </Button>
+                                        <TableRow v-for="(item, index) in form.items" :key="index">
+                                            <TableCell class="text-center px-0">
+                                                <div class="inline-flex items-center justify-center" @click.stop>
+                                                    <Button
+                                                        size="icon"
+                                                        class="h-7 w-7"
+                                                        @click.stop="item.quantity = Math.max(1, Math.floor(Number(item.quantity || 1)) - 1)"
+                                                    >
+                                                        -
+                                                    </Button>
 
-                                                <span class="w-8 text-center tabular-nums select-none">{{ item.quantity }}</span>
+                                                    <span class="w-8 text-center tabular-nums select-none">{{ item.quantity }}</span>
 
-                                                <Button
-                                                    size="icon"
-                                                    class="h-7 w-7"
-                                                    @click.stop="item.quantity = Math.floor(Number(item.quantity || 0)) + 1"
-                                                >
-                                                    +
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div class="flex flex-col leading-tight whitespace-normal break-words">
-                                                <span class="font-medium">{{ item.name }}</span>
-                                                <span class="text-xs text-muted-foreground">{{ item.unit_name }}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell class="text-center">{{ formatRupiah(item.quantity * item.selling_price) }}</TableCell>
-                                        <TableCell>
-                                            <DeleteButton size="sm" @click="removeItem(index)">Hapus</DeleteButton>
-                                        </TableCell>
-                                    </TableRow>
+                                                    <Button
+                                                        size="icon"
+                                                        class="h-7 w-7"
+                                                        @click.stop="item.quantity = Math.floor(Number(item.quantity || 0)) + 1"
+                                                    >
+                                                        +
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div class="flex flex-col leading-tight break-words whitespace-normal">
+                                                    <span class="font-medium">{{ item.name }}</span>
+                                                    <span class="text-xs text-muted-foreground">{{ item.unit_name }}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell class="text-center px-0">{{ formatRupiah(item.quantity * item.selling_price) }}</TableCell>
+                                            <TableCell class="px-2">
+                                                <DeleteButton @click="removeItem(index)">Hapus</DeleteButton>
+                                            </TableCell>
+                                        </TableRow>
                                     </TableBody>
                                 </Table>
                             </div>
                             <div v-else class="text-gray-500">Belum ada item.</div>
                         </CardContent>
-                        <div class="flex flex-col gap-2 p-4 -mb-6 border-t">
-                            <div class="flex justify-between items-center gap-2">
-                                <DeleteButton variant="destructive" size="sm" @click="form.items = []"/>
-                                <Button class="flex-1" variant="outline" size="sm" @click="saveDraft">
-                                    Simpan Order
-                                </Button>
+                        <div class="-mb-6 flex flex-col gap-2 border-t p-4">
+                            <div class="flex items-center justify-between gap-2">
+                                <DeleteButton variant="destructive" size="sm" @click="form.items = []" />
+                                <Button class="flex-1" variant="outline" size="sm" @click="saveDraft"> Simpan Order </Button>
                             </div>
 
                             <Button
-                                class="w-full h-12 text-lg flex justify-between items-center"
+                                class="flex h-12 w-full items-center justify-between text-lg"
                                 :disabled="form.items.length === 0"
                                 @click="paymentModal = true"
                             >
@@ -414,7 +420,7 @@ watch(customerId, (val) => {
         </div>
     </AppLayout>
 
-    <Dialog :open="addModal" @update:open="(val) => addModal = val">
+    <Dialog :open="addModal" @update:open="(val) => (addModal = val)">
         <DialogContent @interactOutside.prevent>
             <DialogHeader>
                 <DialogTitle>Detail Produk</DialogTitle>
@@ -429,35 +435,45 @@ watch(customerId, (val) => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem
-                                    v-for="(unit, index) in selectedProduct.units"
-                                    :key="unit.id"
-                                    :value="unit.id"
-                                >
+                                <SelectItem v-for="(unit, index) in selectedProduct.units" :key="unit.id" :value="unit.id">
                                     {{ unit.name }} - {{ formatRupiah(unit.pivot.selling_price) }}
-                                    <span v-if="index > 0">
-                                        ({{ unit.pivot.conversion }} {{ selectedProduct.units[0].name }})
-                                    </span>
+                                    <span v-if="index > 0"> ({{ unit.pivot.conversion }} {{ selectedProduct.units[0].name }}) </span>
                                 </SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
                 </div>
                 <div class="w-1/2">
-                    <Label for="kuantitas">Kuantitas</Label>
-                    <Input class="h-10" v-model="quantity" type="number" @blur="quantity = quantity < 1 ? 1 : quantity" />
+                    <Label for="quantity">Kuantitas</Label>
+                    <div class="inline-flex items-center justify-center gap-2" @click.stop>
+                        <Button
+                            size="icon"
+                            class="h-10 w-10"
+                            @click.stop="quantity = Math.max(1, Math.floor(Number(quantity || 1)) - 1)"
+                        >
+                            -
+                        </Button>
+
+                        <Input class="h-10 text-center" v-model="quantity" type="number" @blur="quantity = quantity < 1 ? 1 : quantity" />
+
+                        <Button
+                            size="icon"
+                            class="h-10 w-10"
+                            @click.stop="quantity = Math.floor(Number(quantity || 0)) + 1"
+                        >
+                            +
+                        </Button>
+                    </div>
                 </div>
             </div>
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="addModal = false">Batal</Button>
-                <Button @click="confirmAddToCart">
-                    Simpan
-                </Button>
+                <Button @click="confirmAddToCart">Simpan</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="paymentModal" @update:open="val => handlePaymentToggle(val)">
+    <Dialog :open="paymentModal" @update:open="(val) => handlePaymentToggle(val)">
         <DialogContent @interactOutside.prevent>
             <DialogHeader>
                 <DialogTitle>Pembayaran</DialogTitle>
@@ -478,11 +494,7 @@ watch(customerId, (val) => {
                         </SelectTrigger>
                         <SelectContent class="w-60">
                             <SelectGroup>
-                                <SelectItem
-                                    v-for="pm in paymentMethods"
-                                    :key="pm.id"
-                                    :value="pm.id"
-                                >
+                                <SelectItem v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
                                     {{ pm.name }}
                                 </SelectItem>
                             </SelectGroup>
@@ -494,24 +506,15 @@ watch(customerId, (val) => {
                 <div>
                     <Label for="paid_amount">Jumlah Bayar</Label>
                     <div class="flex items-center gap-2">
-                        <Input
-                            id="paid_amount"
-                            v-model="form.paid_amount"
-                            type="number"
-                            min="0"
-                            required
-                            class="flex-1"
-                        />
-                        <Button type="button" @click="form.paid_amount = totalPrice">
-                            Pas
-                        </Button>
+                        <CurrencyInput v-model="form.paid_amount" />
+                        <Button type="button" @click="form.paid_amount = totalPrice"> Pas </Button>
                     </div>
                     <InputError :message="form.errors.paid_amount" class="mt-1" />
                 </div>
 
                 <div>
                     <Label for="customer">Pelanggan</Label>
-                    <Multiselect v-model="customerId" value-prop="id" label="name" :options="customers" searchable/>
+                    <Multiselect v-model="customerId" value-prop="id" label="name" :options="customers" searchable />
                     <InputError :message="form.errors.customer_id" class="mt-1" />
                 </div>
 
@@ -530,9 +533,7 @@ watch(customerId, (val) => {
                             />
                             <span class="text-sm text-gray-500">/ {{ maxRedeemPoints }} poin</span>
                         </div>
-                        <div class="text-sm text-green-600 mt-1">
-                            Potongan: {{ formatRupiah(pointDiscount) }}
-                        </div>
+                        <div class="mt-1 text-sm text-green-600">Potongan: {{ formatRupiah(pointDiscount) }}</div>
                     </div>
                 </template>
 
@@ -540,9 +541,7 @@ watch(customerId, (val) => {
                     <div class="text-sm text-gray-500">
                         {{ changeAmount >= 0 ? 'Kembalian' : 'Sisa Tagihan' }}
                     </div>
-                    <div
-                        :class="['text-lg font-semibold', changeAmount < 0 ? 'text-red-600' : '']"
-                    >
+                    <div :class="['text-lg font-semibold', changeAmount < 0 ? 'text-red-600' : '']">
                         {{ formatRupiah(Math.abs(changeAmount)) }}
                     </div>
                 </div>
@@ -551,14 +550,14 @@ watch(customerId, (val) => {
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="paymentModal = false">Batal</Button>
                 <Button :disabled="form.processing || totalPrice === 0" @click="submitTransaction">
-                    <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin mr-2" />
+                    <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                     Simpan Transaksi
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="successModal" @update:open="val => successModal = val">
+    <Dialog :open="successModal" @update:open="(val) => (successModal = val)">
         <DialogContent @interactOutside.prevent>
             <DialogHeader>
                 <DialogTitle>Transaksi Berhasil</DialogTitle>
@@ -578,21 +577,21 @@ watch(customerId, (val) => {
                     <span>{{ (lastTransaction?.change ?? 0) >= 0 ? 'Kembalian:' : 'Sisa Piutang:' }}</span>
                     <span :class="['font-semibold', (lastTransaction?.change ?? 0) < 0 ? 'text-red-600' : '']">
                         {{ formatRupiah(Math.abs(lastTransaction?.change ?? 0)) }}
-                   </span>
+                    </span>
                 </div>
                 <Alert class="bg-yellow-600 text-white" v-if="(lastTransaction?.change ?? 0) < 0">
                     <AlertTitle>Transaksi dengan Kondisi ini akan masuk kedalam menu Piutang</AlertTitle>
                 </Alert>
             </div>
 
-            <DialogFooter class="gap-2 mt-4">
+            <DialogFooter class="mt-4 gap-2">
                 <Button variant="secondary" @click="successModal = false">Tutup</Button>
                 <Button v-if="(lastTransaction?.change ?? 0) >= 0" :disabled="isPrinting" @click="handleConnectPrinter()">Cetak Struk</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="draftModal" @update:open="val => draftModal = val">
+    <Dialog :open="draftModal" @update:open="(val) => (draftModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Daftar Order Sementara</DialogTitle>
@@ -601,15 +600,17 @@ watch(customerId, (val) => {
 
             <div v-if="draftList.length">
                 <ul class="space-y-2">
-                    <li v-for="draft in draftList" :key="draft.id" class="flex justify-between items-center border p-2 rounded">
+                    <li v-for="draft in draftList" :key="draft.id" class="flex items-center justify-between rounded border p-2">
                         <div>
                             <div class="text-sm font-semibold">{{ draft.note }}</div>
                             <div class="text-xs text-gray-500">{{ draft.items.length }} item</div>
-                            <div class="text-xs font-semibold text-gray-500">{{ formatRupiah(draft.items.reduce((sum: any, item: any) => sum + item.quantity * item.selling_price, 0)) }}</div>
+                            <div class="text-xs font-semibold text-gray-500">
+                                {{ formatRupiah(draft.items.reduce((sum: any, item: any) => sum + item.quantity * item.selling_price, 0)) }}
+                            </div>
                         </div>
                         <div class="flex gap-2">
                             <Button size="sm" @click="loadDraftItems(draft)">Gunakan</Button>
-                            <DeleteButton variant="destructive" size="sm" @click="deleteDraft(draft.id)"/>
+                            <DeleteButton variant="destructive" size="sm" @click="deleteDraft(draft.id)" />
                         </div>
                     </li>
                 </ul>
@@ -617,7 +618,6 @@ watch(customerId, (val) => {
             <div v-else class="text-gray-500">Tidak ada order tersimpan.</div>
         </DialogContent>
     </Dialog>
-
 </template>
 
-<style src="@vueform/multiselect/themes/default.css"/>
+<style src="@vueform/multiselect/themes/default.css" />

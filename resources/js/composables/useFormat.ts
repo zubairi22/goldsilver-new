@@ -12,8 +12,8 @@ export function useFormat() {
         }).format(number);
     };
 
-    function formatDate(dateStr: string) {
-        return format(new Date(dateStr), 'dd MMMM yyyy HH:mm', { locale: id });
+    function formatDate(dateStr: string, formatStr: string = 'dd MMMM yyyy HH:mm') {
+        return format(new Date(dateStr), formatStr, { locale: id });
     }
 
     return { formatRupiah, formatDate };

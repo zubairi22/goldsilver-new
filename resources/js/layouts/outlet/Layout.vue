@@ -4,13 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { X } from 'lucide-vue-next'
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profil',
         url: 'outlet.settings.index',
-        icon: X,
+        icon: 'X',
+    },
+    {
+        title: 'Akun Keuangan',
+        url: 'outlet.financial-accounts.index',
+        icon: 'X',
+    },
+    {
+        title: 'Metode Pembayaran',
+        url: 'outlet.payment-methods.index',
+        icon: 'X',
     },
 ];
 
@@ -39,8 +48,8 @@ const sidebarNavItems: NavItem[] = [
 
             <Separator class="my-6 lg:hidden" />
 
-            <div class="flex-1 md:max-w-2xl">
-                <section class="max-w-xl space-y-12">
+            <div class="flex-1 md:max-w-4xl">
+                <section class="max-w-4xl space-y-12">
                     <slot />
                 </section>
             </div>

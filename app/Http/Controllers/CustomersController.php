@@ -8,6 +8,7 @@ use App\Http\Requests\Customer\CustomerStoreRequest;
 use App\Http\Requests\Customer\CustomerUpdateRequest;
 use App\Models\Customer;
 use App\Models\CustomerDeposit;
+use App\Models\FinancialAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
@@ -59,7 +60,8 @@ class CustomersController extends Controller
     {
         return Inertia::render('customer/Deposit', [
             'customer' => $customer,
-            'deposits' => $customer->deposits()->latest()->paginate(),
+            'deposits' => $customer->deposits()->with('financialAccount')->latest()->paginate(),
+            'financialAccounts' => FinancialAccount::active()->get(),
         ]);
     }
 
@@ -72,6 +74,8 @@ class CustomersController extends Controller
         CustomerDeposit::create([
             'customer_id' => $customer->id,
             'amount' => $validated['amount'],
+            'financial_account_id' => $validated['financial_account_id'],
+            'external_reference' => $validated['external_reference'],
             'type' => 'top_up',
             'description' => $validated['description'] ?? 'Top Up Saldo',
         ]);
@@ -92,6 +96,8 @@ class CustomersController extends Controller
         CustomerDeposit::create([
             'customer_id' => $customer->id,
             'amount' => $validated['amount'],
+            'financial_account_id' => $validated['financial_account_id'],
+            'external_reference' => $validated['external_reference'],
             'type' => 'refund',
             'description' => $validated['description'] ?? 'Refund Deposit',
         ]);

@@ -27,14 +27,14 @@ const page = usePage();
 const auth = computed(() => page.props.auth);
 
 const activeItemStyles = computed(
-    () => (url: string) => (route().current(url) ? 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100' : ''),
+    () => (url: string) => (route().current(url) ? 'bg-gray-100 text-gray-700' : ''),
 );
 
 </script>
 
 <template>
     <div>
-        <div class="border-b border-sidebar-border/80">
+        <div class="bg-primary text-primary-foreground border-b border-sidebar-border/80">
             <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
                 <div class="lg:hidden">
@@ -105,7 +105,7 @@ const activeItemStyles = computed(
                                     </Link>
                                     <div
                                         v-if="route().current(item.url)"
-                                        class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"
+                                        class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-primary dark:bg-white"
                                     />
                                 </NavigationMenuItem>
 

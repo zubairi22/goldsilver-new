@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Sale;
+namespace App\Http\Requests\Refund;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SaleRefundRequest extends FormRequest
+class RefundRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,13 +14,13 @@ class SaleRefundRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason'              => ['nullable','string','max:1000'],
-            'refund_method'       => ['required','string','max:50'],
-            'external_reference'  => ['nullable','string','max:100'],
-            'items'               => ['required','array','min:1'],
+            'reason'               => ['nullable','string','max:1000'],
+            'financial_account_id' => ['required','exists:financial_accounts,id'],
+            'external_reference'   => ['nullable','string','max:100'],
+            'items'                => ['required','array','min:1'],
             'items.*.transaction_item_id' => ['required','integer','exists:transaction_items,id'],
-            'items.*.quantity'    => ['required','integer','min:1'],
-            'items.*.reason'      => ['nullable','string','max:255'],
+            'items.*.quantity'     => ['required','integer','min:1'],
+            'items.*.reason'       => ['nullable','string','max:255'],
         ];
     }
 
@@ -30,9 +30,8 @@ class SaleRefundRequest extends FormRequest
             'reason.string' => 'Alasan refund harus berupa teks.',
             'reason.max'    => 'Alasan refund maksimal :max karakter.',
 
-            'refund_method.required' => 'Metode pengembalian wajib diisi.',
-            'refund_method.string'   => 'Metode pengembalian harus berupa teks.',
-            'refund_method.max'      => 'Metode pengembalian tidak boleh lebih dari :max karakter.',
+            'financial_account_id.required' => 'Akun Finansial wajib diisi.',
+            'financial_account_id.exists'   => 'Akun Finansial harus masuk kategori yang ada',
 
             'external_reference.string' => 'Referensi eksternal harus berupa teks.',
             'external_reference.max'    => 'Referensi eksternal maksimal :max karakter.',
