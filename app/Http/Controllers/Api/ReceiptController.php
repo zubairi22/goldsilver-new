@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Outlet;
 use App\Models\Transaction;
+use Illuminate\Http\Request;
 
 class ReceiptController extends Controller
 {
@@ -28,7 +29,7 @@ class ReceiptController extends Controller
         $refundedTotal   = (int) ($trx->refunded_total ?? 0);
         $netGrandTotal   = max(0, $totalAfterDisc - $refundedTotal);
 
-        $paidAmountAfterRefund = max(0, (int) ($trx->paid_amount ?? 0) - $refundedTotal);
+        $paidAmountAfterRefund = max(0, (int) ($trx->paid_amount ?? 0));
 
         $lines = [];
         $lines[] = strtoupper($outlet->name ?? 'TOKO KITA');
@@ -54,14 +55,15 @@ class ReceiptController extends Controller
         }
 
         $lines[] = str_repeat('-', 48);
-        $lines[] = $this->formatLine("Subtotal", "Rp " . number_format($subtotalGross, 0, ',', '.'), 48);
+        $lines[] = $this->formatLine("Subtotal", "Rp " . number_format($subtotalGross - $refundedTotal, 0, ',', '.'), 48);
         // $lines[] = formatLine("Diskon", "Rp " . number_format($discount, 0, ',', '.'), 48);
         // if ($includeRefund) {
         //     $lines[] = formatLine("Refund", "Rp " . number_format($refundedTotal, 0, ',', '.'), 48);
         // }
         $lines[] = $this->formatLine("Total", "Rp " . number_format($netGrandTotal, 0, ',', '.'), 48);
-        // $lines[] = formatLine("Dibayar", "Rp " . number_format($paidAmountAfterRefund, 0, ',', '.'), 48);
-        // $lines[] = formatLine("Kembali", "Rp " . number_format((int) ($trx->change_amount ?? 0), 0, ',', '.'), 48);
+        $lines[] = '';
+        $lines[] = $this->formatLine("Dibayar", "Rp " . number_format($paidAmountAfterRefund, 0, ',', '.'), 48);
+        $lines[] = $this->formatLine("Kembali", "Rp " . number_format((int) ($trx->change_amount ?? 0) + ($refundedTotal), 0, ',', '.'), 48);
         $lines[] = str_repeat('-', 48);
         $lines[] = '';
         $lines[] = '*RETUR BARANG/BATAL WAJIB BAWA STRUK';
@@ -79,6 +81,49 @@ class ReceiptController extends Controller
             'receipt' => implode("\n", $lines),
         ]);
     }
+
+    public function draftReceipt(Request $request)
+    {
+        $outlet = Outlet::first();
+
+        $items = $request->input('items', []);
+        $note  = $request->input('note', 'Order Sementara');
+        $cashier  = $request->input('cashier', now()->format('d M y H:i'));
+
+        $lines = [];
+        $lines[] = strtoupper($outlet->name ?? 'TOKO KITA');
+        $lines[] = $outlet->phone_number ?? '08xxxxxxx';
+        $lines[] = str_repeat('-', 48);
+
+        $subtotal = 0;
+
+        foreach ($items as $item) {
+            $name     = substr($item['name'] ?? '-', 0, 24);
+            $unitName = $item['unit_name'] ?? '-';
+            $qty      = (int) ($item['quantity'] ?? 0);
+            $price    = (int) ($item['selling_price'] ?? 0);
+            $lineTotal = $qty * $price;
+            $subtotal += $lineTotal;
+
+            $lines[] = $this->formatLine("{$qty} {$name}", "Rp" . number_format($lineTotal, 0, ',', '.'), 48);
+            $lines[] = $this->formatLine("({$unitName})", '');
+        }
+
+        $lines[] = str_repeat('-', 48);
+        $lines[] = $this->formatLine("Total", "Rp " . number_format($subtotal, 0, ',', '.'), 48);
+        $lines[] = str_repeat('-', 48);
+        $lines[] = '';
+        $lines[] = '*** ORDER SEMENTARA ***';
+        $lines[] = $note;
+        $lines[] = '';
+        $lines[] = "Dicetak : " . $cashier ;
+        $lines[] = str_repeat('-', 48);
+
+        return response()->json([
+            'receipt' => implode("\n", $lines),
+        ]);
+    }
+
 
     function formatLine($left, $right, $width = 48) {
         $left = trim($left);

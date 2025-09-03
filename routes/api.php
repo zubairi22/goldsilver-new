@@ -9,5 +9,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/receipt/{transaction_number}', [ReceiptController::class, 'show']);
 Route::get('products/search', [ProductApiController::class, 'search']);
+
+Route::get('/receipt/{transaction_number}', [ReceiptController::class, 'show']);
+Route::post('/receipt/draft', [ReceiptController::class, 'draftReceipt']);

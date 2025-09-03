@@ -23,12 +23,15 @@ import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
 import { AppPageProps } from '@/types';
 import CurrencyInput from '@/components/CurrencyInput.vue';
+import Icon from '@/components/Icon.vue';
+import { useTime } from '@/composables/useTime';
 
 const { products, customers } = defineProps(['products', 'customers', 'paymentMethods']);
 
 const { formatRupiah } = useFormat();
 const { search } = useSearch('cashier.index', '', ['products']);
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
+const { formatNow } = useTime()
 
 const form = useForm({
     items: [] as any[],
@@ -184,7 +187,7 @@ const saveDraft = () => {
             drafts[idx] = {
                 ...drafts[idx],
                 items: JSON.parse(JSON.stringify(form.items)),
-                note: drafts[idx].note || 'Order sementara ' + new Date(now).toLocaleString(),
+                note: drafts[idx].note || 'Order sementara ' + formatNow,
                 updated_at: now,
             };
             localStorage.setItem('order_drafts', JSON.stringify(drafts));
@@ -199,7 +202,7 @@ const saveDraft = () => {
     drafts.push({
         id: newId,
         items: JSON.parse(JSON.stringify(form.items)),
-        note: 'Order sementara ' + new Date(now).toLocaleString(),
+        note: 'Order sementara ' + formatNow(),
         created_at: now,
         updated_at: now,
     });
@@ -231,13 +234,35 @@ const deleteDraft = (id: number) => {
 
 const isPrinting = ref(false);
 
-const handleConnectPrinter = async () => {
+const handlePrintDraft = async (draft: any) => {
     try {
         isPrinting.value = true;
 
-        const response = await axios.get(`/api/receipt/${usePage<AppPageProps>().props.flash.transaction_number}`);
-        const receipt = response.data.receipt;
+        const response = await axios.post('/api/receipt/draft', {
+            items: draft.items,
+            note: draft.note,
+            cashier: usePage().props.auth.user.name
+        });
 
+        const receipt = response.data.receipt;
+        const connected = isConnected.value || (await connectPrinter());
+        if (!connected) return alert('Gagal konek ke printer');
+
+        await printText(receipt);
+    } catch (err) {
+        console.error('Error saat cetak draft:', err);
+        alert('Gagal cetak order sementara');
+    } finally {
+        isPrinting.value = false;
+    }
+};
+
+const handlePrintReceipt = async () => {
+    try {
+        isPrinting.value = true;
+
+        const response = await axios.get(`/api/receipt/${usePage().props.flash.transaction_number}`);
+        const receipt = response.data.receipt;
         const connected = isConnected.value || (await connectPrinter());
         if (!connected) return alert('Gagal konek ke printer');
 
@@ -618,7 +643,7 @@ watch(customerId, (val) => {
 
             <DialogFooter class="mt-4 gap-2">
                 <Button variant="secondary" @click="successModal = false">Tutup</Button>
-                <Button v-if="(lastTransaction?.change ?? 0) >= 0" :disabled="isPrinting" @click="handleConnectPrinter()">Cetak Struk</Button>
+                <Button v-if="(lastTransaction?.change ?? 0) >= 0" :disabled="isPrinting" @click="handlePrintReceipt()">Cetak Struk</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
@@ -641,6 +666,9 @@ watch(customerId, (val) => {
                             </div>
                         </div>
                         <div class="flex gap-2">
+                            <Button size="sm" variant="secondary" @click="handlePrintDraft(draft)">
+                                <icon name="printer"/>
+                            </Button>
                             <Button size="sm" @click="loadDraftItems(draft)">Gunakan</Button>
                             <DeleteButton variant="destructive" size="sm" @click="deleteDraft(draft.id)" />
                         </div>

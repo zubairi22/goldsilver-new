@@ -33,7 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps(['sales', 'paymentMethods', 'financialAccounts']);
 
-const { formatRupiah } = useFormat();
+const { formatRupiah, formatDate } = useFormat();
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
 const { search } = useSearch('transaction.sales.index', '', ['sales']);
 
@@ -231,7 +231,7 @@ async function printReceipt(trx: any) {
                                 <TableBody>
                                     <TableRow v-for="trx in sales.data" :key="trx.id" @click="openTransactionModal(trx)">
                                         <TableCell class="align-top">
-                                            {{ format(new Date(trx.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
+                                            {{ formatDate(trx.created_at, 'dd MMM yyyy HH:mm')}}
                                         </TableCell>
 
                                         <TableCell class="align-top">
@@ -289,7 +289,7 @@ async function printReceipt(trx: any) {
                 <DialogTitle>Detail Transaksi</DialogTitle>
                 <DialogDescription>
                     No: {{ selectedTransaction?.transaction_number }}<br />
-                    Tanggal: {{ format(new Date(selectedTransaction?.created_at), 'dd MMM yyyy HH:mm', { locale: id }) }}
+                    Tanggal: {{ formatDate(selectedTransaction?.created_at, 'dd MMM yyyy HH:mm') }}
                 </DialogDescription>
 
                 <Button variant="secondary" @click="printReceipt(selectedTransaction)">Cetak Struk</Button>
@@ -314,7 +314,6 @@ async function printReceipt(trx: any) {
                         </Badge>
                     </p>
                 </div>
-
                 <div>
                     <Table>
                         <TableHeader>
@@ -326,9 +325,28 @@ async function printReceipt(trx: any) {
                         </TableHeader>
                         <TableBody>
                             <TableRow v-for="item in selectedTransaction?.items" :key="item.id">
-                                <TableCell>{{ item.product?.name }} ({{ item.unit?.name }})</TableCell>
-                                <TableCell class="text-right">x{{ item.quantity }}</TableCell>
-                                <TableCell class="text-right">{{ formatRupiah(item.subtotal) }}</TableCell>
+                                <TableCell>
+                                    {{ item.product?.name }} ({{ item.unit?.name }})
+                                    <span v-if="item.refunded_qty && Number(item.refunded_qty) > 0" class="ml-2 text-red-500 text-xs">
+        - {{ item.refunded_qty }} retur
+      </span>
+                                </TableCell>
+                                <TableCell class="text-right">
+      <span v-if="Number(item.refunded_qty) >= Number(item.quantity)" class="line-through text-gray-400">
+        x{{ item.quantity }}
+      </span>
+                                    <span v-else>
+        x{{ item.quantity }}
+      </span>
+                                </TableCell>
+                                <TableCell class="text-right">
+      <span v-if="Number(item.refunded_qty) >= Number(item.quantity)" class="line-through text-gray-400">
+        {{ formatRupiah(item.subtotal) }}
+      </span>
+                                    <span v-else>
+        {{ formatRupiah(item.subtotal) }}
+      </span>
+                                </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -346,6 +364,9 @@ async function printReceipt(trx: any) {
                     </div>
                     <div class="flex justify-between">
                         <span>Kembali :</span><span>{{ formatRupiah(selectedTransaction?.change_amount) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Refund :</span><span>{{ formatRupiah(selectedTransaction?.refunded_total) }}</span>
                     </div>
                 </div>
             </div>
