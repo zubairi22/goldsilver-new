@@ -9,10 +9,12 @@ use App\Models\Product;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class ProductsController extends Controller
 {
@@ -27,53 +29,89 @@ class ProductsController extends Controller
 
     public function store(ProductCreateRequest $request): RedirectResponse
     {
-        $product = Product::create($request->validated());
+        try {
+            DB::beginTransaction();
 
-        $unitData = [];
-        foreach ($request->validated('units') as $unit) {
-            $unitData[$unit['id']] = [
-                'sku' => $unit['pivot']['sku'],
-                'purchase_price' => $unit['pivot']['purchase_price'],
-                'selling_price' => $unit['pivot']['selling_price'],
-                'conversion' => $unit['pivot']['conversion'],
-            ];
+            $product = Product::create($request->validated());
+
+            $unitData = [];
+            foreach ($request->validated('units') as $unit) {
+                $unitData[$unit['id']] = [
+                    'sku'            => $unit['pivot']['sku'],
+                    'purchase_price' => $unit['pivot']['purchase_price'],
+                    'selling_price'  => $unit['pivot']['selling_price'],
+                    'conversion'     => $unit['pivot']['conversion'],
+                ];
+            }
+
+            $product->units()->attach($unitData);
+
+            DB::commit();
+
+            $this->flashSuccess('Produk berhasil ditambahkan.');
+            return Redirect::back();
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            report($e);
+            $this->flashError('Terjadi kesalahan saat menambahkan produk. Silakan coba lagi.');
+
+            return Redirect::back();
         }
-
-        $product->units()->attach($unitData);
-
-        Cache::forget('products_all');
-
-        $this->flashSuccess('Produk berhasil ditambahkan.');
-        return Redirect::back();
     }
 
     public function update(ProductUpdateRequest $request, Product $product): RedirectResponse
     {
-        $product->update($request->validated());
+        try {
+            DB::beginTransaction();
 
-        $unitData = [];
-        foreach ($request->validated('units') as $unit) {
-            $unitData[$unit['id']] = [
-                'sku' => $unit['pivot']['sku'],
-                'purchase_price' => $unit['pivot']['purchase_price'],
-                'selling_price' => $unit['pivot']['selling_price'],
-                'conversion' => $unit['pivot']['conversion'],
-            ];
+            $product->update($request->validated());
+
+            $unitData = [];
+            foreach ($request->validated('units') as $unit) {
+                $unitData[$unit['id']] = [
+                    'sku'            => $unit['pivot']['sku'],
+                    'purchase_price' => $unit['pivot']['purchase_price'],
+                    'selling_price'  => $unit['pivot']['selling_price'],
+                    'conversion'     => $unit['pivot']['conversion'],
+                ];
+            }
+
+            $product->units()->sync($unitData);
+
+            DB::commit();
+
+            $this->flashSuccess('Produk berhasil diperbarui.');
+            return Redirect::back();
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            report($e);
+            $this->flashError('Terjadi kesalahan saat memperbarui produk. Silakan coba lagi.');
+
+            return Redirect::back();
         }
-
-        $product->units()->sync($unitData);
-
-        Cache::forget('products_all');
-
-        $this->flashSuccess('Produk berhasil diperbarui.');
-        return Redirect::back();
     }
 
     public function destroy(Product $product): RedirectResponse
     {
-        $product->delete();
+        try {
+            DB::beginTransaction();
 
-        $this->flashSuccess('Produk berhasil dihapus.');
-        return Redirect::back();
+            $product->units()->detach();
+
+            $product->delete();
+
+            DB::commit();
+
+            $this->flashSuccess('Produk berhasil dihapus.');
+            return Redirect::back();
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            report($e);
+            $this->flashError('Terjadi kesalahan saat menghapus produk. Silakan coba lagi.');
+            return Redirect::back();
+        }
     }
 }

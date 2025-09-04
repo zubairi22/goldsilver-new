@@ -21,7 +21,6 @@ import PageNav from '@/components/PageNav.vue';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
-import { AppPageProps } from '@/types';
 import CurrencyInput from '@/components/CurrencyInput.vue';
 import Icon from '@/components/Icon.vue';
 import { useTime } from '@/composables/useTime';
@@ -327,7 +326,7 @@ const handleScannerBuffer = (e: KeyboardEvent) => {
 
     scanTimeout = setTimeout(() => {
         barcodeBuffer.value = '';
-    }, 100);
+    }, 300);
 };
 
 onMounted(() => {

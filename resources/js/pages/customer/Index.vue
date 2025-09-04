@@ -203,7 +203,8 @@ const handleDeleteCustomer = () => {
             <DialogHeader>
                 <DialogTitle>Hapus Pelanggan</DialogTitle>
                 <DialogDescription class="mt-2">
-                    Apakah Anda yakin ingin menghapus pelanggan ini? Data akan hilang permanen.
+                    Apakah Anda yakin ingin menghapus pelanggan ini?
+                    Data akan hilang permanen.
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter class="gap-2">

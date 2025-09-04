@@ -36,8 +36,8 @@ const defaultForm = () => ({
         id: number | null;
         pivot: {
             sku: string;
-            purchase_price: string;
-            selling_price: string;
+            purchase_price: number;
+            selling_price: number;
             conversion: number;
         }
     }[]
@@ -57,8 +57,8 @@ const addProduct = () => {
         id: null,
         pivot: {
             sku: '',
-            purchase_price: '0',
-            selling_price: '0',
+            purchase_price: 0,
+            selling_price: 0,
             conversion: 1,
         }
     });
@@ -76,7 +76,7 @@ const deleteProduct = (product: any) => {
 };
 
 const handleAdd = () => {
-    addForm.post(route('products.store'), {
+    addForm.post(route('outlet.products.store'), {
         preserveScroll: true,
         onSuccess: () => {
             addModal.value = false;
@@ -86,7 +86,7 @@ const handleAdd = () => {
 };
 
 const handleEdit = () => {
-    editForm.patch(route('products.update', editForm.id), {
+    editForm.patch(route('outlet.products.update', editForm.id), {
         preserveScroll: true,
         onSuccess: () => {
             editModal.value = false;
@@ -96,7 +96,7 @@ const handleEdit = () => {
 };
 
 const handleDelete = () => {
-    router.delete(route('products.destroy', deleteForm.id), {
+    router.delete(route('outlet.products.destroy', deleteForm.id), {
         preserveScroll: true,
         onSuccess: () => {
             deleteModal.value = false;
