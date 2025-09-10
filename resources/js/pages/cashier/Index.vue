@@ -312,6 +312,7 @@ const handleScannerBuffer = (e: KeyboardEvent) => {
                             purchase_price: unit.pivot.purchase_price,
                             selling_price: unit.pivot.selling_price,
                             quantity: 1,
+                            product: product,
                         });
                     }
                 } else {
