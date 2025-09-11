@@ -41,7 +41,9 @@ class SalesController extends Controller
                 ->filter($filters)
                 ->byUser()
                 ->latest()
-                ->paginate(20),
+                ->paginate(20)
+                ->onEachSide(2)
+                ->withQueryString(),
             'paymentMethods' => PaymentMethod::active()->get(),
             'financialAccounts' => FinancialAccount::active()->get(),
         ]);

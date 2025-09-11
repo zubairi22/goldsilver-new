@@ -100,7 +100,7 @@
             <table>
                 <tr style="font-size: 16px">
                     <td class="no-border" style="padding: 6px;"><strong>Total</strong></td>
-                    <td class="no-border" style="padding: 6px; text-align: right;"><strong>Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</strong></td>
+                    <td class="no-border" style="padding: 6px; text-align: right;"><strong>Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</strong></td>
                 </tr>
             </table>
         </td>
@@ -145,7 +145,7 @@
 <table style="width: 40%; margin-left: auto;">
     <tr>
         <td class="no-border text-right"><strong>Subtotal</strong></td>
-        <td class="no-border text-right">Rp {{ number_format($transaction->subtotal, 0, ',', '.') }}</td>
+        <td class="no-border text-right">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</td>
     </tr>
     <tr>
         <td class="no-border text-right"><strong>Pajak</strong></td>
@@ -159,7 +159,7 @@
 <table style="width: 50%; float: right;">
     <tr>
         <td><strong>GRAND TOTAL</strong></td>
-        <td class="text-right">Rp {{ number_format($transaction->grand_total, 0, ',', '.') }}</td>
+        <td class="text-right">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</td>
     </tr>
     <tr>
         <td><strong>TOTAL UANG MUKA</strong></td>
@@ -168,7 +168,7 @@
     <tr>
         <td><strong>SISA TAGIHAN</strong></td>
         <td class="text-right">
-            Rp {{ number_format(abs($transaction->grand_total - $transaction->payments->sum('amount')), 0, ',', '.') }}
+            Rp {{ number_format(abs($transaction->total_price - $transaction->payments->sum('amount')), 0, ',', '.') }}
         </td>
     </tr>
 </table>
