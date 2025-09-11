@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Debt\DebtSettlementRequest;
 use App\Models\Customer;
 use App\Models\Outlet;
+use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Models\TransactionInvoice;
 use App\Models\TransactionPayment;
@@ -24,7 +25,7 @@ class DebtsController extends Controller
             'transactions.items.product',
             'transactions.items.unit',
             'transactions.user',
-            'transactions.payments',
+            'transactions.payments.paymentMethod',
         ])->whereHas('transactions', fn ($q) => $q->notPaid())->paginate(15);
 
         $customers->getCollection()->transform(function ($customer) {
@@ -34,6 +35,7 @@ class DebtsController extends Controller
 
         return Inertia::render('debt/Index', [
             'customers' => $customers,
+            'paymentMethods' => PaymentMethod::active()->get(),
             'invoices' => TransactionInvoice::with('transaction')->where('status', '!=', 'paid')->orderBy('due_date')->get()
         ]);
     }
@@ -69,6 +71,7 @@ class DebtsController extends Controller
                 'amount' => $paymentAmount,
                 'paid_at' => now(),
                 'notes' => 'Pembayaran piutang',
+                'payment_method_id'  => $validated['payment_method_id'] ?? null,
             ]);
 
             $transaction->paid_amount += $paymentAmount;
@@ -78,6 +81,11 @@ class DebtsController extends Controller
                 $transaction->payment_status = 'paid';
                 $transaction->settled_at = now();
                 $transaction->settled_by = auth()->id();
+
+                $methods = $transaction->payments()->pluck('payment_method_id')->unique()->filter()->values();
+                if ($methods->count() === 1) {
+                    $transaction->payment_method_id = $methods->first();
+                }
 
                 if ($transaction->invoice) {
                     $transaction->invoice->update([

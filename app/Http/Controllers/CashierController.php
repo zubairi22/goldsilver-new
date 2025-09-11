@@ -66,6 +66,7 @@ class CashierController extends Controller
                         'amount' => $paidAmount,
                         'paid_at' => now(),
                         'notes' => 'Pembayaran saat transaksi',
+                        'payment_method_id'  => $validated['payment_method_id'] ?? null,
                     ]);
                 }
 
@@ -146,7 +147,7 @@ class CashierController extends Controller
             'redeemed_points' => $redeemedPoints,
             'paid_amount' => $paid,
             'change_amount' => max(0, $paid - $finalTotal),
-            'payment_method_id' => $data['payment_method_id'],
+            'payment_method_id' => $status === 'paid' ? $data['payment_method_id'] : null,
             'payment_status' => $status,
             'settled_at' => $status === 'paid' ? now() : null,
             'settled_by' => $status === 'paid' ? auth()->id() : null,

@@ -15,6 +15,7 @@ class DebtSettlementRequest extends FormRequest
     {
         return [
             'settlement_amount' => ['required', 'numeric', 'min:1'],
+            'payment_method_id' => ['required', 'exists:payment_methods,id'],
         ];
     }
 }

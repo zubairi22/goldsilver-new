@@ -6,8 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import PageNav from '@/components/PageNav.vue';
 import Heading from '@/components/Heading.vue';
 import SearchInput from '@/components/SearchInput.vue';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
 import { useSearch } from '@/composables/useSearch';
 import { useFormat } from '@/composables/useFormat';
 import type { BreadcrumbItem } from '@/types';
@@ -266,7 +264,7 @@ async function printReceipt(trx: any) {
                                         </TableCell>
 
                                         <TableCell class="text-center align-top">
-                                            <Badge>{{ trx.payment_method.name }}</Badge>
+                                            <Badge>{{ trx.payment_method?.name }}</Badge>
                                         </TableCell>
                                     </TableRow>
 
@@ -298,7 +296,7 @@ async function printReceipt(trx: any) {
             <div class="space-y-4">
                 <div class="text-sm capitalize">
                     <p><strong>Kasir : </strong> {{ selectedTransaction?.user?.name }}</p>
-                    <p><strong>Metode Pembayaran : </strong> {{ selectedTransaction?.payment_method.name }}</p>
+                    <p><strong>Metode Pembayaran : </strong> {{ selectedTransaction?.payment_method?.name }}</p>
                     <p class="mt-1">
                         <strong>Status Refund : </strong>
                         <Badge

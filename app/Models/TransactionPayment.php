@@ -12,10 +12,16 @@ class TransactionPayment extends Model
         'amount',
         'paid_at',
         'notes',
+        'payment_method_id'
     ];
 
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 }

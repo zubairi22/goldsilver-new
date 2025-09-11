@@ -12,58 +12,55 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import ChevronButton from '@/components/ChevronButton.vue';
 import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 import InputError from '@/components/InputError.vue';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Piutang', href: '#' },
 ];
 
-defineProps(['customers', 'invoices']);
+defineProps(['customers', 'invoices', 'paymentMethods']);
 
 const { formatRupiah, formatDate } = useFormat();
 
 const form = useForm({
-    customer_id : '',
+    customer_id: '',
     settlement_amount: 0,
-})
+    payment_method_id: '',
+});
 
 const invoiceForm = useForm({
-    transaction_id : '',
+    transaction_id: '',
     due_date_days: 1,
-})
+});
 
 const settlementModal = ref(false);
 const detailModal = ref(false);
 const invoiceModal = ref(false);
 const invoiceListModal = ref(false);
 
-const selectedPayment = ref()
+const selectedPayment = ref();
 
 const settleDebt = (customer: any) => {
     form.customer_id = customer.id;
-    settlementModal.value = true
-}
+    settlementModal.value = true;
+};
 
 const detailPayment = (transaction: any) => {
     selectedPayment.value = transaction;
-    detailModal.value = true
-}
+    detailModal.value = true;
+};
 
 const generateInvoice = (transaction: any) => {
     invoiceForm.transaction_id = transaction.id;
-    invoiceModal.value = true
-}
+    invoiceModal.value = true;
+};
 
 const openValue = ref<number[]>([]);
 
@@ -94,7 +91,6 @@ const handleGenerateInvoice = () => {
         },
     });
 };
-
 </script>
 
 <template>
@@ -104,11 +100,9 @@ const handleGenerateInvoice = () => {
         <div class="py-8">
             <div class="flex items-center justify-between">
                 <Heading class="mx-4" title="Piutang" description="Riwayat transaksi yang masih berstatus belum lunas" />
-                <Button class="mx-4" variant="outline" size="lg" @click="invoiceListModal = true">
-                    Daftar Invoice
-                </Button>
+                <Button class="mx-4" variant="outline" size="lg" @click="invoiceListModal = true"> Daftar Invoice </Button>
             </div>
-            <div class="mx-auto max-w-8xl">
+            <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
                         <div class="overflow-x-auto">
@@ -131,17 +125,17 @@ const handleGenerateInvoice = () => {
                                                 />
                                             </TableCell>
                                             <TableCell @click="toggleValue(customer.id)">
-                                                {{ customer.name}}
+                                                {{ customer.name }}
                                             </TableCell>
                                             <TableCell class="text-right">
                                                 {{ formatRupiah(customer.total_debt) }}
                                             </TableCell>
-                                            <TableCell class="text-right w-8">
+                                            <TableCell class="w-8 text-right">
                                                 <Button @click="settleDebt(customer)">Bayar</Button>
                                             </TableCell>
                                         </TableRow>
                                         <TableRow v-if="openValue.includes(customer.id)">
-                                            <TableCell/>
+                                            <TableCell />
                                             <TableCell colSpan="6">
                                                 <Table class="w-full">
                                                     <TableHeader>
@@ -151,7 +145,7 @@ const handleGenerateInvoice = () => {
                                                             <TableHead class="text-right">Total</TableHead>
                                                             <TableHead class="text-right">Bayar</TableHead>
                                                             <TableHead class="text-right">Piutang</TableHead>
-                                                            <TableHead class="w-8"/>
+                                                            <TableHead class="w-8" />
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -175,7 +169,7 @@ const handleGenerateInvoice = () => {
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger as-child>
                                                                         <Button variant="secondary">
-                                                                            <icon name="EllipsisVertical"/>
+                                                                            <icon name="EllipsisVertical" />
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent class="w-40">
@@ -195,7 +189,7 @@ const handleGenerateInvoice = () => {
                                         </TableRow>
                                     </template>
                                     <TableRow v-if="!customers.total">
-                                        <TableCell/>
+                                        <TableCell />
                                         <TableCell colspan="6">Belum ada piutang.</TableCell>
                                     </TableRow>
                                 </TableBody>
@@ -207,7 +201,7 @@ const handleGenerateInvoice = () => {
         </div>
     </AppLayout>
 
-    <Dialog :open="settlementModal" @update:open="(val) => settlementModal = val">
+    <Dialog :open="settlementModal" @update:open="(val) => (settlementModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Pembayaran Utang</DialogTitle>
@@ -220,6 +214,23 @@ const handleGenerateInvoice = () => {
                 <InputError class="mt-2" :message="form.errors.settlement_amount" />
             </div>
 
+            <div>
+                <Label for="method">Metode Pembayaran</Label>
+                <Select v-model="form.payment_method_id">
+                    <SelectTrigger class="w-full">
+                        <SelectValue placeholder="Pilih Metode Pembayaran" />
+                    </SelectTrigger>
+                    <SelectContent class="w-60">
+                        <SelectGroup>
+                            <SelectItem v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
+                                {{ pm.name }}
+                            </SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <InputError :message="form.errors.payment_method_id" class="mt-1" />
+            </div>
+
             <DialogFooter>
                 <Button variant="secondary" @click="settlementModal = false">Batal</Button>
                 <Button :disabled="form.processing" @click="handleSettlement">
@@ -230,7 +241,7 @@ const handleGenerateInvoice = () => {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="detailModal" @update:open="(val) => detailModal = val">
+    <Dialog :open="detailModal" @update:open="(val) => (detailModal = val)">
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Detail Pembayaran</DialogTitle>
@@ -244,12 +255,13 @@ const handleGenerateInvoice = () => {
                     <p><strong>Sisa Piutang:</strong> {{ formatRupiah(selectedPayment?.total_price - selectedPayment?.paid_amount) }}</p>
 
                     <h3>Daftar Pembayaran:</h3>
-                    <Table class="border mt-2">
+                    <Table class="mt-2 border">
                         <TableHeader>
                             <TableRow>
                                 <TableHead class="w-44">Jumlah Bayar</TableHead>
                                 <TableHead>Tanggal Pembayaran</TableHead>
                                 <TableHead>Catatan</TableHead>
+                                <TableHead>Metode</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -257,6 +269,7 @@ const handleGenerateInvoice = () => {
                                 <TableCell>{{ formatRupiah(payment.amount) }}</TableCell>
                                 <TableCell>{{ formatDate(payment.paid_at) }}</TableCell>
                                 <TableCell>{{ payment.notes }}</TableCell>
+                                <TableCell>{{ payment.payment_method?.name }}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -268,7 +281,7 @@ const handleGenerateInvoice = () => {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="invoiceModal" @update:open="(val) => invoiceModal = val">
+    <Dialog :open="invoiceModal" @update:open="(val) => (invoiceModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Buat Invoice</DialogTitle>
@@ -291,7 +304,7 @@ const handleGenerateInvoice = () => {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="invoiceListModal" @update:open="(val) => invoiceListModal = val">
+    <Dialog :open="invoiceListModal" @update:open="(val) => (invoiceListModal = val)">
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Daftar Invoice</DialogTitle>
@@ -304,7 +317,7 @@ const handleGenerateInvoice = () => {
                             <TableHead class="w-44">Nomor Invoice</TableHead>
                             <TableHead>Tanggal Jatuh Tempo</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead class="w-8"/>
+                            <TableHead class="w-8" />
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -312,16 +325,13 @@ const handleGenerateInvoice = () => {
                             <TableCell>{{ invoice.invoice_number }}</TableCell>
                             <TableCell>{{ formatDate(invoice.due_date) }}</TableCell>
                             <TableCell>
-                                <Badge
-                                    :variant="invoice.status === 'paid' ? 'success' : invoice.status === 'unpaid' ? 'destructive' : 'warning'" >
+                                <Badge :variant="invoice.status === 'paid' ? 'success' : invoice.status === 'unpaid' ? 'destructive' : 'warning'">
                                     {{ invoice.status }}
                                 </Badge>
                             </TableCell>
                             <TableCell>
                                 <Button>
-                                    <a :href="route('transaction.debt.invoice.view', invoice)" target="_blank">
-                                        Unduh Invoice
-                                    </a>
+                                    <a :href="route('transaction.debt.invoice.view', invoice)" target="_blank"> Unduh Invoice </a>
                                 </Button>
                             </TableCell>
                         </TableRow>
