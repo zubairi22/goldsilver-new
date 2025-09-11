@@ -46,6 +46,8 @@ class DashboardController extends Controller
                 'category' => $key,
                 'total'    => $group->sum('subtotal'),
             ])
+            ->sortByDesc('total')
+            ->take(5)
             ->values();
 
         $topProducts = $categoryTrx
