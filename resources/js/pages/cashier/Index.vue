@@ -380,12 +380,21 @@ watch(customerId, (val) => {
                                     class="cursor-pointer rounded-lg border p-4 shadow-sm transition hover:shadow-md"
                                     @click="addToCart(product)"
                                 >
-                                    <div class="line-clamp-3 min-h-[2.5rem] text-base font-medium" :title="product.name">
+                                    <div class="line-clamp-2 min-h-[3rem] text-base font-medium" :title="product.name">
                                         {{ product.name }}
                                     </div>
 
-                                    <div class="text-md mt-auto font-semibold text-green-700">
-                                        {{ formatRupiah(product.units[0].pivot.selling_price) }}
+                                    <div class="flex justify-between items-center mt-2">
+                                        <div class="text-md font-semibold text-green-700">
+                                            {{ formatRupiah(product.units[0].pivot.selling_price) }}
+                                        </div>
+                                        <div
+                                            class="text-sm font-medium"
+                                            :class="product.stock < 50 ? 'text-red-600' : 'text-gray-800'"
+                                        >
+                                            ({{ product.stock }})
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
