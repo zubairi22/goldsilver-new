@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('total_price');
             $table->integer('paid_amount');
             $table->integer('change_amount');
-            $table->enum('payment_status', ['paid', 'credit', 'partial'])->default('paid');
+            $table->enum('payment_status', ['paid', 'credit', 'partial', 'canceled'])->default('paid');
             $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->nullOnDelete();
             $table->integer('discount_amount')->default(0);
             $table->unsignedInteger('redeemed_points')->default(0);

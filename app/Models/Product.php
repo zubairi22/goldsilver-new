@@ -33,10 +33,11 @@ class Product extends Model
     public function scopeFilter($query, array $filters): void
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhereHas('units', function ($q) use ($search) {
-                        $q->where('product_unit.sku', 'like', '%' . $search . '%');
+            $search = mb_strtolower($search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                    ->orWhereHas('units', function ($unitQuery) use ($search) {
+                        $unitQuery->whereRaw('LOWER(product_unit.sku) LIKE ?', ["%{$search}%"]);
                     });
             });
         });

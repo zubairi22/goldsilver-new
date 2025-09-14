@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email', 100)->nullable();
             $table->text('address')->nullable();
             $table->integer('balance')->default(0);
+            $table->integer('debt_limit')->default(0);
             $table->timestamps();
         });
     }

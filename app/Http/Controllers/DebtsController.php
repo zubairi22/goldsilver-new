@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Debt\DebtCancelItemRequest;
 use App\Http\Requests\Debt\DebtSettlementRequest;
 use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\PaymentMethod;
+use App\Models\Product;
+use App\Models\StockMutation;
 use App\Models\Transaction;
 use App\Models\TransactionInvoice;
 use App\Models\TransactionPayment;
+use App\Models\TransactionRefund;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -103,6 +108,77 @@ class DebtsController extends Controller
 
         $this->flashSuccess('Piutang berhasil diproses.');
         return Redirect::back();
+    }
+
+    public function cancelDebtItem(DebtCancelItemRequest $request, Transaction $transaction): RedirectResponse
+    {
+        try {
+            DB::transaction(function () use ($request, $transaction) {
+                $trxItems = $transaction->items()->get()->keyBy('id');
+
+                foreach ($request->input('items', []) as $row) {
+                    $qty = (int) ($row['cancel_qty'] ?? 0);
+
+                    if ($qty < 1) {
+                        continue;
+                    }
+
+                    $ti = $trxItems[$row['transaction_item_id']] ?? null;
+                    if (!$ti) {
+                        throw new \Exception('Item tidak ditemukan pada transaksi.');
+                    }
+
+                    if ($qty > $ti->quantity) {
+                        throw new \Exception("Qty cancel melebihi jumlah item {$ti->id}.");
+                    }
+
+                    $amount = $ti->selling_price  * $qty;
+
+                    $product = Product::with(['units' => fn($q) => $q->where('units.id', $ti['unit_id'])])
+                        ->findOrFail($ti['product_id']);
+
+                    $unit = $product->units->first();
+                    $conversion = $unit?->pivot->conversion ?? 1;
+                    $stockIn    = $qty * $conversion;
+
+                    $product->increment('stock', $stockIn);
+
+                    StockMutation::create([
+                        'product_id'  => $ti->product_id,
+                        'user_id'     => auth()->id(),
+                        'type'        => 'in',
+                        'quantity'    => $stockIn,
+                        'source_type' => Transaction::class,
+                        'source_id'   => $transaction->id,
+                        'note'        => 'Cancel item piutang '.$transaction->transaction_number,
+                    ]);
+
+                    if ($qty >= $ti->quantity) {
+                        $ti->delete();
+                    } else {
+                        $ti->decrement('quantity', $qty);
+                        $ti->decrement('subtotal', $amount);
+                    }
+                }
+
+                $newTotal = $transaction->items()->sum('subtotal');
+
+                if ($newTotal <= 0) {
+                    $transaction->update([
+                        'total_price' => 0,
+                        'payment_status' => 'canceled',
+                    ]);
+                } else {
+                    $transaction->update(['total_price' => $newTotal]);
+                }
+            });
+
+            $this->flashSuccess('Item piutang berhasil dibatalkan.');
+            return back();
+        } catch (\Throwable $e) {
+            $this->flashError($e->getMessage(), $e);
+            return back();
+        }
     }
 
     public function generateInvoice(Request $request, Transaction $transaction)

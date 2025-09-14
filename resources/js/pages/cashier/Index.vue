@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,10 +12,27 @@ import DeleteButton from '@/components/DeleteButton.vue';
 import { useFormat } from '@/composables/useFormat';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSearch } from '@/composables/useSearch';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
 import Multiselect from '@vueform/multiselect';
 import PageNav from '@/components/PageNav.vue';
 import { Alert, AlertTitle } from '@/components/ui/alert';
@@ -142,6 +159,15 @@ function handlePaymentToggle(val: boolean) {
     }
 }
 
+
+const showQrModal = ref(false)
+const selectedQr = ref<string | null>(null)
+
+const openQr = (url: string) => {
+    selectedQr.value = url
+    showQrModal.value = true
+}
+
 const submitTransaction = () => {
     form.customer_id = customerId.value;
     form.discount_amount = pointDiscount.value;
@@ -197,16 +223,14 @@ const saveDraft = () => {
         }
     }
 
-    const newId = now;
     drafts.push({
-        id: newId,
+        id: now,
         items: JSON.parse(JSON.stringify(form.items)),
         note: 'Order sementara ' + formatNow(),
         created_at: now,
         updated_at: now,
     });
     localStorage.setItem('order_drafts', JSON.stringify(drafts));
-    draftId.value = newId;
     alert('Order berhasil disimpan sementara!');
     form.items = [];
 };
@@ -554,18 +578,30 @@ watch(customerId, (val) => {
 
                 <div>
                     <Label for="method">Metode Pembayaran</Label>
-                    <Select v-model="form.payment_method_id">
-                        <SelectTrigger class="w-full">
-                            <SelectValue placeholder="Pilih Metode Pembayaran" />
-                        </SelectTrigger>
-                        <SelectContent class="w-60">
-                            <SelectGroup>
-                                <SelectItem v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
-                                    {{ pm.name }}
-                                </SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                    <div class="flex items-center gap-2">
+                        <Select v-model="form.payment_method_id">
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Pilih Metode Pembayaran" />
+                            </SelectTrigger>
+                            <SelectContent class="w-60">
+                                <SelectGroup>
+                                    <SelectItem v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
+                                        {{ pm.name }}
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
+                        <div v-if="form.payment_method_id">
+                            <Button
+                                v-if="paymentMethods.find((pm: any) => pm.id === form.payment_method_id)?.image_path"
+                                type="button"
+                                @click="openQr(paymentMethods.find((pm: any) => pm.id === form.payment_method_id)?.image_path!)"
+                            >
+                                Lihat QR
+                            </Button>
+                        </div>
+                    </div>
                     <InputError :message="form.errors.payment_method_id" class="mt-1" />
                 </div>
 
@@ -685,6 +721,20 @@ watch(customerId, (val) => {
                 </ul>
             </div>
             <div v-else class="text-gray-500">Tidak ada order tersimpan.</div>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="showQrModal" @update:open="v => showQrModal = v">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Scan QR</DialogTitle>
+            </DialogHeader>
+            <div class="flex justify-center p-4">
+                <img v-if="selectedQr" :src="'/storage/' + selectedQr" alt="QR Code" class="max-w-full max-h-[400px] border rounded" />
+            </div>
+            <DialogFooter>
+                <Button @click="showQrModal = false">Tutup</Button>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 </template>

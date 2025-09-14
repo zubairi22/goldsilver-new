@@ -19,6 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -91,6 +92,43 @@ const handleGenerateInvoice = () => {
         },
     });
 };
+
+const cancelDebtModal = ref(false)
+
+const cancelForm = useForm({
+    transaction_id: '',
+    reason: '',
+    items: [] as {
+        transaction_item_id: number
+        product_name: string
+        unit_name: string
+        quantity: number
+        cancel_qty: number
+    }[],
+})
+
+const openCancelDebtModal = (trx: any) => {
+    cancelForm.transaction_id = trx.id
+    cancelForm.items = trx.items.map((it: any) => ({
+        transaction_item_id: it.id,
+        product_name: it.product.name,
+        unit_name: it.unit.name,
+        quantity: it.quantity,
+        cancel_qty: 0,
+    }))
+    cancelDebtModal.value = true
+}
+
+const submitCancelDebt = () => {
+    cancelForm.post(route('transaction.debt.cancel.item', cancelForm.transaction_id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            cancelDebtModal.value = false
+            cancelForm.reset()
+        },
+    })
+}
+
 </script>
 
 <template>
@@ -173,8 +211,11 @@ const handleGenerateInvoice = () => {
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent class="w-40">
-                                                                        <DropdownMenuItem>
-                                                                            <span @click="detailPayment(trx)">Detail Pembayaran</span>
+                                                                        <DropdownMenuItem @click="detailPayment(trx)">
+                                                                            Detail Pembayaran
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem @click="openCancelDebtModal(trx)">
+                                                                            Cancel Produk
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem @click="generateInvoice(trx)">
                                                                             Buat Invoice
@@ -341,6 +382,85 @@ const handleGenerateInvoice = () => {
 
             <DialogFooter>
                 <Button variant="secondary" @click="invoiceListModal = false">Tutup</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="cancelDebtModal" @update:open="(v) => (cancelDebtModal = v)">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Cancel Item Piutang</DialogTitle>
+                <DialogDescription>Pilih item dan jumlah yang ingin dibatalkan.</DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-4">
+                <div class="overflow-x-auto">
+                    <Table class="w-full">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Produk</TableHead>
+                                <TableHead class="text-center w-20">Qty</TableHead>
+                                <TableHead class="text-right w-48">Qty Cancel</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="(it, idx) in cancelForm.items" :key="it.transaction_item_id">
+                                <TableCell>
+                                    <div class="font-medium">{{ it.product_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ it.unit_name }}</div>
+                                </TableCell>
+                                <TableCell class="text-center">
+                                    {{ it.quantity }}
+                                </TableCell>
+                                <TableCell class="text-right">
+                                    <div class="inline-flex items-center justify-center gap-2" @click.stop>
+                                        <Button
+                                            size="icon"
+                                            class="h-7 w-7"
+                                            @click.stop="cancelForm.items[idx].cancel_qty = Math.max(0, (cancelForm.items[idx].cancel_qty || 0) - 1)"
+                                        >
+                                            -
+                                        </Button>
+
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            class="text-center"
+                                            :max="it.quantity"
+                                            v-model.number="cancelForm.items[idx].cancel_qty"
+                                        />
+
+                                        <Button
+                                            size="icon"
+                                            class="h-7 w-7"
+                                            @click.stop="cancelForm.items[idx].cancel_qty = Math.min((cancelForm.items[idx].cancel_qty || 0) + 1, it.quantity)"
+                                        >
+                                            +
+                                        </Button>
+                                    </div>
+                                    <InputError :message="(cancelForm.errors as any)[`items.${idx}.quantity`]" class="mt-1" />
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="!cancelForm.items.length">
+                                <TableCell colspan="6">Tidak ada item.</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+
+                <div>
+                    <Label>Alasan Cancel (opsional)</Label>
+                    <Textarea rows="3" v-model="cancelForm.reason" />
+                    <InputError :message="cancelForm.errors.reason" class="mt-1" />
+                </div>
+            </div>
+
+            <DialogFooter class="gap-2">
+                <Button variant="secondary" @click="cancelDebtModal = false">Batal</Button>
+                <Button :disabled="cancelForm.processing || !cancelForm.items.some(i => i.cancel_qty > 0)" @click="submitCancelDebt">
+                    <LoaderCircle v-if="cancelForm.processing" class="mr-2 h-4 w-4 animate-spin" />
+                    Konfirmasi Cancel
+                </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

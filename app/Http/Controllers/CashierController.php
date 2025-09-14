@@ -27,7 +27,7 @@ class CashierController extends Controller
     {
         $products = Product::with('units')
             ->filter(Request::only('search'))
-            ->latest()->paginate(12)
+            ->paginate(12)
             ->onEachSide(2)
             ->withQueryString();
 
@@ -58,6 +58,14 @@ class CashierController extends Controller
 
                 $this->checkDepositBalance($validated, $finalTotal);
                 $paymentStatus = $this->determinePaymentStatus($paidAmount, $finalTotal);
+
+                if ($paymentStatus !== 'paid') {
+                    $customer = Customer::findOrFail($validated['customer_id']);
+
+                    if (!$customer->canTakeNewDebt($finalTotal)) {
+                        throw new \Exception("Customer tidak memenuhi syarat untuk membuat piutang baru. Perhatikan Limit atau Hutang yang Sudah Ada");
+                    }
+                }
 
                 $transaction = $this->createTransaction($validated, $total, $discount, $redeemedPoints, $paidAmount, $finalTotal, $paymentStatus);
 

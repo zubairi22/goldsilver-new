@@ -47,13 +47,23 @@
         }
 
         .title {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             text-align: right;
         }
     </style>
 </head>
 <body>
+<table class="no-border px-8" style="margin-bottom: 0;">
+    <tr>
+        <td class="no-border">
+            <img src="{{ public_path('logo.jpg') }}" alt="Logo" style="max-width:100px; height:80px;">
+        </td>
+        <td class="no-border title" colspan="2">
+            Invoice Penjualan
+        </td>
+    </tr>
+</table>
 
 <hr>
 <table class="no-border px-8">
@@ -66,12 +76,9 @@
             <strong>Tanggal</strong><br>
             {{ \Carbon\Carbon::parse($transaction->date)->translatedFormat('d F Y') }}
         </td>
-        <td class="no-border border-left padding-left ">
+        <td class="no-border border-left padding-left">
             <strong>Jatuh Tempo</strong><br>
             {{ \Carbon\Carbon::parse($invoice->due_date)->translatedFormat('d F Y') }}
-        </td>
-        <td class="no-border title" colspan="2">
-            Invoice Penjualan
         </td>
     </tr>
 </table>

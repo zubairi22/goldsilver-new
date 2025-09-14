@@ -50,25 +50,29 @@ class ReceiptController extends Controller
             $unitPrice = (int) ($item->selling_price ?? $item->price ?? round(($item->subtotal ?? 0) / max(1, $soldQty)));
             $lineTotal = $unitPrice * $netQty;
 
-            $lines[] = $this->formatLine("{$netQty} {$name}", "Rp" . number_format($lineTotal, 0, ',', '.'), 48);
+            $lines[] = $this->formatLine("{$netQty} {$name}", "Rp" . number_format($lineTotal, 0, ',', '.'));
             $lines[] = $this->formatLine("({$unitName})",'');
         }
 
         $lines[] = str_repeat('-', 48);
-        $lines[] = $this->formatLine("Subtotal", "Rp " . number_format($subtotalGross - $refundedTotal, 0, ',', '.'), 48);
+        $lines[] = $this->formatLine("Subtotal", "Rp " . number_format($subtotalGross - $refundedTotal, 0, ',', '.'));
         // $lines[] = formatLine("Diskon", "Rp " . number_format($discount, 0, ',', '.'), 48);
         // if ($includeRefund) {
         //     $lines[] = formatLine("Refund", "Rp " . number_format($refundedTotal, 0, ',', '.'), 48);
         // }
-        $lines[] = $this->formatLine("Total", "Rp " . number_format($netGrandTotal, 0, ',', '.'), 48);
+        $lines[] = $this->formatLine("Total", "Rp " . number_format($netGrandTotal, 0, ',', '.'));
         $lines[] = '';
-        $lines[] = $this->formatLine("Dibayar", "Rp " . number_format($paidAmountAfterRefund, 0, ',', '.'), 48);
-        $lines[] = $this->formatLine("Kembali", "Rp " . number_format((int) ($trx->change_amount ?? 0) + ($refundedTotal), 0, ',', '.'), 48);
+        $lines[] = $this->formatLine("Dibayar", "Rp " . number_format($paidAmountAfterRefund, 0, ',', '.'),);
+        $lines[] = $this->formatLine("Kembali", "Rp " . number_format((int) ($trx->change_amount ?? 0) + ($refundedTotal), 0, ',', '.'));
         $lines[] = str_repeat('-', 48);
         $lines[] = '';
-        $lines[] = '*RETUR BARANG/BATAL WAJIB BAWA STRUK';
-        $lines[] = '(MAKSIMAL 1x24 JAM). BARANG RUSAK TIDAK';
-        $lines[] = 'DAPAT DIRETUR*';
+        $lines[] = '*KOMPLAIN RETURE WAJIB WA DAN BAWA STRUK (MAX 2×24 JAM)';
+        $lines[] = 'BARANG YANG SUDAH DI CEK DI TOKO KEMUDIAN RUSAK DI LUAR TOKO';
+        $lines[] = 'TIDAK DAPAT RETURE DENGAN TANDA TANGAN DI BAWAH*';
+        $lines[] = '';
+        $lines[] = $this->formatLine('COSTUMER.', 'KASIR/CHECKER');
+        $lines[] = '';
+        $lines[] = $this->formatLine('................', '..................');
         $lines[] = '';
         $lines[] = $trx->transaction_number;
         $lines[] = '';

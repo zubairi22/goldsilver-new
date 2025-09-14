@@ -26,10 +26,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 const defaultForm = () => ({
     name: '',
     code: '',
+    image: null,
 })
 
 const addForm = useForm(defaultForm())
-const editForm = useForm({ id: '', ...defaultForm() })
+const editForm = useForm({_method: 'patch', id: '', ...defaultForm() })
 const deleteForm = useForm({ id: '' })
 
 const addModal = ref(false)
@@ -55,7 +56,9 @@ const handleAdd = () => {
 }
 
 const handleEdit = () => {
-    editForm.patch(route('outlet.payment-methods.update', editForm.id), {
+    if (!(editForm.image as any instanceof File)) editForm.image = null
+
+    editForm.post(route('outlet.payment-methods.update', editForm.id), {
         preserveScroll: true,
         onSuccess: () => { editModal.value = false; editForm.reset() },
     })
@@ -88,6 +91,7 @@ const handleDelete = () => {
                                 <Table class="w-full">
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead class="w-16">Gambar</TableHead>
                                             <TableHead>Nama</TableHead>
                                             <TableHead>Kode</TableHead>
                                             <TableHead class="w-8"></TableHead>
@@ -96,6 +100,9 @@ const handleDelete = () => {
                                     </TableHeader>
                                     <TableBody>
                                         <TableRow v-for="pm in payment_methods.data" :key="pm.id">
+                                            <TableCell>
+                                                <img v-if="pm.image_path" :src="'/storage/' + pm.image_path" alt="logo" class="w-16 object-contain" />
+                                            </TableCell>
                                             <TableCell>{{ pm.name }}</TableCell>
                                             <TableCell>{{ pm.code }}</TableCell>
                                             <TableCell class="px-0.5">
@@ -136,6 +143,12 @@ const handleDelete = () => {
                     <Input v-model="addForm.code" />
                     <InputError :message="addForm.errors.code" />
                 </div>
+                <div>
+                    <label class="text-sm mb-1 block">Gambar</label>
+                    <Input type="file"
+                           @change="(e: any) => addForm.image = e.target.files[0]" />
+                    <InputError :message="addForm.errors.image" />
+                </div>
             </div>
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="addModal = false">Batal</Button>
@@ -162,6 +175,12 @@ const handleDelete = () => {
                     <label class="text-sm mb-1 block">Kode</label>
                     <Input v-model="editForm.code" />
                     <InputError :message="editForm.errors.code" />
+                </div>
+                <div>
+                    <label class="text-sm mb-1 block">Gambar</label>
+                    <Input type="file"
+                           @change="(e: any) => editForm.image = e.target.files[0]" />
+                    <InputError :message="editForm.errors.image" />
                 </div>
             </div>
             <DialogFooter class="gap-2">

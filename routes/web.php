@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
         Route::post('refund/{transaction}', [RefundsController::class, 'store'])->name('refunds.store');
         Route::resource('debts', DebtsController::class)->except(['show', 'create', 'edit']);
         Route::post('debt/{customer}/settlement', [DebtsController::class, 'settleDebt'])->name('debt.settle');
+        Route::post('debt/{transaction}/cancel-item', [DebtsController::class, 'cancelDebtItem'])->name('debt.cancel.item');
         Route::post('debt/{transaction}/generate-invoice', [DebtsController::class, 'generateInvoice'])->name('debt.invoice.generate');
         Route::get('debt/{transaction}/view-invoice', [DebtsController::class, 'viewInvoice'])->name('debt.invoice.view');
     });

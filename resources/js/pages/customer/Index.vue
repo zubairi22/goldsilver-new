@@ -28,7 +28,7 @@ const { customers } = defineProps(['customers', 'auth']);
 const { search } = useSearch('outlet.customers.index', '', ['customers']);
 const { formatRupiah } = useFormat()
 const defaultForm = () => ({
-    name: '', phone: '', email: '', address: ''
+    name: '', phone: '', email: '', address: '', debt_limit: 0,
 });
 
 const addForm = useForm(defaultForm());
@@ -109,6 +109,7 @@ const handleDeleteCustomer = () => {
                                         <TableHead class="w-60">Alamat</TableHead>
                                         <TableHead class="text-center">Poin</TableHead>
                                         <TableHead class="text-center">Deposit</TableHead>
+                                        <TableHead class="text-center">Limit</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
                                     </TableRow>
@@ -121,6 +122,7 @@ const handleDeleteCustomer = () => {
                                         <TableCell>{{ customer.address }}</TableCell>
                                         <TableCell class="text-center">{{ customer.current_year_point?.points || 0 }}</TableCell>
                                         <TableCell class="text-center">{{ formatRupiah(customer.balance) }}</TableCell>
+                                        <TableCell class="text-center">{{ formatRupiah(customer.debt_limit) }}</TableCell>
                                         <TableCell v-if="auth.can.includes('delete customer')" class="px-2">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger as-child>
