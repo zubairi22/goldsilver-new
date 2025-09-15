@@ -1,18 +1,20 @@
 <?php
 
+use App\Http\Controllers\CashierController;
+use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtsController;
-use App\Http\Controllers\FinancialAccountController;
 use App\Http\Controllers\Master\MenusController;
-use App\Http\Controllers\OutletController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\Master\RolesController;
 use App\Http\Controllers\Master\UsersController;
+use App\Http\Controllers\Outlet\FinancialAccountController;
+use App\Http\Controllers\Outlet\OutletController;
+use App\Http\Controllers\Outlet\PaymentMethodController;
+use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\RefundsController;
 use App\Http\Controllers\SalesController;
-use App\Http\Controllers\CashierController;
+use App\Http\Controllers\UnitsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,6 +30,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('financial-accounts', FinancialAccountController::class)->except(['show', 'create', 'edit']);
         Route::resource('payment-methods', PaymentMethodController::class)->except(['show', 'create', 'edit']);
 
+        Route::resource('units', UnitsController::class)->except(['show', 'create', 'edit']);
+        Route::resource('categories', CategoriesController::class)->except(['show', 'create', 'edit']);
         Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
         Route::get('customer/{customer}/point', [CustomersController::class, 'point'])->name('customer.point');

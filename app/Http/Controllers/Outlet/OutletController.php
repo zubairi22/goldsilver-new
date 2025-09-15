@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Outlet;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\OutletSettingUpdateRequest;
 use App\Models\Outlet;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 

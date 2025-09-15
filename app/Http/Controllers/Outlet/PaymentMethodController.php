@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Outlet;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\OutletPaymentMethodCreateRequest;
 use App\Http\Requests\Outlet\OutletPaymentMethodUpdateRequest;
-use App\Models\FinancialAccount;
 use App\Models\PaymentMethod;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;

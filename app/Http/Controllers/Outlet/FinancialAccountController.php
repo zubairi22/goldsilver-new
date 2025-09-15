@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Outlet;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\OutletFinancialAccountCreateRequest;
 use App\Http\Requests\Outlet\OutletFinancialAccountUpdateRequest;
 use App\Models\FinancialAccount;
