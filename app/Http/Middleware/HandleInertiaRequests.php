@@ -71,7 +71,7 @@ class HandleInertiaRequests extends Middleware
                 ->with(['children' => function ($query) use ($userPermissions) {
                     $query->whereHas('permissions', function ($query) use ($userPermissions) {
                         $query->whereIn('permissions.id', $userPermissions);
-                    });
+                    })->orderBy('sort');
                 }])
                 ->orderBy('sort')
                 ->get();

@@ -45,6 +45,14 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 26, 'name' => 'view refund', 'guard_name' => 'web'],
             ['id' => 27, 'name' => 'view debts', 'guard_name' => 'web'],
             ['id' => 28, 'name' => 'settle debts', 'guard_name' => 'web'],
+            ['id' => 29, 'name' => 'view unit', 'guard_name' => 'web'],
+            ['id' => 30, 'name' => 'create unit', 'guard_name' => 'web'],
+            ['id' => 31, 'name' => 'update unit', 'guard_name' => 'web'],
+            ['id' => 32, 'name' => 'delete unit', 'guard_name' => 'web'],
+            ['id' => 33, 'name' => 'view category', 'guard_name' => 'web'],
+            ['id' => 34, 'name' => 'create category', 'guard_name' => 'web'],
+            ['id' => 35, 'name' => 'update category', 'guard_name' => 'web'],
+            ['id' => 36, 'name' => 'delete category', 'guard_name' => 'web'],
 
         ];
 
@@ -60,7 +68,7 @@ class PermissionMenuSeeder extends Seeder
         ]);
         $admin->assignRole($role);
 
-        $roleUser = Role::create(['name' => 'User']);
+        $roleUser = Role::create(['name' => 'Kasir']);
         $roleUser->syncPermissions([1, 19, 20, 21, 23, 24, 25, 26]);
 
         $user = User::factory()->create([
@@ -89,13 +97,15 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 5, 'title' => 'Peran', 'url' => 'master.roles.index', 'parent_id' => 2, 'icon' => 'UserRoundCog', 'sort' => 3],
             ['id' => 6, 'title' => 'Manajemen Outlet', 'url' => 'outlet', 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 9],
             ['id' => 7, 'title' => 'Pengaturan', 'url' => 'outlet.settings.index', 'parent_id' => 6, 'icon' => 'Settings', 'sort' => 1],
-            ['id' => 8, 'title' => 'Produk', 'url' => 'outlet.products.index', 'parent_id' => 6, 'icon' => 'Package', 'sort' => 1],
-            ['id' => 9, 'title' => 'Pelanggan', 'url' => 'outlet.customers.index', 'parent_id' => 6, 'icon' => 'Users', 'sort' => 2],
+            ['id' => 8, 'title' => 'Produk', 'url' => 'outlet.products.index', 'parent_id' => 6, 'icon' => 'Package', 'sort' => 2],
+            ['id' => 9, 'title' => 'Pelanggan', 'url' => 'outlet.customers.index', 'parent_id' => 6, 'icon' => 'Users', 'sort' => 5],
             ['id' => 10, 'title' => 'Kasir', 'url' => 'cashier.index', 'parent_id' => null, 'icon' => 'Store', 'sort' => 1],
             ['id' => 11, 'title' => 'Transaksi', 'url' => 'transaction', 'parent_id' => null, 'icon' => 'ArrowLeftRight', 'sort' => 2],
             ['id' => 12, 'title' => 'Penjualan', 'url' => 'transaction.sales.index', 'parent_id' => 11, 'icon' => 'ShoppingCart', 'sort' => 1],
             ['id' => 13, 'title' => 'Piutang', 'url' => 'transaction.debts.index', 'parent_id' => 11, 'icon' => 'FileText', 'sort' => 2],
             ['id' => 14, 'title' => 'Refund', 'url' => 'transaction.refunds.index', 'parent_id' => 11, 'icon' => 'Undo2', 'sort' => 3],
+            ['id' => 15, 'title' => 'Satuan', 'url' => 'outlet.units.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 3],
+            ['id' => 16, 'title' => 'Kategori', 'url' => 'outlet.categories.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 4],
         ];
 
         Menu::insert($menus);
@@ -138,6 +148,10 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 35, 'menu_id' => 13, 'permission_id' => 26],
             ['id' => 36, 'menu_id' => 14, 'permission_id' => 27],
             ['id' => 37, 'menu_id' => 14, 'permission_id' => 28],
+            ['id' => 38, 'menu_id' => 15, 'permission_id' => 29],
+            ['id' => 39, 'menu_id' => 15, 'permission_id' => 30],
+            ['id' => 40, 'menu_id' => 15, 'permission_id' => 31],
+            ['id' => 41, 'menu_id' => 15, 'permission_id' => 32],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);
