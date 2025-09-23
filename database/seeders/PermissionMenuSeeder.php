@@ -53,6 +53,14 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 34, 'name' => 'create category', 'guard_name' => 'web'],
             ['id' => 35, 'name' => 'update category', 'guard_name' => 'web'],
             ['id' => 36, 'name' => 'delete category', 'guard_name' => 'web'],
+            ['id' => 37, 'name' => 'view supplier', 'guard_name' => 'web'],
+            ['id' => 38, 'name' => 'create supplier', 'guard_name' => 'web'],
+            ['id' => 39, 'name' => 'update supplier', 'guard_name' => 'web'],
+            ['id' => 40, 'name' => 'delete supplier', 'guard_name' => 'web'],
+            ['id' => 41, 'name' => 'view purchase', 'guard_name' => 'web'],
+            ['id' => 42, 'name' => 'create purchase', 'guard_name' => 'web'],
+            ['id' => 43, 'name' => 'update purchase', 'guard_name' => 'web'],
+            ['id' => 44, 'name' => 'delete purchase', 'guard_name' => 'web'],
 
         ];
 
@@ -97,15 +105,17 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 5, 'title' => 'Peran', 'url' => 'master.roles.index', 'parent_id' => 2, 'icon' => 'UserRoundCog', 'sort' => 3],
             ['id' => 6, 'title' => 'Manajemen Outlet', 'url' => 'outlet', 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 9],
             ['id' => 7, 'title' => 'Pengaturan', 'url' => 'outlet.settings.index', 'parent_id' => 6, 'icon' => 'Settings', 'sort' => 1],
-            ['id' => 8, 'title' => 'Produk', 'url' => 'outlet.products.index', 'parent_id' => 6, 'icon' => 'Package', 'sort' => 2],
+            ['id' => 8, 'title' => 'Produk', 'url' => 'outlet.products.index', 'parent_id' => 6, 'icon' => 'Package', 'sort' => 4],
             ['id' => 9, 'title' => 'Pelanggan', 'url' => 'outlet.customers.index', 'parent_id' => 6, 'icon' => 'Users', 'sort' => 5],
             ['id' => 10, 'title' => 'Kasir', 'url' => 'cashier.index', 'parent_id' => null, 'icon' => 'Store', 'sort' => 1],
             ['id' => 11, 'title' => 'Transaksi', 'url' => 'transaction', 'parent_id' => null, 'icon' => 'ArrowLeftRight', 'sort' => 2],
             ['id' => 12, 'title' => 'Penjualan', 'url' => 'transaction.sales.index', 'parent_id' => 11, 'icon' => 'ShoppingCart', 'sort' => 1],
             ['id' => 13, 'title' => 'Piutang', 'url' => 'transaction.debts.index', 'parent_id' => 11, 'icon' => 'FileText', 'sort' => 2],
             ['id' => 14, 'title' => 'Refund', 'url' => 'transaction.refunds.index', 'parent_id' => 11, 'icon' => 'Undo2', 'sort' => 3],
-            ['id' => 15, 'title' => 'Satuan', 'url' => 'outlet.units.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 3],
-            ['id' => 16, 'title' => 'Kategori', 'url' => 'outlet.categories.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 4],
+            ['id' => 15, 'title' => 'Satuan', 'url' => 'outlet.units.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 2],
+            ['id' => 16, 'title' => 'Kategori', 'url' => 'outlet.categories.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 3],
+            ['id' => 17, 'title' => 'Pemasok', 'url' => 'outlet.suppliers.index', 'parent_id' => 6, 'icon' => 'Truck', 'sort' => 4],
+            ['id' => 18, 'title' => 'Pembelian', 'url' => 'outlet.purchases.index', 'parent_id' => 6, 'icon' => 'ShoppingBag', 'sort' => 5],
         ];
 
         Menu::insert($menus);
@@ -152,6 +162,18 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 39, 'menu_id' => 15, 'permission_id' => 30],
             ['id' => 40, 'menu_id' => 15, 'permission_id' => 31],
             ['id' => 41, 'menu_id' => 15, 'permission_id' => 32],
+            ['id' => 42, 'menu_id' => 16, 'permission_id' => 33],
+            ['id' => 43, 'menu_id' => 16, 'permission_id' => 34],
+            ['id' => 44, 'menu_id' => 16, 'permission_id' => 35],
+            ['id' => 45, 'menu_id' => 16, 'permission_id' => 36],
+            ['id' => 46, 'menu_id' => 17, 'permission_id' => 37],
+            ['id' => 47, 'menu_id' => 17, 'permission_id' => 38],
+            ['id' => 48, 'menu_id' => 17, 'permission_id' => 39],
+            ['id' => 49, 'menu_id' => 17, 'permission_id' => 40],
+            ['id' => 50, 'menu_id' => 18, 'permission_id' => 41],
+            ['id' => 51, 'menu_id' => 18, 'permission_id' => 42],
+            ['id' => 52, 'menu_id' => 18, 'permission_id' => 43],
+            ['id' => 53, 'menu_id' => 18, 'permission_id' => 44],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);

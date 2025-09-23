@@ -85,7 +85,7 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
             <Table class="w-full">
                 <TableHeader>
                     <TableRow>
-                        <TableHead style="width: 35%">Produk</TableHead>
+                        <TableHead class="w-[35%]">Produk</TableHead>
                         <TableHead>Qty</TableHead>
                         <TableHead>Harga/Unit</TableHead>
                         <TableHead class="w-32">Total</TableHead>
