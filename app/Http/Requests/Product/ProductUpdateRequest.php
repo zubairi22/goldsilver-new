@@ -11,7 +11,6 @@ class ProductUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'stock' => ['required', 'integer', 'min:0'],
             'category_id' => ['required', 'exists:categories,id'],
 
             'units' => ['required', 'array', 'min:1'],

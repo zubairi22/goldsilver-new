@@ -68,7 +68,7 @@ watch(
 
         <div class="mt-4">
             <Label for="stock">Stok</Label>
-            <Input id="stock" type="number" min="0" v-model="form.stock" />
+            <Input id="stock" type="number" min="0" v-model="form.stock" disabled />
             <InputError class="mt-1" :message="form.errors.stock" />
         </div>
 

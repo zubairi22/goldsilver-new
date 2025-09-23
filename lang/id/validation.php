@@ -147,7 +147,17 @@ return [
     */
 
     'attributes' => [
+        'phone'   => 'No. Telepon',
+        'address' => 'Alamat',
         'paid_amount' => 'jumlah bayar',
+        'supplier_id'      => 'Supplier',
+        'purchase_number'  => 'Nomor PO',
+        'ordered_at'       => 'Tanggal pemesanan',
+        'note'             => 'Catatan',
+        'items.*.product_id' => 'Produk',
+        'items.*.qty'         => 'Qty',
+        'items.*.unit_price'  => 'Harga/Unit',
+        'items.*.note'        => 'Catatan item',
     ],
 
 ];

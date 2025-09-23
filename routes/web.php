@@ -12,8 +12,10 @@ use App\Http\Controllers\Outlet\FinancialAccountController;
 use App\Http\Controllers\Outlet\OutletController;
 use App\Http\Controllers\Outlet\PaymentMethodController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\RefundsController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UnitsController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +40,11 @@ Route::middleware('auth')->group(function () {
         Route::get('customer/{customer}/deposit', [CustomersController::class, 'deposit'])->name('customer.deposit');
         Route::post('customer/{customer}/deposit', [CustomersController::class, 'storeDeposit'])->name('customer.deposit.store');
         Route::post('customer/{customer}/deposit/refund', [CustomersController::class, 'storeRefund'])->name('customer.deposit.refund');
+
+        Route::resource('suppliers', SuppliersController::class)->except(['show']);
+
+        Route::resource('purchases', PurchasesController::class)->except(['show']);
+        Route::patch('purchases/receive/{purchase}', [PurchasesController::class, 'receive'])->name('purchases.receive');
     });
 
     Route::resource('cashier', CashierController::class)->except(['show', 'create', 'edit']);

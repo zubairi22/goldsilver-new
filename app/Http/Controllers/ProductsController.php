@@ -52,8 +52,6 @@ class ProductsController extends Controller
             return Redirect::back();
         } catch (Throwable $e) {
             DB::rollBack();
-
-            report($e);
             $this->flashError('Terjadi kesalahan saat menambahkan produk. Silakan coba lagi.');
 
             return Redirect::back();
