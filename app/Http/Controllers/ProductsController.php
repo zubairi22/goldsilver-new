@@ -52,7 +52,7 @@ class ProductsController extends Controller
             return Redirect::back();
         } catch (Throwable $e) {
             DB::rollBack();
-            $this->flashError('Terjadi kesalahan saat menambahkan produk. Silakan coba lagi.');
+            $this->flashError('Terjadi kesalahan saat menambahkan produk. Silakan coba lagi.', $e);
 
             return Redirect::back();
         }
@@ -83,9 +83,7 @@ class ProductsController extends Controller
             return Redirect::back();
         } catch (Throwable $e) {
             DB::rollBack();
-
-            report($e);
-            $this->flashError('Terjadi kesalahan saat memperbarui produk. Silakan coba lagi.');
+            $this->flashError('Terjadi kesalahan saat memperbarui produk. Silakan coba lagi.', $e);
 
             return Redirect::back();
         }
@@ -106,9 +104,7 @@ class ProductsController extends Controller
             return Redirect::back();
         } catch (Throwable $e) {
             DB::rollBack();
-
-            report($e);
-            $this->flashError('Terjadi kesalahan saat menghapus produk. Silakan coba lagi.');
+            $this->flashError('Terjadi kesalahan saat menghapus produk. Silakan coba lagi.' , $e);
             return Redirect::back();
         }
     }
