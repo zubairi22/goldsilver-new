@@ -4,14 +4,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoaderCircle } from 'lucide-vue-next';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import DeleteButton from '@/components/DeleteButton.vue';
 import { useFormat } from '@/composables/useFormat';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useSearch } from '@/composables/useSearch';
 import {
     Dialog,
     DialogContent,
@@ -22,30 +18,20 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
 import Multiselect from '@vueform/multiselect';
-import PageNav from '@/components/PageNav.vue';
-import { Alert, AlertTitle } from '@/components/ui/alert';
 import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 import axios from 'axios';
 import CurrencyInput from '@/components/CurrencyInput.vue';
-import Icon from '@/components/Icon.vue';
 import { useTime } from '@/composables/useTime';
+import QrDialog from '@/pages/cashier/partial/QrDialog.vue';
+import DraftsDialog from '@/pages/cashier/partial/DraftsDialog.vue';
+import SuccessDialog from '@/pages/cashier/partial/SuccessDialog.vue';
+import ProductCard from '@/pages/cashier/partial/ProductCard.vue';
+import CartCard from '@/pages/cashier/partial/CartCard.vue';
 
 const { products, customers } = defineProps(['products', 'customers', 'paymentMethods']);
 
 const { formatRupiah } = useFormat();
-const { search } = useSearch('cashier.index', '', ['products']);
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
 const { formatNow } = useTime()
 
@@ -158,7 +144,6 @@ function handlePaymentToggle(val: boolean) {
         redeemPoints.value = 0;
     }
 }
-
 
 const showQrModal = ref(false)
 const selectedQr = ref<string | null>(null)
@@ -390,139 +375,22 @@ watch(customerId, (val) => {
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                 <div class="md:col-span-3">
-                    <Card>
-                        <CardHeader>
-                            <div class="flex gap-2">
-                                <Input v-model="search" placeholder="Cari produk berdasarkan nama dan sku" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                                <div
-                                    v-for="product in products.data"
-                                    :key="product.id"
-                                    class="cursor-pointer rounded-lg border p-4 shadow-sm transition hover:shadow-md"
-                                    @click="addToCart(product)"
-                                >
-                                    <div class="line-clamp-2 min-h-[3rem] text-base font-medium" :title="product.name">
-                                        {{ product.name }}
-                                    </div>
-
-                                    <div class="flex justify-between items-center mt-2">
-                                        <div class="text-md font-semibold text-green-700">
-                                            {{ formatRupiah(product.units[0].pivot.selling_price) }}
-                                        </div>
-                                        <div
-                                            class="text-sm font-medium"
-                                            :class="product.stock < 50 ? 'text-red-600' : 'text-gray-800'"
-                                        >
-                                            ({{ product.stock }})
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                            <b v-if="!products.total">Produk tidak di Temukan</b>
-                            <div class="mt-4 flex justify-center overflow-x-auto">
-                                <PageNav :data="products" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <ProductCard
+                        :products="products"
+                        @add-to-cart="addToCart"
+                    />
                 </div>
 
                 <div class="md:col-span-2">
-                    <Card class="flex min-h-[28rem] h-[39rem] flex-col">
-                        <CardHeader>
-                            <CardTitle class="pb-0">Keranjang</CardTitle>
-                        </CardHeader>
-                        <CardContent class="flex-1">
-                            <div class="max-h-[26rem] overflow-y-auto" v-if="form.items.length">
-                                <Table class="w-full text-sm">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead class="h-8 w-12" />
-                                            <TableHead class="h-8 text-start">Produk</TableHead>
-                                            <TableHead class="h-8 text-center">Subtotal</TableHead>
-                                            <TableHead class="h-8 w-8" />
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        <TableRow
-                                            v-for="(item, index) in form.items"
-                                            :key="index"
-                                            @click="editItemCart(item, index)"
-                                        >
-                                            <TableCell class="text-center px-0">
-                                                {{ item.quantity }}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div class="flex flex-col leading-tight break-words whitespace-normal">
-                                                    <span class="font-medium">{{ item.name }}</span>
-                                                    <span class="text-xs text-muted-foreground">{{ item.unit_name }}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell class="text-center px-0">{{ formatRupiah(item.quantity * item.selling_price) }}</TableCell>
-                                            <TableCell class="px-2" @click.stop>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger>
-                                                        <DeleteButton size="sm"/>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Hapus {{ item.name }} ?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Item akan di hapus dari keranjang
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                            <AlertDialogAction variant="destructive" @click="removeItem(index)">
-                                                                Hapus
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </div>
-                            <div v-else class="text-gray-500">Belum ada item.</div>
-                        </CardContent>
-                        <div class="-mb-6 flex flex-col gap-2 border-t p-4">
-                            <div class="flex items-center justify-between gap-2">
-                                <AlertDialog>
-                                    <AlertDialogTrigger>
-                                        <DeleteButton size="sm"/>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Hapus isi keranjang?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Keranjang akan dikosongkan
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction variant="destructive" @click="form.items = []">
-                                                Hapus
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                                <Button class="flex-1" variant="outline" size="sm" @click="saveDraft"> Simpan Order </Button>
-                            </div>
-
-                            <Button
-                                class="flex h-12 w-full items-center justify-between text-lg"
-                                :disabled="form.items.length === 0"
-                                @click="paymentModal = true"
-                            >
-                                <span>Bayar</span>
-                                <span>{{ formatRupiah(totalPrice) }}</span>
-                            </Button>
-                        </div>
-                    </Card>
+                    <CartCard
+                        :items="form.items"
+                        :totalPrice="totalPrice"
+                        @edit-item="editItemCart"
+                        @remove-item="removeItem"
+                        @clear-cart="form.items = []"
+                        @save-draft="saveDraft"
+                        @pay="paymentModal = true"
+                    />
                 </div>
             </div>
         </div>
@@ -677,84 +545,23 @@ watch(customerId, (val) => {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="successModal" @update:open="(val) => (successModal = val)">
-        <DialogContent @interactOutside.prevent>
-            <DialogHeader>
-                <DialogTitle>Transaksi Berhasil</DialogTitle>
-                <DialogDescription>Transaksi telah disimpan dengan sukses.</DialogDescription>
-            </DialogHeader>
+    <SuccessDialog
+        v-model="successModal"
+        :lastTransaction="lastTransaction"
+        :isPrinting="isPrinting"
+        @print="handlePrintReceipt"
+    />
 
-            <div class="space-y-3">
-                <div class="flex justify-between text-sm">
-                    <span>Total Tagihan:</span>
-                    <span class="font-semibold">{{ formatRupiah(lastTransaction?.total ?? 0) }}</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span>Jumlah Bayar:</span>
-                    <span class="font-semibold">{{ formatRupiah(lastTransaction?.paid ?? 0) }}</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span>{{ (lastTransaction?.change ?? 0) >= 0 ? 'Kembalian:' : 'Sisa Piutang:' }}</span>
-                    <span :class="['font-semibold', (lastTransaction?.change ?? 0) < 0 ? 'text-red-600' : '']">
-                        {{ formatRupiah(Math.abs(lastTransaction?.change ?? 0)) }}
-                    </span>
-                </div>
-                <Alert class="bg-yellow-600 text-white" v-if="(lastTransaction?.change ?? 0) < 0">
-                    <AlertTitle>Transaksi dengan Kondisi ini akan masuk kedalam menu Piutang</AlertTitle>
-                </Alert>
-            </div>
+    <DraftsDialog
+        v-model="draftModal"
+        :drafts="draftList"
+        :isPrinting="isPrinting"
+        @use="loadDraftItems"
+        @delete="deleteDraft"
+        @print="handlePrintDraft"
+    />
 
-            <DialogFooter class="mt-4 gap-2">
-                <Button variant="secondary" @click="successModal = false">Tutup</Button>
-                <Button v-if="(lastTransaction?.change ?? 0) >= 0" :disabled="isPrinting" @click="handlePrintReceipt()">Cetak Struk</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <Dialog :open="draftModal" @update:open="(val) => (draftModal = val)">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Daftar Order Sementara</DialogTitle>
-                <DialogDescription>Pilih order yang ingin dilanjutkan.</DialogDescription>
-            </DialogHeader>
-
-            <div v-if="draftList.length">
-                <ul class="space-y-2">
-                    <li v-for="draft in draftList" :key="draft.id" class="flex items-center justify-between rounded border p-2">
-                        <div>
-                            <div class="text-sm font-semibold">{{ draft.note }}</div>
-                            <div class="text-xs text-gray-500">{{ draft.items.length }} item</div>
-                            <div class="text-xs font-semibold text-gray-500">
-                                {{ formatRupiah(draft.items.reduce((sum: any, item: any) => sum + item.quantity * item.selling_price, 0)) }}
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <Button size="sm" variant="secondary" @click="handlePrintDraft(draft)">
-                                <icon name="printer"/>
-                            </Button>
-                            <Button size="sm" @click="loadDraftItems(draft)">Gunakan</Button>
-                            <DeleteButton variant="destructive" size="sm" @click="deleteDraft(draft.id)" />
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <div v-else class="text-gray-500">Tidak ada order tersimpan.</div>
-        </DialogContent>
-    </Dialog>
-
-    <Dialog :open="showQrModal" @update:open="v => showQrModal = v">
-        <DialogContent class="max-w-md">
-            <DialogHeader>
-                <DialogTitle>Scan QR</DialogTitle>
-            </DialogHeader>
-            <div class="flex justify-center p-4">
-                <img v-if="selectedQr" :src="'/storage/' + selectedQr" alt="QR Code" class="max-w-full max-h-[400px] border rounded" />
-            </div>
-            <DialogFooter>
-                <Button @click="showQrModal = false">Tutup</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+    <QrDialog v-model="showQrModal" :imagePath="selectedQr" />
 </template>
 
 <style src="@vueform/multiselect/themes/default.css" />

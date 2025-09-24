@@ -9,7 +9,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar
+    SidebarMenuSub, SidebarMenuSubItem, useSidebar
 } from '@/components/ui/sidebar';
 import { icons } from 'lucide-vue-next'
 import { type NavItem } from '@/types';
@@ -24,7 +24,7 @@ const { toggleSidebar, state } = useSidebar()
 </script>
 
 <template>
-    <SidebarGroup class="mt-2">
+    <SidebarGroup class="mt-2 space-y-1">
         <template v-for="item in items" :key="item.title">
             <SidebarMenu v-if="item.children?.length === 0">
                 <SidebarMenuItem>
