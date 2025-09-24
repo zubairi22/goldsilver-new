@@ -463,7 +463,25 @@ watch(customerId, (val) => {
                                             </TableCell>
                                             <TableCell class="text-center px-0">{{ formatRupiah(item.quantity * item.selling_price) }}</TableCell>
                                             <TableCell class="px-2" @click.stop>
-                                                <DeleteButton @click="removeItem(index)">Hapus</DeleteButton>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger>
+                                                        <DeleteButton size="sm"/>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Hapus {{ item.name }} ?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Item akan di hapus dari keranjang
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                            <AlertDialogAction variant="destructive" @click="removeItem(index)">
+                                                                Hapus
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>

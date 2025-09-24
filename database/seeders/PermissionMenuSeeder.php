@@ -114,7 +114,7 @@ class PermissionMenuSeeder extends Seeder
             ['id' => 14, 'title' => 'Refund', 'url' => 'transaction.refunds.index', 'parent_id' => 11, 'icon' => 'Undo2', 'sort' => 3],
             ['id' => 15, 'title' => 'Satuan', 'url' => 'outlet.units.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 2],
             ['id' => 16, 'title' => 'Kategori', 'url' => 'outlet.categories.index', 'parent_id' => 6, 'icon' => 'Package2', 'sort' => 3],
-            ['id' => 17, 'title' => 'Pemasok', 'url' => 'outlet.suppliers.index', 'parent_id' => 6, 'icon' => 'Truck', 'sort' => 4],
+            ['id' => 17, 'title' => 'Supplier', 'url' => 'outlet.suppliers.index', 'parent_id' => 6, 'icon' => 'Truck', 'sort' => 4],
             ['id' => 18, 'title' => 'Pembelian', 'url' => 'outlet.purchases.index', 'parent_id' => 6, 'icon' => 'ShoppingBag', 'sort' => 5],
         ];
 
