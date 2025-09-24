@@ -20,6 +20,7 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -251,7 +252,7 @@ const submitCancelDebt = () => {
 
             <div>
                 <Label for="settlement_amount">Jumlah Pembayaran</Label>
-                <Input v-model="form.settlement_amount" type="number" min="1" required />
+                <CurrencyInput v-model="form.settlement_amount" required />
                 <InputError class="mt-2" :message="form.errors.settlement_amount" />
             </div>
 
