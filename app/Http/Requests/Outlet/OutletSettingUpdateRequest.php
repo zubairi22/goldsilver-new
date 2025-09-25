@@ -18,6 +18,8 @@ class OutletSettingUpdateRequest extends FormRequest
             'address' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
+            'instagram' => 'nullable|string|max:255',
+            'receipt_footer'=> 'nullable|string',
         ];
     }
 }

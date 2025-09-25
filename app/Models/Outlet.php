@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Outlet extends Model
 {
     protected $fillable = [
-        'name', 'address', 'phone_number', 'email',
+        'name', 'address', 'phone_number', 'email', 'instagram', 'receipt_footer',
     ];
 }

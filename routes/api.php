@@ -13,3 +13,4 @@ Route::get('products/search', [ProductApiController::class, 'search']);
 
 Route::get('/receipt/{transaction_number}', [ReceiptController::class, 'show']);
 Route::post('/receipt/draft', [ReceiptController::class, 'draftReceipt']);
+Route::get('/outlet/preview', [ReceiptController::class, 'preview'])->name('outlet.preview');

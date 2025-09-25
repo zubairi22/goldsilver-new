@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('phone_number', 20)->nullable();
             $table->string('email', 100)->nullable();
             $table->text('address')->nullable();
+            $table->string('instagram')->nullable();
+            $table->text('receipt_footer')->nullable();
             $table->timestamps();
         });
     }
