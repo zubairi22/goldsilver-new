@@ -22,7 +22,7 @@ class SalesController extends Controller
     {
         $filters = [
             'search'            => $request->input('search'),
-            'mode'              => $request->input('mode', 'daily'),
+            'mode'              => $request->input('mode', 'all'),
             'start'             => $request->input('start'),
             'end'               => $request->input('end'),
             'payment_method_id' => $request->input('payment_method_id', 'all'),

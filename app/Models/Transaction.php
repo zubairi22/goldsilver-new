@@ -152,38 +152,37 @@ class Transaction extends Model
             }
         );
 
-        if (empty($filters['search'])) {
-            $query->when($filters['mode'] ?? null, function ($query, $mode) use ($filters) {
-                $today = Carbon::today();
-                $start = null;
-                $end   = null;
+        $query->when($filters['mode'] ?? null, function ($query, $mode) use ($filters) {
+            $today = Carbon::today();
+            $start = null;
+            $end   = null;
 
-                if ($mode === 'daily') {
-                    $start = $today->copy()->startOfDay();
-                    $end   = $today->copy()->endOfDay();
-                } elseif ($mode === 'weekly') {
-                    $start = $today->copy()->startOfWeek();
-                    $end   = $today->copy()->endOfDay();
-                } elseif ($mode === 'monthly') {
-                    $start = $today->copy()->startOfMonth();
-                    $end   = $today->copy()->endOfDay();
-                } elseif ($mode === 'custom') {
-                    if (!empty($filters['start'])) {
-                        $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
-                    }
-                    if (!empty($filters['end'])) {
-                        $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
-                    }
-                    if ($start && !$end) {
-                        $end = $today->copy()->endOfDay();
-                    }
+            if ($mode === 'daily') {
+                $start = $today->copy()->startOfDay();
+                $end   = $today->copy()->endOfDay();
+            } elseif ($mode === 'weekly') {
+                $start = $today->copy()->startOfWeek();
+                $end   = $today->copy()->endOfDay();
+            } elseif ($mode === 'monthly') {
+                $start = $today->copy()->startOfMonth();
+                $end   = $today->copy()->endOfDay();
+            } elseif ($mode === 'custom') {
+                if (!empty($filters['start'])) {
+                    $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
                 }
+                if (!empty($filters['end'])) {
+                    $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
+                }
+                if ($start && !$end) {
+                    $end = $today->copy()->endOfDay();
+                }
+            }
 
-                if ($start && $end) {
-                    $query->whereBetween('created_at', [$start, $end]);
-                }
-            });
-        }
+            if ($start && $end) {
+                $query->whereBetween('created_at', [$start, $end]);
+            }
+        });
+
     }
 
     public function scopeByUser(Builder $query): Builder

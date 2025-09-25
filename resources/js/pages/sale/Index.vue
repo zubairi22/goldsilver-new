@@ -40,7 +40,7 @@ const refundModal = ref(false);
 const selectedTransaction = ref<any>(null);
 
 const payment_method_id = ref<any>('all');
-const mode = ref<'daily' | 'weekly' | 'monthly'>('daily');
+const mode = ref<any>('all');
 const date = ref();
 
 const applyFilters = () => {
@@ -192,6 +192,7 @@ async function printReceipt(trx: any) {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
+                                                <SelectItem value="all">Semua</SelectItem>
                                                 <SelectItem value="daily">Hari Ini</SelectItem>
                                                 <SelectItem value="weekly">Minggu Ini</SelectItem>
                                                 <SelectItem value="monthly">Bulan Ini</SelectItem>
