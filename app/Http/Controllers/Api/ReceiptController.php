@@ -101,8 +101,8 @@ class ReceiptController extends Controller
         $cashier  = $request->input('cashier', now()->format('d M y H:i'));
 
         $lines = [];
-        $lines[] = strtoupper($outlet->name ?? 'TOKO KITA');
-        $lines[] = $outlet->phone_number ?? '08xxxxxxx';
+        $lines[] = $this->centerLine(strtoupper($outlet->name ?? 'TOKO KITA'));
+        $lines[] = $this->centerLine($outlet->phone_number ?? '08xxxxxxx');
         $lines[] = str_repeat('-', 48);
 
         $subtotal = 0;
@@ -123,8 +123,20 @@ class ReceiptController extends Controller
         $lines[] = $this->formatLine("Total", "Rp " . number_format($subtotal, 0, ',', '.'), 48);
         $lines[] = str_repeat('-', 48);
         $lines[] = '';
-        $lines[] = '*** ORDER SEMENTARA ***';
-        $lines[] = $note;
+        foreach (explode("\n", $outlet->receipt_footer ?? '') as $line) {
+            foreach ($this->wrapAndCenter($line) as $wrappedLine) {
+                $lines[] = $wrappedLine;
+            }
+        }
+        $lines[] = '';
+        $lines[] = $this->formatLine('COSTUMER.', 'KASIR/CHECKER');
+        $lines[] = '';
+        $lines[] = $this->formatLine('................', '..................');
+        $lines[] = '';
+        $lines[] = 'Instagram : ' . $outlet->instagram ?? 'tokokami';
+        $lines[] = 'Whatsapp  : ' . $outlet->phone_number ?? '08xxxxxxx';
+        $lines[] = '';
+        $lines[] = $this->centerLine($note);
         $lines[] = '';
         $lines[] = "Dicetak : " . $cashier ;
         $lines[] = str_repeat('-', 48);
@@ -222,7 +234,6 @@ class ReceiptController extends Controller
             'receipt' => implode("\n", $lines),
         ]);
     }
-
 
     function formatLine($left, $right, $width = 48) {
         $left = trim($left);

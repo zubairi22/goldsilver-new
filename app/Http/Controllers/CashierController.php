@@ -204,7 +204,9 @@ class CashierController extends Controller
 
         if ($redeemedPoints > 0) {
             $pointRecord = CustomerPoint::where('customer_id', $transaction->customer_id)
-                ->where('year', $year)->first();
+                ->where('year', $year)
+                ->lockForUpdate()
+                ->first();
 
             if (!$pointRecord || $pointRecord->points < $redeemedPoints) {
                 throw new \Exception("Poin tidak mencukupi untuk ditukar.");
@@ -220,22 +222,24 @@ class CashierController extends Controller
             ]);
         }
 
-        $conversion = 200000;
-        $earnedPoints = floor($total / $conversion);
-        if ($earnedPoints > 0) {
-            $pointRecord = CustomerPoint::firstOrCreate(
-                ['customer_id' => $transaction->customer_id, 'year' => $year],
-                ['points' => 0]
-            );
+        if ($transaction->payment_status === 'paid') {
+            $conversion = 200000;
+            $earnedPoints = floor($total / $conversion);
+            if ($earnedPoints > 0) {
+                $pointRecord = CustomerPoint::firstOrCreate(
+                    ['customer_id' => $transaction->customer_id, 'year' => $year],
+                    ['points' => 0]
+                );
 
-            $pointRecord->increment('points', $earnedPoints);
+                $pointRecord->increment('points', $earnedPoints);
 
-            CustomerPointLog::create([
-                'customer_id' => $transaction->customer_id,
-                'type' => 'earn',
-                'points' => $earnedPoints,
-                'description' => "Transaksi #{$transaction->transaction_number}",
-            ]);
+                CustomerPointLog::create([
+                    'customer_id' => $transaction->customer_id,
+                    'type' => 'earn',
+                    'points' => $earnedPoints,
+                    'description' => "Transaksi #{$transaction->transaction_number}",
+                ]);
+            }
         }
     }
 

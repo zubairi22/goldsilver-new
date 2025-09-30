@@ -180,6 +180,7 @@ const submitCancelDebt = () => {
                                                     <TableHeader>
                                                         <TableRow>
                                                             <TableHead class="w-44">Kode</TableHead>
+                                                            <TableHead>Kasir</TableHead>
                                                             <TableHead>Tanggal</TableHead>
                                                             <TableHead class="text-right">Total</TableHead>
                                                             <TableHead class="text-right">Bayar</TableHead>
@@ -191,6 +192,9 @@ const submitCancelDebt = () => {
                                                         <TableRow v-for="trx in customer.transactions" :key="trx.id">
                                                             <TableCell>
                                                                 {{ trx.transaction_number }}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {{ trx.user.name }}
                                                             </TableCell>
                                                             <TableCell>
                                                                 {{ formatDate(trx.created_at) }}

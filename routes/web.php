@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
         Route::get('customer/{customer}/point', [CustomersController::class, 'point'])->name('customer.point');
+        Route::post('customer/{customer}/point/redeem', [CustomersController::class, 'redeemPoint'])->name('customer.point.redeem');
         Route::get('customer/{customer}/deposit', [CustomersController::class, 'deposit'])->name('customer.deposit');
         Route::post('customer/{customer}/deposit', [CustomersController::class, 'storeDeposit'])->name('customer.deposit.store');
         Route::post('customer/{customer}/deposit/refund', [CustomersController::class, 'storeRefund'])->name('customer.deposit.refund');
