@@ -14,8 +14,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { purchase } = defineProps<{
     purchase: any,
-    suppliers: Array<{id:number,name:string}>,
-    products: Array<{id:number,name:string,stock:number}>,
+    suppliers: object,
+    products: object,
 }>()
 
 const mapItem = (it:any) => ({

@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InputError from '@/components/InputError.vue';
+import { onMounted } from 'vue';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 
 defineProps<{
-    suppliers: Array<{ id: number; name: string }>;
-    products: Array<{ id: number; name: string; stock: number }>;
+    suppliers: object;
+    products: object;
     submitting?: boolean;
 }>();
 
@@ -34,19 +36,47 @@ const defaultItem = (): PurchaseItem => ({
     _key: Math.random().toString(36).slice(2),
 });
 
-const addRow = () => form.value.items.push(defaultItem());
+const addRow = (productId: number | null = null, unit_price: number = 0) => {
+    form.value.items.push({
+        ...defaultItem(),
+        product_id: productId,
+        unit_price,
+    });
+};
 const removeRow = (idx: number) => form.value.items.splice(idx, 1);
 
 const formTotal = () => form.value.items.reduce((sum: number, it: PurchaseItem) => sum + Number(it.unit_price || 0) * Number(it.qty || 0), 0);
 
-const emit = defineEmits<{ (e: 'submit'): void }>()
+const emit = defineEmits<{ (e: 'submit'): void }>();
+
+const { scannerInput, scannedCode, refocusScanner, processScan } = useBarcodeScanner()
+
+const handleFound = (product: any) => {
+    const exists = form.value.items.find((it: any) => it.product_id === product.id)
+    if (exists) {
+        exists.qty += 1
+    } else {
+        const unit = product.units[0]
+        addRow(product.id, unit?.pivot?.purchase_price || 0)
+    }
+}
+
+onMounted(() => {
+    refocusScanner();
+
+
+    (window as any).testScan = (sku: string) => {
+        scannedCode.value = sku
+        processScan(handleFound)
+    }
+});
 </script>
 
 <template>
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
             <label class="text-sm font-medium">Supplier</label>
-            <Multiselect v-model="form.supplier_id" :options="suppliers"/>
+            <Multiselect v-model="form.supplier_id" :options="suppliers" />
             <InputError :message="form.errors.supplier_id" />
         </div>
         <div>
@@ -58,7 +88,7 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
             <label class="text-sm font-medium">Status</label>
             <Select v-model="form.status">
                 <SelectTrigger id="payment_method">
-                    <SelectValue placeholder="Pilih Metode Pembayaran" />
+                    <SelectValue placeholder="Pilih Status PO" />
                 </SelectTrigger>
                 <SelectContent class="w-52">
                     <SelectGroup>
@@ -95,7 +125,13 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
                 <TableBody>
                     <TableRow v-for="(it, idx) in form.items" :key="it._key ?? idx">
                         <TableCell>
-                            <Multiselect v-model="it.product_id" :options="products" @change="() => form.clearErrors(`items.${idx}.product_id`)" searchable append-to-body />
+                            <Multiselect
+                                v-model="it.product_id"
+                                :options="products"
+                                @change="() => form.clearErrors(`items.${idx}.product_id`)"
+                                searchable
+                                append-to-body
+                            />
                             <InputError :message="form.errors[`items.${idx}.product_id`]" />
                         </TableCell>
                         <TableCell>
@@ -119,6 +155,15 @@ const emit = defineEmits<{ (e: 'submit'): void }>()
     <div class="mt-4 flex justify-end gap-2">
         <Button type="button" :disabled="submitting" @click="emit('submit')"> Simpan </Button>
     </div>
+
+    <input
+        ref="scannerInput"
+        v-model="scannedCode"
+        type="text"
+        tabindex="-1"
+        class="fixed top-1/2 left-1/2 opacity-0"
+        @keyup.enter="processScan(handleFound)"
+    />
 </template>
 
 <style src="@vueform/multiselect/themes/default.css" />

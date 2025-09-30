@@ -13,12 +13,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 const { defaults } = defineProps<{
-    suppliers: Array<{id:number,name:string}>,
-    products: Array<{id:number,name:string,stock:number}>,
+    suppliers: object;
+    products: object;
     defaults: { purchase_number: string, status: string },
 }>()
-
-const defaultItem = () => ({ product_id: null, unit_price: 0, qty: 1, note: '', _key: Math.random().toString(36).slice(2) })
 
 const form = useForm({
     supplier_id: null as number | null,
@@ -26,7 +24,7 @@ const form = useForm({
     status: defaults.status,
     ordered_at: '',
     note: '',
-    items: [defaultItem()],
+    items: [],
 })
 
 const submit = () => {

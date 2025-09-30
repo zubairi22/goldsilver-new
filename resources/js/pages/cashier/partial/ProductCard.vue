@@ -8,7 +8,7 @@ import { useSearch } from '@/composables/useSearch';
 defineProps(['products']);
 const emit = defineEmits(['add-to-cart']);
 
-const { search } = useSearch('cashier.index', '', ['products']);
+const { search } = useSearch('cashier.index', route().params.search, ['products']);
 
 const { formatRupiah } = useFormat();
 
@@ -37,7 +37,7 @@ const handleClick = (product: any) => {
                         <div class="text-md font-semibold text-green-700">
                             {{ formatRupiah(product.units[0].pivot.selling_price) }}
                         </div>
-                        <div :class="product.stock < 50 ? 'text-red-600' : 'text-gray-800'">
+                        <div :class="product.stock < 50 ? 'text-red-600 text-sm' : 'text-gray-800 text-sm'">
                             ({{ product.stock }})
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle } from 'lucide-vue-next';
@@ -28,6 +28,10 @@ import DraftsDialog from '@/pages/cashier/partial/DraftsDialog.vue';
 import SuccessDialog from '@/pages/cashier/partial/SuccessDialog.vue';
 import ProductCard from '@/pages/cashier/partial/ProductCard.vue';
 import CartCard from '@/pages/cashier/partial/CartCard.vue';
+import { useNotifier } from "@/composables/useNotifier"
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
+
+const notify = useNotifier()
 
 const { products, customers } = defineProps(['products', 'customers', 'paymentMethods']);
 
@@ -86,6 +90,7 @@ const confirmAddToCart = () => {
         selling_price: unit.pivot.selling_price,
         quantity: qty,
         product: selectedProduct.value,
+        _key: Math.random().toString(36).slice(2)
     }
 
     if (editCartItemIndex.value !== null) {
@@ -109,10 +114,17 @@ const confirmAddToCart = () => {
 
     editCartItemIndex.value = null
     addModal.value = false;
+    refocusScanner();
 };
 
 const removeItem = (index: number) => {
     form.items.splice(index, 1);
+    refocusScanner();
+};
+
+const clearCart = () => {
+    form.items = []
+    refocusScanner();
 };
 
 const paymentModal = ref(false);
@@ -178,6 +190,7 @@ const submitTransaction = () => {
                 deleteDraft(draftId.value);
             }
         },
+        onFinish: () => refocusScanner(),
     });
 };
 
@@ -186,7 +199,11 @@ const draftId = ref<number | null>(null);
 const draftList = ref<any[]>([]);
 
 const saveDraft = () => {
-    if (form.items.length === 0) return alert('Tidak ada item untuk disimpan.');
+    if (form.items.length === 0) {
+        refocusScanner()
+        notify.warning("Perhatian", "Tidak ada item untuk disimpan.", { position: "top-center" })
+        return
+    }
 
     const drafts: any[] = JSON.parse(localStorage.getItem('order_drafts') || '[]');
     const now = Date.now();
@@ -201,9 +218,10 @@ const saveDraft = () => {
                 updated_at: now,
             };
             localStorage.setItem('order_drafts', JSON.stringify(drafts));
-            alert('Draft diperbarui!');
+            notify.success("Berhasil",'Draft diperbarui!', { position: "top-center" })
             form.items = [];
             draftId.value = null;
+            refocusScanner()
             return;
         }
     }
@@ -216,8 +234,10 @@ const saveDraft = () => {
         updated_at: now,
     });
     localStorage.setItem('order_drafts', JSON.stringify(drafts));
-    alert('Order berhasil disimpan sementara!');
+    notify.success("Berhasil",'Order berhasil disimpan sementara!', { position: "top-center" })
     form.items = [];
+
+    refocusScanner()
 };
 
 const loadDrafts = () => {
@@ -254,12 +274,12 @@ const handlePrintDraft = async (draft: any) => {
 
         const receipt = response.data.receipt;
         const connected = isConnected.value || (await connectPrinter());
-        if (!connected) return alert('Gagal konek ke printer');
+        if (!connected) notify.error("Error",'Koneksi ke printer gagal', { position: "top-center" })
 
         await printText(receipt);
     } catch (err) {
         console.error('Error saat cetak draft:', err);
-        alert('Gagal cetak order sementara');
+        notify.error("Error",'Gagal cetak order sementara', { position: "top-center" })
     } finally {
         isPrinting.value = false;
     }
@@ -272,80 +292,46 @@ const handlePrintReceipt = async () => {
         const response = await axios.get(`/api/receipt/${usePage().props.flash.transaction_number}`);
         const receipt = response.data.receipt;
         const connected = isConnected.value || (await connectPrinter());
-        if (!connected) return alert('Gagal konek ke printer');
+        if (!connected) return notify.error("Error",'Koneksi ke printer gagal', { position: "top-center" });
 
         await printText(receipt);
     } catch (err) {
         console.error('Error saat cetak:', err);
-        alert('Gagal ambil atau cetak struk');
+        notify.error("Error",'Gagal ambil atau cetak struk', { position: "top-center" })
     } finally {
         isPrinting.value = false;
     }
 };
 
-const barcodeBuffer = ref('');
-let scanTimeout: ReturnType<typeof setTimeout> | null = null;
+const { scannerInput, scannedCode, refocusScanner, processScan } = useBarcodeScanner()
 
-const handleScannerBuffer = (e: KeyboardEvent) => {
-    if (addModal.value || paymentModal.value || draftModal.value || successModal.value) return;
+const handleFound = (product: any, code: string) => {
+    const unit = product.units.find((u: any) => u.pivot.sku === code)
+    if (!unit) return
 
-    const char = e.key;
+    const exists = form.items.find(
+        (item) => item.product_id === product.id && item.unit_id === unit.id
+    )
 
-    if (scanTimeout) clearTimeout(scanTimeout);
-
-    if (char.length === 1 && /[a-zA-Z0-9]/.test(char)) {
-        barcodeBuffer.value += char;
+    if (exists) {
+        exists.quantity += 1
+    } else {
+        form.items.push({
+            product_id: product.id,
+            unit_id: unit.id,
+            name: product.name,
+            unit_name: unit.name,
+            purchase_price: unit.pivot.purchase_price,
+            selling_price: unit.pivot.selling_price,
+            quantity: 1,
+            product,
+            _key: Math.random().toString(36).slice(2)
+        })
     }
-
-    if (char === 'Enter') {
-        const scanned = barcodeBuffer.value;
-        barcodeBuffer.value = '';
-
-        fetch(`/api/products/search?sku=${scanned}`)
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success && data.product) {
-                    const product = data.product;
-                    const unit = product.units.find((u: any) => u.pivot.sku === scanned);
-
-                    const exists = form.items.find((item) => item.product_id === product.id && item.unit_id === unit.id);
-
-                    if (exists) {
-                        exists.quantity += 1;
-                    } else {
-                        form.items.push({
-                            product_id: product.id,
-                            unit_id: unit.id,
-                            name: product.name,
-                            unit_name: unit.name,
-                            purchase_price: unit.pivot.purchase_price,
-                            selling_price: unit.pivot.selling_price,
-                            quantity: 1,
-                            product: product,
-                        });
-                    }
-                } else {
-                    alert(`Produk dengan SKU "${scanned}" tidak ditemukan.`);
-                }
-            })
-            .catch((error) => {
-                alert('Terjadi kesalahan saat mengambil data produk.');
-                console.error(error);
-            });
-    }
-
-    scanTimeout = setTimeout(() => {
-        barcodeBuffer.value = '';
-    }, 300);
-};
+}
 
 onMounted(() => {
-    window.addEventListener('keydown', handleScannerBuffer);
-});
-
-onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleScannerBuffer);
-    if (scanTimeout) clearTimeout(scanTimeout);
+    scannerInput.value?.focus();
 });
 
 watch(customerId, (val) => {
@@ -353,6 +339,13 @@ watch(customerId, (val) => {
     maxRedeemPoints.value = customer?.current_year_point?.points || 0;
     redeemPoints.value = 0;
 });
+
+[addModal, paymentModal, draftModal, successModal].forEach((modal) => {
+    watch(modal, (val) => {
+        if (!val) refocusScanner();
+    });
+});
+
 </script>
 
 <template>
@@ -387,13 +380,23 @@ watch(customerId, (val) => {
                         :totalPrice="totalPrice"
                         @edit-item="editItemCart"
                         @remove-item="removeItem"
-                        @clear-cart="form.items = []"
+                        @clear-cart="clearCart"
                         @save-draft="saveDraft"
                         @pay="paymentModal = true"
                     />
                 </div>
             </div>
         </div>
+
+        <input
+            ref="scannerInput"
+            v-model="scannedCode"
+            type="text"
+            tabindex="-1"
+            autofocus
+            class="fixed top-1/2 left-1/2 invisible"
+            @keyup.enter="processScan(handleFound)"
+        />
     </AppLayout>
 
     <Dialog :open="addModal" @update:open="(val) => (addModal = val)">
