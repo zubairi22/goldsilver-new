@@ -1,21 +1,14 @@
 <script lang="ts" setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle } from 'lucide-vue-next';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { useFormat } from '@/composables/useFormat';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Multiselect from '@vueform/multiselect';
@@ -114,17 +107,15 @@ const confirmAddToCart = () => {
 
     editCartItemIndex.value = null
     addModal.value = false;
-    refocusScanner();
 };
 
 const removeItem = (index: number) => {
     form.items.splice(index, 1);
-    refocusScanner();
 };
 
 const clearCart = () => {
     form.items = []
-    refocusScanner();
+
 };
 
 const paymentModal = ref(false);
@@ -190,7 +181,6 @@ const submitTransaction = () => {
                 deleteDraft(draftId.value);
             }
         },
-        onFinish: () => refocusScanner(),
     });
 };
 
@@ -200,7 +190,6 @@ const draftList = ref<any[]>([]);
 
 const saveDraft = () => {
     if (form.items.length === 0) {
-        refocusScanner()
         notify.warning("Perhatian", "Tidak ada item untuk disimpan.", { position: "top-center" })
         return
     }
@@ -221,7 +210,6 @@ const saveDraft = () => {
             notify.success("Berhasil",'Draft diperbarui!', { position: "top-center" })
             form.items = [];
             draftId.value = null;
-            refocusScanner()
             return;
         }
     }
@@ -236,8 +224,6 @@ const saveDraft = () => {
     localStorage.setItem('order_drafts', JSON.stringify(drafts));
     notify.success("Berhasil",'Order berhasil disimpan sementara!', { position: "top-center" })
     form.items = [];
-
-    refocusScanner()
 };
 
 const loadDrafts = () => {
@@ -303,7 +289,7 @@ const handlePrintReceipt = async () => {
     }
 };
 
-const { scannerInput, scannedCode, refocusScanner, processScan } = useBarcodeScanner()
+const { initScan } = useBarcodeScanner()
 
 const handleFound = (product: any, code: string) => {
     const unit = product.units.find((u: any) => u.pivot.sku === code)
@@ -330,20 +316,14 @@ const handleFound = (product: any, code: string) => {
     }
 }
 
-onMounted(() => {
-    scannerInput.value?.focus();
-});
+initScan(handleFound, (code) => {
+    console.warn("Produk tidak ditemukan:", code)
+})
 
 watch(customerId, (val) => {
     const customer = customers.find((c: any) => c.id === val);
     maxRedeemPoints.value = customer?.current_year_point?.points || 0;
     redeemPoints.value = 0;
-});
-
-[addModal, paymentModal, draftModal, successModal].forEach((modal) => {
-    watch(modal, (val) => {
-        if (!val) refocusScanner();
-    });
 });
 
 </script>
@@ -387,16 +367,6 @@ watch(customerId, (val) => {
                 </div>
             </div>
         </div>
-
-        <input
-            ref="scannerInput"
-            v-model="scannedCode"
-            type="text"
-            tabindex="-1"
-            autofocus
-            class="fixed top-1/2 left-1/2 invisible"
-            @keyup.enter="processScan(handleFound)"
-        />
     </AppLayout>
 
     <Dialog :open="addModal" @update:open="(val) => (addModal = val)">

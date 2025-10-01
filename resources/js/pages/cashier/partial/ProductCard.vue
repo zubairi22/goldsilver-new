@@ -34,7 +34,7 @@ const handleClick = (product: any) => {
                         {{ product.name }}
                     </div>
                     <div class="flex justify-between items-center mt-2">
-                        <div class="text-md font-semibold text-green-700">
+                        <div class="text-sm font-semibold text-green-700">
                             {{ formatRupiah(product.units[0].pivot.selling_price) }}
                         </div>
                         <div :class="product.stock < 50 ? 'text-red-600 text-sm' : 'text-gray-800 text-sm'">

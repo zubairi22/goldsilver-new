@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InputError from '@/components/InputError.vue';
-import { onMounted } from 'vue';
 import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 
 defineProps<{
@@ -49,7 +48,7 @@ const formTotal = () => form.value.items.reduce((sum: number, it: PurchaseItem) 
 
 const emit = defineEmits<{ (e: 'submit'): void }>();
 
-const { scannerInput, scannedCode, refocusScanner, processScan } = useBarcodeScanner()
+const { initScan } = useBarcodeScanner()
 
 const handleFound = (product: any) => {
     const exists = form.value.items.find((it: any) => it.product_id === product.id)
@@ -61,15 +60,10 @@ const handleFound = (product: any) => {
     }
 }
 
-onMounted(() => {
-    refocusScanner();
+initScan(handleFound, (code) => {
+    console.warn("Produk tidak ditemukan:", code)
+})
 
-
-    (window as any).testScan = (sku: string) => {
-        scannedCode.value = sku
-        processScan(handleFound)
-    }
-});
 </script>
 
 <template>
@@ -155,15 +149,6 @@ onMounted(() => {
     <div class="mt-4 flex justify-end gap-2">
         <Button type="button" :disabled="submitting" @click="emit('submit')"> Simpan </Button>
     </div>
-
-    <input
-        ref="scannerInput"
-        v-model="scannedCode"
-        type="text"
-        tabindex="-1"
-        class="fixed top-1/2 left-1/2 opacity-0"
-        @keyup.enter="processScan(handleFound)"
-    />
 </template>
 
 <style src="@vueform/multiselect/themes/default.css" />
