@@ -24,9 +24,9 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             manifest: {
-                name: 'Teman Dagang',
-                short_name: 'TemanDagang',
-                description: 'Aplikasi web Teman Dagang',
+                name: 'Toko Mulia',
+                short_name: 'TokoMulia',
+                description: 'Aplikasi POS Toko Mulia',
                 theme_color: '#0f172a',
                 background_color: '#ffffff',
                 display: 'standalone',
