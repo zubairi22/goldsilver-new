@@ -1,7 +1,7 @@
 {
-  "name": "Teman Dagang",
-  "short_name": "TemanDagang",
-  "description": "Aplikasi web Teman Dagang",
+  "name": "Toko Mulia",
+  "short_name": "TokoMulia",
+  "description": "Aplikasi POS Toko Mulia",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
