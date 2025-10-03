@@ -36,9 +36,14 @@ const stockValues = lowestStocks.map((item: any) => item.stock);
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
-const payment_method_id = ref<any>('all')
-const mode = ref<'daily' | 'weekly' | 'monthly'>('daily')
-const date = ref();
+const payment_method_id = ref<any>(route().params.payment_method_id ?? 'all')
+const mode = ref<'daily' | 'weekly' | 'monthly' | 'custom'>(route().params.mode ?? 'daily')
+
+const date = ref(
+    route().params.start && route().params.end
+        ? [route().params.start, route().params.end]
+        : null
+)
 
 const applyFilters = () => {
     const params: Record<string, string> = {}
@@ -48,10 +53,11 @@ const applyFilters = () => {
     }
 
     if (date.value && date.value[0] && date.value[1]) {
-        params.mode = 'custom'
+        params.mode = ''
         params.start = date.value[0]
         params.end   = date.value[1]
     } else {
+        date.value = null
         params.mode = mode.value
     }
 
@@ -61,6 +67,13 @@ const applyFilters = () => {
     })
 }
 
+watch(mode, (val) => {
+    if (val) {
+        date.value = null
+    }
+    applyFilters()
+})
+
 watch([payment_method_id, mode, date], applyFilters)
 
 </script>
@@ -68,7 +81,7 @@ watch([payment_method_id, mode, date], applyFilters)
 <template>
     <Head title="Dashboard" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex flex-wrap justify-between items-center gap-4 px-8 pt-8 mb-4">
+        <div class="flex flex-wrap justify-between items-center gap-4 px-8 pt-4 mb-4">
             <div class="w-52">
                 <Select v-model="payment_method_id">
                     <SelectTrigger id="payment_method">
@@ -114,7 +127,7 @@ watch([payment_method_id, mode, date], applyFilters)
                 </div>
             </div>
         </div>
-        <div class="grid gap-4 py-2 px-8">
+        <div class="grid gap-4 py-2 px-8 pb-6">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Card class="gap-0 bg-emerald-50 border-emerald-200">
                     <CardHeader class="flex flex-row items-center justify-between">

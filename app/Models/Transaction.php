@@ -168,10 +168,10 @@ class Transaction extends Model
                 $end   = $today->copy()->endOfDay();
             } elseif ($mode === 'custom') {
                 if (!empty($filters['start'])) {
-                    $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
+                    $start = Carbon::createFromFormat('Y-m-d', $filters['start'])?->startOfDay();
                 }
                 if (!empty($filters['end'])) {
-                    $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
+                    $end = Carbon::createFromFormat('Y-m-d', $filters['end'])?->endOfDay();
                 }
                 if ($start && !$end) {
                     $end = $today->copy()->endOfDay();

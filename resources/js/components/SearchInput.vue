@@ -18,7 +18,7 @@ watch(model, (newValue) => {
     <div class="relative w-full items-center">
         <Input
             id="search"
-            type="text"
+            type="search"
             v-model="model"
             placeholder="Cari..."
             class="pl-8"
