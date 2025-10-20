@@ -31,7 +31,7 @@ class Purchase extends Model
         $query->when($filters['search'] ?? null, function ($q, $s) {
             $s = mb_strtolower($s);
             $q->where(function($qq) use ($s) {
-                $qq->whereRaw('LOWER(code) LIKE ?', ["%{$s}%"])
+                $qq->whereRaw('LOWER(purchase_number) LIKE ?', ["%{$s}%"])
                     ->orWhereHas('supplier', function($qs) use ($s) {
                         $qs->whereRaw('LOWER(name) LIKE ?', ["%{$s}%"]);
                     });

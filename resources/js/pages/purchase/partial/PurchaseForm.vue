@@ -70,7 +70,7 @@ initScan(handleFound, (code) => {
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
             <label class="text-sm font-medium">Supplier</label>
-            <Multiselect v-model="form.supplier_id" :options="suppliers" />
+            <Multiselect v-model="form.supplier_id" :options="suppliers" searchable />
             <InputError :message="form.errors.supplier_id" />
         </div>
         <div>
