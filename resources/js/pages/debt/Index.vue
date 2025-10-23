@@ -360,17 +360,17 @@ const submitCancelDebt = () => {
                 <Table class="mt-2">
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-44">Nomor Invoice</TableHead>
-                            <TableHead>Tanggal Jatuh Tempo</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead class="w-44">Nama Pelanggan</TableHead>
+                            <TableHead class="text-center">Tanggal Jatuh Tempo</TableHead>
+                            <TableHead class="text-center">Status</TableHead>
                             <TableHead class="w-8" />
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow v-for="invoice in invoices" :key="invoice.id">
-                            <TableCell>{{ invoice.invoice_number }}</TableCell>
-                            <TableCell>{{ formatDate(invoice.due_date) }}</TableCell>
-                            <TableCell>
+                            <TableCell class="text-center">{{ invoice.transaction.customer.name }}</TableCell>
+                            <TableCell class="text-center">{{ formatDate(invoice.due_date, 'dd MMMM yyyy') }}</TableCell>
+                            <TableCell class="text-center">
                                 <Badge :variant="invoice.status === 'paid' ? 'success' : invoice.status === 'unpaid' ? 'destructive' : 'warning'">
                                     {{ invoice.status }}
                                 </Badge>

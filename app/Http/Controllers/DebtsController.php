@@ -41,7 +41,7 @@ class DebtsController extends Controller
         return Inertia::render('debt/Index', [
             'customers' => $customers,
             'paymentMethods' => PaymentMethod::active()->get(),
-            'invoices' => TransactionInvoice::with('transaction')->where('status', '!=', 'paid')->orderBy('due_date')->get()
+            'invoices' => TransactionInvoice::with('transaction.customer')->where('status', '!=', 'paid')->orderBy('due_date')->get()
         ]);
     }
 
