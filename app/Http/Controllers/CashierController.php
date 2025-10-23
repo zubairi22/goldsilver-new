@@ -170,6 +170,7 @@ class CashierController extends Controller
 
             $unit = $product->units->first();
             $qty = $item['quantity'];
+            $purchasePrice = $unit?->pivot->purchase_price;
             $price = $unit?->pivot->selling_price;
             $conversion = $unit?->pivot->conversion;
             $subtotal = $price * $qty;
@@ -180,6 +181,7 @@ class CashierController extends Controller
                 'product_id' => $product->id,
                 'unit_id' => $unit?->id,
                 'quantity' => $qty,
+                'purchase_price' => $purchasePrice,
                 'selling_price' => $price,
                 'subtotal' => $subtotal,
             ]);

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
             $table->foreignId('unit_id')->constrained()->restrictOnDelete();
             $table->integer('quantity');
+            $table->integer('purchase_price');
             $table->integer('selling_price');
             $table->integer('subtotal');
             $table->timestamps();

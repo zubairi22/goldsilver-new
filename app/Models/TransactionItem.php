@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TransactionItem extends Model
 {
-    protected $fillable = ['transaction_id', 'product_id', 'unit_id', 'quantity', 'purchase_price', 'selling_price', 'subtotal'];
+    protected $fillable = [
+        'transaction_id',
+        'product_id',
+        'unit_id',
+        'quantity',
+        'purchase_price',
+        'selling_price',
+        'subtotal'
+    ];
 
     public function transaction(): BelongsTo
     {
