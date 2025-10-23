@@ -20,7 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps<{ purchases:any }>()
 
-const { search } = useSearch('outlet.purchases.index', '', ['purchases'])
+const { search } = useSearch('outlet.purchases.index', route().params.search, ['purchases'])
 const { formatRupiah } = useFormat()
 
 const receive = (id:number) => {
@@ -45,7 +45,7 @@ const destroyPO = (id:number) => {
                                 <Button>Tambah PO</Button>
                             </Link>
                             <div class="mb-3 mt-3 md:mt-0 md:text-right">
-                                <SearchInput v-model="search" />
+                                <SearchInput v-model:search="search" />
                             </div>
                         </div>
 

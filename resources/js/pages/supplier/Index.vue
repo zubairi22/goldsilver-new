@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { suppliers } = defineProps<{ suppliers: any }>()
 
-const { search } = useSearch('outlet.suppliers.index', '', ['suppliers'])
+const { search } = useSearch('outlet.suppliers.index', route().params.search, ['suppliers'])
 
 const defaultForm = () => ({
     name: '',
@@ -92,7 +92,7 @@ const handleDeleteSupplier = () => {
                                 <Button @click="addSupplier">Tambah Supplier</Button>
                             </div>
                             <div class="mb-3 md:text-right">
-                                <SearchInput v-model="search" />
+                                <SearchInput v-model:search="search" />
                             </div>
                         </div>
 

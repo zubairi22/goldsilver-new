@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle } from 'lucide-vue-next';
@@ -291,6 +291,9 @@ const handlePrintReceipt = async () => {
 
 const { initScan } = useBarcodeScanner()
 
+const variantModal = ref(false)
+const variantOptions = ref<any[]>([])
+
 const handleFound = (product: any, code: string) => {
     const unit = product.units.find((u: any) => u.pivot.sku === code)
     if (!unit) return
@@ -316,8 +319,36 @@ const handleFound = (product: any, code: string) => {
     }
 }
 
-initScan(handleFound, (code) => {
-    console.warn("Produk tidak ditemukan:", code)
+function showVariantSelection(products: any[]) {
+    variantOptions.value = products
+    variantModal.value = true
+}
+
+function selectVariant(product: any[], code: string) {
+    variantModal.value = false
+    handleFound(product, code)
+}
+
+initScan(
+    handleFound,
+    (code) => {
+        console.warn("Produk tidak ditemukan:", code)
+    },
+    (products) => {
+        showVariantSelection(products)
+    }
+)
+
+onMounted(() => {
+    ;(window as any).testScan = async (sku: string) => {
+        const res = await fetch(`/api/products/search?sku=${sku}`)
+        const data = await res.json()
+        if (data.success && data.products) {
+            showVariantSelection(data.products)
+        } else {
+            console.warn("Produk tidak ditemukan:", sku)
+        }
+    }
 })
 
 watch(customerId, (val) => {
@@ -535,6 +566,42 @@ watch(customerId, (val) => {
     />
 
     <QrDialog v-model="showQrModal" :imagePath="selectedQr" />
+
+    <Dialog :open="variantModal" @update:open="(val) => (variantModal = val)">
+        <DialogContent @interactOutside.prevent>
+            <DialogHeader>
+                <DialogTitle>Pilih Varian Produk</DialogTitle>
+                <DialogDescription>Beberapa produk memiliki barcode yang sama</DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-2">
+                <div
+                    v-for="p in variantOptions"
+                    :key="p.id"
+                    class="flex items-center justify-between w-full border rounded-md p-2 hover:bg-muted transition"
+                >
+                    <div class="flex flex-col text-left">
+                        <span class="font-medium text-sm">{{ p.name }}</span>
+                        <span class="text-xs text-muted-foreground">
+                            {{ p.units[0].name }} — {{ p.units[0].pivot.sku }}
+                        </span>
+                    </div>
+                    <Button
+                        size="sm"
+                        class="ml-2"
+                        @click="selectVariant(p, p.units[0].pivot.sku)"
+                    >
+                        Pilih
+                    </Button>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="secondary" @click="variantModal = false">Batal</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
 </template>
 
 <style src="@vueform/multiselect/themes/default.css" />

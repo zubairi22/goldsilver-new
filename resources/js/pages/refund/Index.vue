@@ -6,8 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import PageNav from '@/components/PageNav.vue';
 import Heading from '@/components/Heading.vue';
 import SearchInput from '@/components/SearchInput.vue';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
 import { useSearch } from '@/composables/useSearch';
 import { useFormat } from '@/composables/useFormat';
 import type { BreadcrumbItem } from '@/types';
@@ -22,8 +20,6 @@ import {
     DialogHeader,
     DialogTitle
 } from '@/components/ui/dialog';
-import axios from 'axios';
-import { useBluetoothPrinter } from '@/composables/useBluetoothPrinter';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -33,7 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 defineProps(['refunds']);
 
 const { formatRupiah, formatDate } = useFormat();
-const { search } = useSearch('transaction.refunds.index', '', ['refunds']);
+const { search } = useSearch('transaction.refunds.index', route().params.search, ['refunds']);
 
 const detailModal = ref(false);
 const selectedRefund = ref<any>(null);
@@ -56,7 +52,7 @@ function openRefundModal(rf: any) {
                         <div class="flex flex-col justify-between md:flex-row mb-2">
                             <div />
                             <div class="mb-3 md:text-right">
-                                <SearchInput v-model="search" />
+                                <SearchInput v-model:search="search" />
                             </div>
                         </div>
                         <div class="overflow-x-auto">

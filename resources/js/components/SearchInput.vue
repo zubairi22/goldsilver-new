@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-vue-next'
 
-const model = ref('');
+const search = defineModel<string>('search');
 
-const emit = defineEmits<{
-    (e: 'update:modelValue', payload: string | number): void
-}>()
-
-watch(model, (newValue) => {
-    emit('update:modelValue', newValue);
+defineProps({
+    placeholder: {
+        type: String,
+        default: 'Cari...'
+    },
 });
 </script>
 
@@ -19,8 +17,8 @@ watch(model, (newValue) => {
         <Input
             id="search"
             type="search"
-            v-model="model"
-            placeholder="Cari..."
+            v-model="search"
+            :placeholder="placeholder"
             class="pl-8"
         />
         <span class="absolute start-0 inset-y-0 flex items-center justify-center px-2">

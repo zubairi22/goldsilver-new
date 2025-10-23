@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 defineProps(['products', 'categories', 'units']);
 
-const { search } = useSearch('outlet.products.index', '', ['products']);
+const { search } = useSearch('outlet.products.index', route().params.search, ['products']);
 
 const {formatRupiah} = useFormat()
 
@@ -118,7 +118,7 @@ const handleDelete = () => {
                         <div class="flex flex-col justify-between md:flex-row mb-2">
                             <Button @click="addProduct">Tambah Produk</Button>
                             <div class="mb-3 mt-3 md:mt-0 md:text-right">
-                                <SearchInput v-model="search"/>
+                                <SearchInput v-model:search="search"/>
                             </div>
                         </div>
                         <div class="overflow-x-auto">

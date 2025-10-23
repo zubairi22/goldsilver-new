@@ -33,7 +33,7 @@ defineProps(['sales', 'paymentMethods', 'financialAccounts']);
 
 const { formatRupiah, formatDate } = useFormat();
 const { connectPrinter, printText, isConnected } = useBluetoothPrinter();
-const { search } = useSearch('transaction.sales.index', '', ['sales']);
+const { search } = useSearch('transaction.sales.index', route().params.search, ['sales']);
 
 const detailModal = ref(false);
 const refundModal = ref(false);
@@ -208,7 +208,7 @@ async function printReceipt(trx: any) {
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
                             <div />
                             <div class="mb-3 md:text-right">
-                                <SearchInput v-model="search" />
+                                <SearchInput v-model:search="search" />
                             </div>
                         </div>
                         <div class="overflow-x-auto">
