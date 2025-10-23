@@ -16,7 +16,9 @@ class ReceiptController extends Controller
 
         $trx = Transaction::with([
             'user',
-            'items' => function ($q) use ($includeRefund) {
+            'customer.currentYearPoint',
+            'customer.pointLogs',
+            'items' => function ($q) {
                 $q->with(['product', 'unit'])
                     ->withSum('refundItems as refunded_qty', 'quantity');
             },
@@ -86,6 +88,21 @@ class ReceiptController extends Controller
         $lines[] = '';
         $lines[] = "Terbayar  : " . $trx->created_at->format('d M y H:i');
         $lines[] = "Dicetak   : " . ($trx->user->name ?? '-');
+
+        if ($trx->customer) {
+            $lines[] = '';
+            $currentPoints = $trx->customer->currentYearPoint->points ?? 0;
+            $earnedPoints = $trx->customer->pointLogs()
+                ->where('type', 'earn')
+                ->where('description', 'like', "%#{$trx->transaction_number}%")
+                ->sum('points');
+
+            $lines[] = str_repeat('-', 48);
+            $lines[] = $this->formatLine('Poin Diperoleh', $earnedPoints . ' pts');
+            $lines[] = $this->formatLine('Total Poin Saat Ini', $currentPoints . ' pts');
+        }
+
+        dd(implode("\n", $lines));
 
         return response()->json([
             'receipt' => implode("\n", $lines),
@@ -229,6 +246,9 @@ class ReceiptController extends Controller
         $lines[] = '';
         $lines[] = "Terbayar  : " . $trx->created_at->format('d M y H:i');
         $lines[] = "Dicetak   : " . ($trx->user->name ?? '-');
+        $lines[] = str_repeat('-', 48);
+        $lines[] = $this->formatLine('Poin Diperoleh', '11 pts');
+        $lines[] = $this->formatLine('Poin Saat Ini', '120 pts');
 
         return response()->json([
             'receipt' => implode("\n", $lines),
