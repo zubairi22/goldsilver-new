@@ -102,8 +102,6 @@ class ReceiptController extends Controller
             $lines[] = $this->formatLine('Total Poin Saat Ini', $currentPoints . ' pts');
         }
 
-        dd(implode("\n", $lines));
-
         return response()->json([
             'receipt' => implode("\n", $lines),
         ]);

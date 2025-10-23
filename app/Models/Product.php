@@ -33,6 +33,15 @@ class Product extends Model
         return $this->belongsToMany(Unit::class, 'product_unit')->withPivot('purchase_price', 'selling_price', 'conversion', 'sku');
     }
 
+    public function updateAllPurchasePrices(float $basePrice): void
+    {
+        foreach ($this->units as $unit) {
+            $adjustedPrice = $basePrice * ($unit->pivot->conversion ?: 1);
+            $this->units()->updateExistingPivot($unit->id, ['purchase_price' => $adjustedPrice]);
+        }
+    }
+
+
     public function scopeFilter($query, array $filters): void
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {

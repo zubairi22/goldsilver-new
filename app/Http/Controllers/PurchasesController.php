@@ -67,6 +67,12 @@ class PurchasesController extends Controller
                     'qty'         => $row['qty'],
                     'note'        => $row['note'] ?? null,
                 ]);
+
+                if ($po->status === Purchase::STATUS_RECEIVED) {
+                    $product = Product::with('units')->find($row['product_id']);
+                    $product?->updateAllPurchasePrices($row['unit_price']);
+                }
+
             }
 
             $this->updateTotalPurchase($po->id);
@@ -124,6 +130,12 @@ class PurchasesController extends Controller
                     'qty'        => $row['qty'],
                     'note'       => $row['note'] ?? null,
                 ]);
+
+                if ($purchase->status === Purchase::STATUS_RECEIVED) {
+                    $product = Product::with('units')->find($row['product_id']);
+                    $product?->updateAllPurchasePrices($row['unit_price']);
+                }
+
             }
 
             $this->updateTotalPurchase($purchase->id);

@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { suppliers } = defineProps<{ suppliers: any }>()
 
-const { search } = useSearch('master.suppliers.index', '', ['suppliers'])
+const { search } = useSearch('outlet.suppliers.index', '', ['suppliers'])
 
 const defaultForm = () => ({
     name: '',
