@@ -3,6 +3,7 @@ import axios from "axios"
 import { toast } from "vue-sonner"
 
 type ScanHandler = (product: any, code: string) => void
+type MultiHandler = (products: any[], code: string) => void
 
 export function useBarcodeScanner() {
     const buffer = ref("")
@@ -11,14 +12,18 @@ export function useBarcodeScanner() {
 
     const initScan = (
         onFound: ScanHandler,
-        onNotFound?: (code: string) => void
+        onNotFound?: (code: string) => void,
+        onMultipleFound?: MultiHandler
     ) => {
         const fetchProduct = async (code: string) => {
             try {
                 const { data } = await axios.get(`/api/products/search?sku=${code}`)
-                if (data.success && data.product) {
+                if (data.success && !data.multiple && data.product) {
                     onFound(data.product, code)
                     toast.success(`Produk ${data.product.name} ditemukan`, { position: "top-center" })
+                } else if (data.success && data.multiple && data.products?.length) {
+                    onMultipleFound?.(data.products, code)
+                    toast.info(`Ditemukan ${data.products.length} varian untuk SKU ${code}`, { position: "top-center" })
                 } else {
                     onNotFound?.(code)
                     toast.warning(`Produk dengan SKU: ${code} tidak ditemukan`, { position: "top-center" })

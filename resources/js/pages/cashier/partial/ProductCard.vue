@@ -33,14 +33,20 @@ const handleClick = (product: any) => {
                     <div class="line-clamp-2 min-h-[3rem] text-base font-medium" :title="product.name">
                         {{ product.name }}
                     </div>
-                    <div class="flex justify-between items-center mt-2">
-                        <div class="text-sm font-semibold text-green-700">
+                    <div class="flex flex-wrap justify-between items-center mt-2 gap-x-2">
+                        <div class="text-sm font-semibold text-green-700 truncate">
                             {{ formatRupiah(product.units[0].pivot.selling_price) }}
                         </div>
-                        <div :class="product.stock < 50 ? 'text-red-600 text-sm' : 'text-gray-800 text-sm'">
+                        <div
+                            :class="[
+                              'text-sm',
+                              product.stock < 50 ? 'text-red-600' : 'text-gray-800'
+                            ]"
+                        >
                             ({{ product.stock }})
                         </div>
                     </div>
+
                 </div>
             </div>
             <b v-if="!products.total">Produk tidak ditemukan</b>

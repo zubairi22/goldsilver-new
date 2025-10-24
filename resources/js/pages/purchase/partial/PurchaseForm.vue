@@ -97,6 +97,7 @@ initScan(handleFound, (code) => {
         <div class="md:col-span-2">
             <label class="text-sm font-medium">Catatan</label>
             <Textarea v-model="form.note" class="w-full rounded border p-2" rows="2" />
+            <InputError :message="form.errors.note" />
         </div>
     </div>
 
@@ -142,6 +143,7 @@ initScan(handleFound, (code) => {
                 </TableBody>
             </Table>
         </div>
+        <InputError class="mt-2" :message="form.errors.items" />
 
         <div class="mt-3 text-right font-semibold">Total: {{ formatRupiah(formTotal()) }}</div>
     </div>
