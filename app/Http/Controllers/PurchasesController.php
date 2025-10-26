@@ -217,7 +217,7 @@ class PurchasesController extends Controller
                 'user_id'     => auth()->id(),
                 'type'        => 'in',
                 'quantity'    => $it->qty,
-                'source_type' => 'purchases',
+                'source_type' => 'Purchases',
                 'source_id'   => $po?->id,
                 'note'        => 'PO '.$po?->purchase_number,
                 'created_at'  => now(),
