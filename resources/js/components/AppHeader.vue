@@ -124,7 +124,7 @@ const activeItemStyles = computed(
 
                                                 <div
                                                     v-if="route().current(`${item.url}.*`)"
-                                                    class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"
+                                                    class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-primary dark:bg-white"
                                                 />
                                             </div>
                                         </DropdownMenuTrigger>

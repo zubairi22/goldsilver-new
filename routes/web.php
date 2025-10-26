@@ -14,6 +14,7 @@ use App\Http\Controllers\Outlet\PaymentMethodController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\RefundsController;
+use App\Http\Controllers\Reports\StockReportController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UnitsController;
@@ -26,7 +27,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    Route::name('outlet.')->prefix('outlet')->group(function () {
+    Route::middleware('role:super-admin')->name('outlet.')->prefix('outlet')->group(function () {
         Route::get('settings', [OutletController::class, 'index'])->name('settings.index');
         Route::patch('settings', [OutletController::class, 'update'])->name('settings.update');
         Route::resource('financial-accounts', FinancialAccountController::class)->except(['show', 'create', 'edit']);
@@ -35,17 +36,19 @@ Route::middleware('auth')->group(function () {
         Route::resource('units', UnitsController::class)->except(['show', 'create', 'edit']);
         Route::resource('categories', CategoriesController::class)->except(['show', 'create', 'edit']);
         Route::resource('products', ProductsController::class)->except(['show', 'create', 'edit']);
+        Route::resource('suppliers', SuppliersController::class)->except(['show']);
+
+        Route::resource('purchases', PurchasesController::class)->except(['show']);
+        Route::patch('purchases/receive/{purchase}', [PurchasesController::class, 'receive'])->name('purchases.receive');
+    });
+
+    Route::middleware('role:super-admin|kasir')->name('outlet.')->prefix('outlet')->group(function () {
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
         Route::get('customer/{customer}/point', [CustomersController::class, 'point'])->name('customer.point');
         Route::post('customer/{customer}/point/redeem', [CustomersController::class, 'redeemPoint'])->name('customer.point.redeem');
         Route::get('customer/{customer}/deposit', [CustomersController::class, 'deposit'])->name('customer.deposit');
         Route::post('customer/{customer}/deposit', [CustomersController::class, 'storeDeposit'])->name('customer.deposit.store');
         Route::post('customer/{customer}/deposit/refund', [CustomersController::class, 'storeRefund'])->name('customer.deposit.refund');
-
-        Route::resource('suppliers', SuppliersController::class)->except(['show']);
-
-        Route::resource('purchases', PurchasesController::class)->except(['show']);
-        Route::patch('purchases/receive/{purchase}', [PurchasesController::class, 'receive'])->name('purchases.receive');
     });
 
     Route::resource('cashier', CashierController::class)->except(['show', 'create', 'edit']);
@@ -59,6 +62,11 @@ Route::middleware('auth')->group(function () {
         Route::post('debt/{transaction}/cancel-item', [DebtsController::class, 'cancelDebtItem'])->name('debt.cancel.item');
         Route::post('debt/{transaction}/generate-invoice', [DebtsController::class, 'generateInvoice'])->name('debt.invoice.generate');
         Route::get('debt/{transaction}/view-invoice', [DebtsController::class, 'viewInvoice'])->name('debt.invoice.view');
+    });
+
+    Route::middleware('role:super-admin')->name('reports.')->prefix('reports')->group(function () {
+        Route::get('stock', [StockReportController::class, 'index'])->name('stock.index');
+        Route::get('stock/{product}', [StockReportController::class, 'show'])->name('stock.show');
     });
 
     Route::middleware('role:super-admin')->name('master.')->prefix('master')->group(function () {

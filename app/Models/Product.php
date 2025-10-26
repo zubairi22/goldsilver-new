@@ -52,5 +52,9 @@ class Product extends Model
                     });
             });
         });
+
+        $query->when($filters['category_id'] ?? null, function ($query) use ($filters) {
+            $query->where('category_id', $filters['category_id']);
+        });
     }
 }
