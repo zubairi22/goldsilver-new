@@ -15,7 +15,7 @@ class StockReportController extends Controller
     public function index(Request $request)
     {
         $filters = [
-            'category_id' => $request->input('category_id', 'all'),
+            'category_id' => $request->input('category_id'),
             'mode'        => $request->input('mode', 'daily'),
             'start'       => $request->input('start'),
             'end'         => $request->input('end'),
