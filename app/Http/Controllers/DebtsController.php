@@ -148,7 +148,7 @@ class DebtsController extends Controller
                         'user_id'     => auth()->id(),
                         'type'        => 'in',
                         'quantity'    => $stockIn,
-                        'source_type' => Transaction::class,
+                        'source_type' => 'Debt',
                         'source_id'   => $transaction->id,
                         'note'        => 'Cancel item piutang '.$transaction->transaction_number,
                     ]);

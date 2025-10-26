@@ -193,7 +193,7 @@ class CashierController extends Controller
                 'user_id' => auth()->id(),
                 'type' => 'out',
                 'quantity' => $stockReduction,
-                'source_type' => Transaction::class,
+                'source_type' => 'Transaction',
                 'source_id' => $transaction->id,
                 'note' => 'Penjualan',
             ]);

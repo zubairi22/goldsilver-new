@@ -2,16 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Refund\RefundRequest;
 use App\Models\FinancialAccount;
 use App\Models\PaymentMethod;
-use App\Models\Product;
-use App\Models\StockMutation;
 use App\Models\Transaction;
-use App\Models\TransactionRefund;
-use App\Models\TransactionRefundItem;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

@@ -106,7 +106,7 @@ class RefundsController extends Controller
                         'user_id'     => auth()->id(),
                         'type'        => 'in',
                         'quantity'    => $stockIn,
-                        'source_type' => TransactionRefund::class,
+                        'source_type' => 'Refund',
                         'source_id'   => $refund->id,
                         'note'        => 'Refund penjualan '.$transaction->transaction_number.' ('.$refund->refund_number.')',
                     ]);
