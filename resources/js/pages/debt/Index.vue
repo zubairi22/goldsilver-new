@@ -139,7 +139,20 @@ const submitCancelDebt = () => {
         <div class="py-8">
             <div class="flex items-center justify-between">
                 <Heading class="mx-4" title="Piutang" description="Riwayat transaksi yang masih berstatus belum lunas" />
-                <Button class="mx-4" variant="outline" size="lg" @click="invoiceListModal = true"> Daftar Invoice </Button>
+                <Button
+                    class="mx-4 relative"
+                    variant="outline"
+                    size="lg"
+                    @click="invoiceListModal = true"
+                >
+                    Daftar Invoice
+                    <span
+                        v-if="invoices?.length"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center"
+                    >
+                        {{ invoices.length }}
+                    </span>
+                </Button>
             </div>
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
@@ -351,7 +364,7 @@ const submitCancelDebt = () => {
     </Dialog>
 
     <Dialog :open="invoiceListModal" @update:open="(val) => (invoiceListModal = val)">
-        <DialogContent class="sm:max-w-3xl">
+        <DialogContent class="sm:max-w-4xl">
             <DialogHeader>
                 <DialogTitle>Daftar Invoice</DialogTitle>
             </DialogHeader>
@@ -362,7 +375,7 @@ const submitCancelDebt = () => {
                         <TableRow>
                             <TableHead class="w-44">Nama Pelanggan</TableHead>
                             <TableHead class="text-center">Tanggal Jatuh Tempo</TableHead>
-                            <TableHead class="text-center">Status</TableHead>
+                            <TableHead class="text-center">Total</TableHead>
                             <TableHead class="w-8" />
                         </TableRow>
                     </TableHeader>
@@ -370,11 +383,7 @@ const submitCancelDebt = () => {
                         <TableRow v-for="invoice in invoices" :key="invoice.id">
                             <TableCell class="text-center">{{ invoice.transaction.customer.name }}</TableCell>
                             <TableCell class="text-center">{{ formatDate(invoice.due_date, 'dd MMMM yyyy') }}</TableCell>
-                            <TableCell class="text-center">
-                                <Badge :variant="invoice.status === 'paid' ? 'success' : invoice.status === 'unpaid' ? 'destructive' : 'warning'">
-                                    {{ invoice.status }}
-                                </Badge>
-                            </TableCell>
+                            <TableCell class="text-center">{{ formatRupiah(invoice.transaction.total_price ) }}</TableCell>
                             <TableCell>
                                 <Button>
                                     <a :href="route('transaction.debt.invoice.view', invoice)" target="_blank"> Unduh Invoice </a>

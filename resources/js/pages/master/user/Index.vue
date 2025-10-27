@@ -28,9 +28,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const {users, roles} = defineProps(['users', 'roles']);
+defineProps(['users', 'roles']);
 
-const { search } = useSearch('master.users.index', '', ['users']);
+const { search } = useSearch('master.users.index', route().params.search, ['users']);
 
 const defaultForm = () => ({
     name: '', email: '', role: ''
@@ -101,7 +101,7 @@ const handleDeleteUser = () => {
                                 <Button @click="addUserModal = true">Tambah Pengguna</Button>
                             </div>
                             <div class="mb-3 md:text-right">
-                                <SearchInput v-model="search"/>
+                                <SearchInput v-model:search="search"/>
                             </div>
                         </div>
                         <div class="overflow-x-auto">

@@ -25,7 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const { customers } = defineProps(['customers', 'auth']);
-const { search } = useSearch('outlet.customers.index', '', ['customers']);
+const { search } = useSearch('outlet.customers.index', route().params.search, ['customers']);
 const { formatRupiah } = useFormat()
 const defaultForm = () => ({
     name: '', phone: '', email: '', address: '', debt_limit: 0,
@@ -95,7 +95,7 @@ const handleDeleteCustomer = () => {
                                 <Button @click="addCustomerModal = true">Tambah Pelanggan</Button>
                             </div>
                             <div class="mb-3 md:text-right">
-                                <SearchInput v-model="search" />
+                                <SearchInput v-model:search="search" />
                             </div>
                         </div>
 

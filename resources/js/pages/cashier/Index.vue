@@ -23,6 +23,7 @@ import ProductCard from '@/pages/cashier/partial/ProductCard.vue';
 import CartCard from '@/pages/cashier/partial/CartCard.vue';
 import { useNotifier } from "@/composables/useNotifier"
 import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
+import { Badge } from '@/components/ui/badge';
 
 const notify = useNotifier()
 
@@ -224,6 +225,7 @@ const saveDraft = () => {
     localStorage.setItem('order_drafts', JSON.stringify(drafts));
     notify.success("Berhasil",'Order berhasil disimpan sementara!', { position: "top-center" })
     form.items = [];
+    loadDrafts()
 };
 
 const loadDrafts = () => {
@@ -340,15 +342,7 @@ initScan(
 )
 
 onMounted(() => {
-    ;(window as any).testScan = async (sku: string) => {
-        const res = await fetch(`/api/products/search?sku=${sku}`)
-        const data = await res.json()
-        if (data.success && data.products) {
-            showVariantSelection(data.products)
-        } else {
-            console.warn("Produk tidak ditemukan:", sku)
-        }
-    }
+    loadDrafts()
 })
 
 watch(customerId, (val) => {
@@ -356,7 +350,6 @@ watch(customerId, (val) => {
     maxRedeemPoints.value = customer?.current_year_point?.points || 0;
     redeemPoints.value = 0;
 });
-
 </script>
 
 <template>
@@ -373,9 +366,17 @@ watch(customerId, (val) => {
                         draftModal = true;
                         loadDrafts();
                     "
+                    class="relative"
                 >
                     Daftar Order
+                    <span
+                        v-if="draftList.length > 0"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center"
+                    >
+                        {{ draftList.length }}
+                    </span>
                 </Button>
+
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                 <div class="md:col-span-3">
