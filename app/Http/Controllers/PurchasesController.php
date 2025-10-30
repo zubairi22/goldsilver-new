@@ -219,7 +219,7 @@ class PurchasesController extends Controller
                 'quantity'    => $it->qty,
                 'source_type' => 'Purchases',
                 'source_id'   => $po?->id,
-                'note'        => 'PO '.$po?->purchase_number,
+                'note'        => $po?->purchase_number,
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ]);

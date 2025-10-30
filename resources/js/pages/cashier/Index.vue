@@ -23,7 +23,6 @@ import ProductCard from '@/pages/cashier/partial/ProductCard.vue';
 import CartCard from '@/pages/cashier/partial/CartCard.vue';
 import { useNotifier } from "@/composables/useNotifier"
 import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
-import { Badge } from '@/components/ui/badge';
 
 const notify = useNotifier()
 
@@ -500,7 +499,7 @@ watch(customerId, (val) => {
                     <Label for="paid_amount">Jumlah Bayar</Label>
                     <div class="flex items-center gap-2">
                         <CurrencyInput v-model="form.paid_amount" />
-                        <Button type="button" @click="form.paid_amount = totalPrice"> Pas </Button>
+                        <Button type="button" @click="form.paid_amount = totalAfterDiscount"> Pas </Button>
                     </div>
                     <InputError :message="form.errors.paid_amount" class="mt-1" />
                 </div>

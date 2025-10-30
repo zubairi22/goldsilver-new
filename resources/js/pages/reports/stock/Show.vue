@@ -104,7 +104,6 @@ watch(date, applyFilters);
                 </Card>
             </div>
 
-
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>

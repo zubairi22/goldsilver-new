@@ -1,30 +1,27 @@
-import { ref, watch } from 'vue';
-import { throttle } from 'lodash';
-import { router } from '@inertiajs/vue3';
+import { ref, watch } from 'vue'
+import { pickBy, throttle } from 'lodash'
+import { router } from '@inertiajs/vue3'
 
-export function useSearch(routeName: string, initialSearch = '', data: any = [], routeParam?: any,) {
-    const search = ref(initialSearch);
+export function useSearch(routeName: string, initialSearch = '', data = [], routeParam = {}) {
+    const search = ref(initialSearch)
 
     const throttledSearch = throttle(() => {
-        if (search.value) {
-            router.get(route(routeName, routeParam), { search: search.value }, {
-                only: data,
-                preserveState: true,
-                preserveScroll: true,
-            });
+        const currentParams = route().params ? { ...pickBy(route().params) } : {}
+
+        if (search.value && search.value !== '') {
+            currentParams.search = search.value
         } else {
-            router.get(route(routeName, routeParam),{}, {
-                preserveState: true,
-                preserveScroll: true,
-            });
+            delete currentParams.search
         }
-    }, 500);
 
-    watch(search, () => {
-        throttledSearch();
-    });
+        router.get(route(routeName, routeParam), currentParams, {
+            only: data,
+            preserveState: true,
+            preserveScroll: true,
+        })
+    }, 500)
 
-    return {
-        search,
-    };
+    watch(search, throttledSearch)
+
+    return { search }
 }

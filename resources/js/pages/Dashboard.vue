@@ -10,12 +10,15 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import Icon from '@/components/Icon.vue';
+import { format } from 'date-fns'
+import { id } from 'date-fns/locale'
 
-const { summary, salesByCategory, topProducts, salesByCashier, lowestStocks } = defineProps([
+const { summary, salesByCategory, topProducts, salesByCashier, cashByCashier, lowestStocks } = defineProps([
     'summary',
     'salesByCategory',
     'topProducts',
     'salesByCashier',
+    'cashByCashier',
     'lowestStocks',
     'paymentMethods'
 ]);
@@ -31,8 +34,13 @@ const topProductValues = topProducts.map((item: any) => item.total_sold);
 const cashierLabels = salesByCashier.map((item: any) => item.cashier);
 const cashierValues = salesByCashier.map((item: any) => item.total);
 
+const cashLabels = cashByCashier.map((item: any) => item.cashier);
+const cashValues = cashByCashier.map((item: any) => item.total);
+
 const stockLabels = lowestStocks.map((item: any) => item.name);
 const stockValues = lowestStocks.map((item: any) => item.stock);
+
+const today = format(new Date(), "EEEE, d MMMM yyyy", { locale: id })
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -230,6 +238,26 @@ watch([payment_method_id, mode, date], applyFilters)
                         <HorizontalBarChart :labels="stockLabels" :data="stockValues" suffix=" pcs" color="#ef4444" />
                     </CardContent>
                 </Card>
+
+                <Card class="bg-amber-50 border-amber-200">
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <CardTitle class="text-amber-700 leading-tight">
+                            <div>Uang Kas per Kasir</div>
+                            <div class="text-sm">Uang Awal : Rp.350.000</div>
+                            <div class="text-xs font-medium">{{ today }}</div>
+                        </CardTitle>
+                        <Icon name="Wallet" class="w-5 h-5 text-amber-600" />
+                    </CardHeader>
+                    <CardContent class="h-64">
+                        <HorizontalBarChart
+                            :labels="cashLabels"
+                            :data="cashValues"
+                            prefix="Rp "
+                            color="#f59e0b"
+                        />
+                    </CardContent>
+                </Card>
+
             </div>
         </div>
     </AppLayout>

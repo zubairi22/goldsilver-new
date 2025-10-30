@@ -6,6 +6,7 @@ use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -21,17 +22,24 @@ class DashboardController extends Controller
 
         $base = Transaction::byUser()->filter($filters);
 
-        $pm = $request->query('payment_method', 'all');
-
-        if ($pm !== 'all') {
-            $base->where('payment_method', $pm);
-        }
-
         $transactions = (clone $base)->get();
 
-        $totalSales          = $transactions->sum('total_price') - $transactions->sum('refunded_total');
-        $outstandingPayment  = $transactions->whereIn('payment_status', ['credit', 'partial'])->sum('total_price');
-        $paidSales           = $transactions->where('payment_status', 'paid')->sum('total_price');
+        $totalSales = $transactions->sum(fn($trx) =>
+            $trx->total_price - $trx->discount_amount - $trx->refunded_total
+        );
+
+        $outstandingPayment = $transactions
+            ->whereIn('payment_status', ['credit', 'partial'])
+            ->sum(fn($trx) =>
+                $trx->total_price - $trx->discount_amount
+            );
+
+        $paidSales = $transactions
+            ->where('payment_status', 'paid')
+            ->sum(fn($trx) =>
+                $trx->total_price - $trx->discount_amount
+            );
+
         $totalRefund         = $transactions->sum('refunded_total');
         $transactionCount    = $transactions->count();
 
@@ -72,6 +80,34 @@ class DashboardController extends Controller
 
         $lowestStocks = Product::orderBy('stock')->limit(5)->get(['name', 'stock']);
 
+        $todayStart = Carbon::today()->startOfDay();
+        $todayEnd   = Carbon::today()->endOfDay();
+
+        $cashTrxToday = Transaction::byUser()
+            ->whereBetween('created_at', [$todayStart, $todayEnd])
+            ->where('payment_status', 'paid')
+            ->whereHas('paymentMethod', fn($q) =>
+            $q->whereRaw('LOWER(name) = ?', ['cash'])
+            )
+            ->with(['paymentMethod', 'user'])
+            ->get();
+
+        $openingCash = 350000;
+
+        $cashByCashier = $cashTrxToday
+            ->groupBy(fn($trx) => $trx->user->name ?? 'Tanpa Nama')
+            ->map(fn($group, $cashier) => [
+                'cashier' => $cashier,
+                'opening' => $openingCash,
+                'sales'   => $group->sum(fn($trx) =>
+                    ($trx->total_price - $trx->discount_amount) - $trx->refunded_total
+                ),
+                'total'   => $openingCash + $group->sum(fn($trx) =>
+                        ($trx->total_price - $trx->discount_amount) - $trx->refunded_total
+                    ),
+            ])
+            ->values();
+
         return Inertia::render('Dashboard', [
             'summary' => [
                 'totalSales'         => $totalSales,
@@ -84,6 +120,7 @@ class DashboardController extends Controller
             'salesByCategory' => $salesByCategory,
             'topProducts'     => $topProducts,
             'salesByCashier'  => $salesByCashier,
+            'cashByCashier'   => $cashByCashier,
             'lowestStocks'    => $lowestStocks,
             'paymentMethods'  => PaymentMethod::active()->get(),
         ]);

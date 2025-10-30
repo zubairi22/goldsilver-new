@@ -40,6 +40,10 @@ const applyFilters = () => {
         params.category_id = category_id.value;
     }
 
+    if (search.value) {
+        params.search = search.value;
+    }
+
     router.get(route('reports.stock.index'), params, {
         preserveScroll: true,
         preserveState: true,

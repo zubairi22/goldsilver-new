@@ -52,6 +52,7 @@ export default defineConfig({
                 ],
             },
             workbox: {
+                cleanupOutdatedCaches: true,
                 runtimeCaching: [
                     {
                         urlPattern: ({ request }) => request.destination === 'document',
@@ -62,7 +63,7 @@ export default defineConfig({
                     },
                     {
                         urlPattern: ({ request }) => request.destination === 'script' || request.destination === 'style',
-                        handler: 'StaleWhileRevalidate',
+                        handler: 'NetworkFirst',
                         options: {
                             cacheName: 'asset-cache',
                         },

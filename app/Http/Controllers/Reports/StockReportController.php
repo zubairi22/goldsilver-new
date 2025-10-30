@@ -25,7 +25,6 @@ class StockReportController extends Controller
         $start = $filters['start'] ? Carbon::parse($filters['start']) : Carbon::now()->startOfDay();
         $end   = $filters['end'] ? Carbon::parse($filters['end']) : Carbon::now()->endOfDay();
 
-
         $products = Product::with('category')
             ->filter($filters)
             ->withCount([
@@ -65,18 +64,20 @@ class StockReportController extends Controller
             ? Carbon::parse($request->input('end'))->endOfDay()
             : Carbon::now()->endOfDay();
 
-        $mutations = $product->stockMutations()
-            ->whereBetween('created_at', [$start, $end])
+        $query = $product->stockMutations()
+            ->whereBetween('created_at', [$start, $end]);
+
+        $mutations = $query->clone()
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->onEachSide(2)
             ->withQueryString();
 
         $summary = [
-            'in'  => $mutations->getCollection()->where('type', 'in')->sum('quantity'),
-            'out' => $mutations->getCollection()->where('type', 'out')->sum('quantity'),
-            'net' => $mutations->getCollection()->where('type', 'in')->sum('quantity')
-                - $mutations->getCollection()->where('type', 'out')->sum('quantity'),
+            'in'  => $query->clone()->where('type', 'in')->sum('quantity'),
+            'out' => $query->clone()->where('type', 'out')->sum('quantity'),
+            'net' => $query->clone()->where('type', 'in')->sum('quantity')
+                - $query->clone()->where('type', 'out')->sum('quantity'),
         ];
 
         return Inertia::render('reports/stock/Show', [

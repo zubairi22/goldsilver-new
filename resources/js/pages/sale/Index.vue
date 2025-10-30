@@ -58,6 +58,10 @@ const applyFilters = () => {
         params.mode = mode.value;
     }
 
+    if (search.value) {
+        params.search = search.value;
+    }
+
     router.get(route('transaction.sales.index'), params, {
         preserveScroll: true,
         preserveState: true,
