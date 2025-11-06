@@ -40,7 +40,7 @@ class ReceiptController extends Controller
         $lines[] = str_repeat('-', 48);
 
         foreach ($trx->items as $item) {
-            $name     = substr($item->product->name ?? '-', 0, 24);
+            $name     = $item->product->name ?? '-';
             $unitName = $item->unit->name ?? '-';
             $soldQty  = (int) ($item->quantity ?? $item->qty ?? 0);
             $refQty   = (int) ($item->refunded_qty ?? 0);
@@ -53,8 +53,16 @@ class ReceiptController extends Controller
             $unitPrice = (int) ($item->selling_price ?? $item->price ?? round(($item->subtotal ?? 0) / max(1, $soldQty)));
             $lineTotal = $unitPrice * $netQty;
 
-            $lines[] = $this->formatLine("{$netQty} {$name}", "Rp" . number_format($lineTotal, 0, ',', '.'));
-            $lines[] = $this->formatLine("({$unitName})",'');
+            $wrappedName = wordwrap("{$netQty} {$name}", 28);
+
+            $nameLines = explode("\n", $wrappedName);
+
+            foreach ($nameLines as $i => $line) {
+                $rightText = ($i === 0) ? "Rp" . number_format($lineTotal, 0, ',', '.') : '';
+                $lines[] = $this->formatLine($line, $rightText);
+            }
+
+            $lines[] = $this->formatLine("({$unitName})", '');
         }
 
         $lines[] = str_repeat('-', 48);
@@ -123,14 +131,22 @@ class ReceiptController extends Controller
         $subtotal = 0;
 
         foreach ($items as $item) {
-            $name     = substr($item['name'] ?? '-', 0, 24);
-            $unitName = $item['unit_name'] ?? '-';
-            $qty      = (int) ($item['quantity'] ?? 0);
-            $price    = (int) ($item['selling_price'] ?? 0);
+            $name      = $item['name'] ?? '-';
+            $unitName  = $item['unit_name'] ?? '-';
+            $qty       = (int) ($item['quantity'] ?? 0);
+            $price     = (int) ($item['selling_price'] ?? 0);
             $lineTotal = $qty * $price;
             $subtotal += $lineTotal;
 
-            $lines[] = $this->formatLine("{$qty} {$name}", "Rp" . number_format($lineTotal, 0, ',', '.'), 48);
+            $wrappedName = wordwrap("{$qty} {$name}", 28);
+
+            $nameLines = explode("\n", $wrappedName);
+
+            foreach ($nameLines as $i => $line) {
+                $rightText = ($i === 0) ? "Rp" . number_format($lineTotal, 0, ',', '.') : '';
+                $lines[] = $this->formatLine($line, $rightText);
+            }
+
             $lines[] = $this->formatLine("({$unitName})", '');
         }
 

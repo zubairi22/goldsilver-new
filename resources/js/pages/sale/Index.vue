@@ -234,7 +234,12 @@ async function printReceipt(trx: any) {
                                 <TableBody>
                                     <TableRow v-for="trx in sales.data" :key="trx.id" @click="openTransactionModal(trx)">
                                         <TableCell class="align-top">
-                                            {{ formatDate(trx.created_at, 'dd MMM yyyy HH:mm')}}
+                                            <div>
+                                                <div>{{ formatDate(trx.created_at, 'dd MMM yyyy HH:mm') }}</div>
+                                                <div class="text-xs text-muted-foreground font-mono">
+                                                    #{{ trx.transaction_number }}
+                                                </div>
+                                            </div>
                                         </TableCell>
 
                                         <TableCell class="align-top">
