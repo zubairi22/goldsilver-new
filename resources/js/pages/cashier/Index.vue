@@ -156,12 +156,7 @@ const openQr = (url: string) => {
     showQrModal.value = true
 }
 
-const isSubmitting = ref(false);
-
 const submitTransaction = () => {
-    if (isSubmitting.value) return
-    isSubmitting.value = true
-
     form.customer_id = customerId.value;
     form.discount_amount = pointDiscount.value;
     form.redeemed_points = redeemPoints.value;
@@ -185,9 +180,6 @@ const submitTransaction = () => {
             if (draftId.value) {
                 deleteDraft(draftId.value);
             }
-        },
-        onFinish: () => {
-            isSubmitting.value = false
         },
     });
 };
@@ -550,7 +542,7 @@ watch(customerId, (val) => {
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="paymentModal = false">Batal</Button>
                 <Button
-                    :disabled="form.processing || isSubmitting || totalPrice === 0"
+                    :disabled="form.processing || totalPrice === 0"
                     @click="submitTransaction"
                 >
                     <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />

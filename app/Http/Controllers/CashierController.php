@@ -48,6 +48,11 @@ class CashierController extends Controller
         $validated = $request->validated();
         $transaction = null;
 
+        if ($this->isDuplicateTransaction($validated)) {
+            $this->flashError('Transaksi identik baru saja diproses. Mohon tunggu beberapa detik.');
+            return Redirect::back();
+        }
+
         try {
             DB::transaction(function () use ($validated, &$transaction) {
                 $total = $this->validateAndCalculateTotal($validated['items']);
@@ -97,6 +102,25 @@ class CashierController extends Controller
             return Redirect::back();
         }
     }
+
+    protected function isDuplicateTransaction(array $validated): bool
+    {
+        $hash = md5(json_encode([
+            'user_id' => auth()->id(),
+            'customer_id' => $validated['customer_id'] ?? null,
+            'items' => $validated['items'],
+            'total' => array_sum(array_column($validated['items'], 'quantity')),
+            'paid_amount' => $validated['paid_amount'],
+        ], JSON_THROW_ON_ERROR));
+
+        if (Cache::has('trx_dup_'.$hash)) {
+            return true;
+        }
+
+        Cache::put('trx_dup_'.$hash, true, 10);
+        return false;
+    }
+
 
     protected function validateAndCalculateTotal(array $items): float
     {
