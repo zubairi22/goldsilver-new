@@ -177,6 +177,26 @@ watch([payment_method_id, mode, date], applyFilters)
                     </CardContent>
                 </Card>
 
+                <Card class="gap-0 bg-purple-50 border-purple-200">
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <CardTitle class="text-sm font-medium text-purple-700">Total Diskon</CardTitle>
+                        <Icon name="Tag" class="w-5 h-5 text-purple-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-2xl font-bold text-purple-800">{{ formatRupiah(summary.totalDiscount) }}</p>
+                    </CardContent>
+                </Card>
+
+                <Card class="gap-0 bg-teal-50 border-teal-200">
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <CardTitle class="text-sm font-medium text-teal-700">Total Kembalian</CardTitle>
+                        <Icon name="CornerDownLeft" class="w-5 h-5 text-teal-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <p class="text-2xl font-bold text-teal-800">{{ formatRupiah(summary.totalChange) }}</p>
+                    </CardContent>
+                </Card>
+
                 <Card class="gap-0 bg-blue-50 border-blue-200">
                     <CardHeader class="flex flex-row items-center justify-between">
                         <CardTitle class="text-sm font-medium text-blue-700">Total Produk Terjual</CardTitle>

@@ -43,6 +43,9 @@ class DashboardController extends Controller
         $totalRefund         = $transactions->sum('refunded_total');
         $transactionCount    = $transactions->count();
 
+        $totalDiscount = $transactions->sum('discount_amount');
+        $totalChange   = $transactions->sum('change_amount');
+
         $itemsTrx = (clone $base)->with('items')->get();
         $totalItemsSold = $itemsTrx->flatMap->items->sum('quantity');
 
@@ -116,6 +119,8 @@ class DashboardController extends Controller
                 'totalRefund'        => $totalRefund,
                 'transactionCount'   => $transactionCount,
                 'itemsSold'          => $totalItemsSold,
+                'totalDiscount'      => $totalDiscount,
+                'totalChange'        => $totalChange,
             ],
             'salesByCategory' => $salesByCategory,
             'topProducts'     => $topProducts,

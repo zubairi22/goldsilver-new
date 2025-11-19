@@ -498,7 +498,10 @@ watch(customerId, (val) => {
                 <div>
                     <Label for="paid_amount">Jumlah Bayar</Label>
                     <div class="flex items-center gap-2">
-                        <CurrencyInput v-model="form.paid_amount" />
+                        <CurrencyInput
+                            v-model="form.paid_amount"
+                            @input="form.clearErrors('paid_amount')"
+                        />
                         <Button type="button" @click="form.paid_amount = totalAfterDiscount"> Pas </Button>
                     </div>
                     <InputError :message="form.errors.paid_amount" class="mt-1" />
@@ -506,7 +509,13 @@ watch(customerId, (val) => {
 
                 <div>
                     <Label for="customer">Pelanggan</Label>
-                    <Multiselect v-model="customerId" value-prop="id" label="name" :options="customers" searchable />
+                    <Multiselect
+                        v-model="customerId"
+                        @input="form.clearErrors('customer_id')"
+                        value-prop="id"
+                        label="name"
+                        :options="customers"
+                        searchable />
                     <InputError :message="form.errors.customer_id" class="mt-1" />
                 </div>
 
