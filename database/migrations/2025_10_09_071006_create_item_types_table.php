@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_point_logs', function (Blueprint $table) {
+        Schema::create('item_types', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-            $table->enum('type', ['earn', 'redeem']);
-            $table->unsignedInteger('points');
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
     }
 
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customer_point_logs');
+        Schema::dropIfExists('item_types');
     }
 };
