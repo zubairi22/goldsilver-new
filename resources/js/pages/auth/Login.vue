@@ -16,8 +16,8 @@ defineProps<{
 }>();
 
 const form = useForm({
-    email: '',
-    password: '',
+    email: 'admin@temantekno.com',
+    password: 'password',
     remember: false,
 });
 

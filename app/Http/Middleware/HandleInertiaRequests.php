@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
-use App\Models\Outlet;
+use App\Models\StoreSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
@@ -41,7 +41,7 @@ class HandleInertiaRequests extends Middleware
     {
         $shared = [
             ...parent::share($request),
-            'name' => Outlet::first()->name ?? config('app.name'),
+            'name' => StoreSetting::first()->name ?? config('app.name'),
             'auth' => [
                 'user' => $request->user(),
                 'can' => $request->user() ? $request->user()->getPermissionsViaRoles()->pluck('name') : null,
@@ -56,7 +56,7 @@ class HandleInertiaRequests extends Middleware
                 'transaction_number' => fn () => $request->session()->get('transaction_number'),
             ],
             'og' => [
-                'title' => Outlet::first()->name ?? config('app.name'),
+                'title' => StoreSetting::first()->name ?? config('app.name'),
                 'image' => public_path('/logo.png'),
             ]
         ];

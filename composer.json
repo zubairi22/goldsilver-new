@@ -16,6 +16,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-medialibrary": "^11.17",
         "spatie/laravel-permission": "^6.20",
         "tightenco/ziggy": "^2.4"
     },

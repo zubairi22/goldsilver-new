@@ -14,31 +14,26 @@ import { useSearch } from '@/composables/useSearch'
 import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 
-const { filters } = defineProps(['sales', 'paymentMethods', 'filters'])
+const { sales, paymentMethods, filters } = defineProps(['sales', 'paymentMethods', 'filters'])
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Penjualan', href: '#' },
+    { title: 'Penjualan Emas', href: '#' },
 ]
 
-const { search } = useSearch('transactions.sales.index', filters.search, ['sales'])
-
+const { search } = useSearch('transactions.sales.gold.index', filters.search, ['sales'])
 const { formatRupiah, formatDate } = useFormat()
 
 const status = ref(filters.status)
-const category = ref(filters.category)
 const sale_type = ref(filters.sale_type)
 const payment_method_id = ref(filters.payment_method_id)
-const date = ref(
-    filters.start && filters.end ? [filters.start, filters.end] : []
-)
+const date = ref(filters.start && filters.end ? [filters.start, filters.end] : [])
 
 const applyFilters = () => {
-    const params: Record<string, any> = {}
+    const params: Record<string, any> = { category: 'gold' }
 
     if (search.value) params.search = search.value
     if (status.value !== 'all') params.status = status.value
-    if (category.value !== 'all') params.category = category.value
     if (sale_type.value !== 'all') params.sale_type = sale_type.value
     if (payment_method_id.value !== 'all') params.payment_method_id = payment_method_id.value
     if (date.value && date.value[0] && date.value[1]) {
@@ -46,31 +41,29 @@ const applyFilters = () => {
         params.end = date.value[1]
     }
 
-    router.get(route('transactions.sales.index', params), {}, {
+    router.get(route('transactions.sales.gold.index', params), {}, {
         preserveScroll: true,
         preserveState: true,
     })
 }
 
-watch([status, category, sale_type, payment_method_id, date], applyFilters)
+watch([status, sale_type, payment_method_id, date], applyFilters)
 </script>
 
 <template>
-    <Head title="Penjualan" />
+    <Head title="Penjualan Emas" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Penjualan" description="Daftar semua transaksi penjualan" />
+            <Heading class="mx-4" title="Penjualan Emas" description="Daftar transaksi penjualan kategori emas" />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
                         <!-- Filter Section -->
-                        <div
-                            class="flex flex-wrap items-center justify-between gap-4 mb-4"
-                        >
-                            <!-- Bagian kiri: semua Select -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                             <div class="flex flex-wrap items-center gap-4">
+                                <!-- Status -->
                                 <div class="w-40">
                                     <Select v-model="status">
                                         <SelectTrigger>
@@ -85,28 +78,19 @@ watch([status, category, sale_type, payment_method_id, date], applyFilters)
                                     </Select>
                                 </div>
 
-                                <div class="w-36">
-                                    <Select v-model="category">
-                                        <SelectTrigger><SelectValue placeholder="Kategori" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="gold">Emas</SelectItem>
-                                            <SelectItem value="silver">Perak</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
+                                <!-- Jenis Penjualan -->
                                 <div class="w-40">
                                     <Select v-model="sale_type">
                                         <SelectTrigger><SelectValue placeholder="Jenis" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="retail">Retail</SelectItem>
-                                            <SelectItem value="wholesale">Grosir</SelectItem>
+                                            <SelectItem value="retail">Eceran</SelectItem>
+                                            <SelectItem value="wholesale">Partai</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
+                                <!-- Metode Pembayaran -->
                                 <div class="w-40">
                                     <Select v-model="payment_method_id">
                                         <SelectTrigger><SelectValue placeholder="Metode Pembayaran" /></SelectTrigger>
@@ -126,7 +110,7 @@ watch([status, category, sale_type, payment_method_id, date], applyFilters)
                                 </div>
                             </div>
 
-                            <!-- Bagian kanan: Date Picker -->
+                            <!-- Date Picker -->
                             <div class="w-full sm:w-auto lg:w-80">
                                 <VueDatePicker
                                     v-model="date"
@@ -156,6 +140,7 @@ watch([status, category, sale_type, payment_method_id, date], applyFilters)
                                         <TableHead>Invoice</TableHead>
                                         <TableHead>Kasir</TableHead>
                                         <TableHead>Pelanggan</TableHead>
+                                        <TableHead class="text-right">Total Berat (gr)</TableHead>
                                         <TableHead class="text-right">Total Harga</TableHead>
                                         <TableHead class="text-right">Dibayar</TableHead>
                                         <TableHead class="text-right">Sisa</TableHead>
@@ -169,6 +154,7 @@ watch([status, category, sale_type, payment_method_id, date], applyFilters)
                                         <TableCell>{{ sale.invoice_no }}</TableCell>
                                         <TableCell>{{ sale.user?.name || '-' }}</TableCell>
                                         <TableCell>{{ sale.customer?.name || '-' }}</TableCell>
+                                        <TableCell class="text-right">{{ sale.total_weight.toFixed(2) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.remaining_amount) }}</TableCell>
@@ -177,7 +163,7 @@ watch([status, category, sale_type, payment_method_id, date], applyFilters)
                                     </TableRow>
 
                                     <TableRow v-if="!sales.total">
-                                        <TableCell colspan="9" class="text-center py-4">Belum ada penjualan.</TableCell>
+                                        <TableCell colspan="10" class="text-center py-4">Belum ada penjualan emas.</TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

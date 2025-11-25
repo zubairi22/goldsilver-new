@@ -2,7 +2,7 @@ import { ref, watch } from 'vue'
 import { pickBy, throttle } from 'lodash'
 import { router } from '@inertiajs/vue3'
 
-export function useSearch(routeName: string, initialSearch = '', data = [], routeParam = {}) {
+export function useSearch(routeName: string, initialSearch = '', data: any = [], routeParam = {}) {
     const search = ref(initialSearch)
 
     const throttledSearch = throttle(() => {

@@ -6,24 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class PaymentMethod extends Model
 {
-
     protected $fillable = [
         'name',
-        'code',
         'is_active',
-        'image_path',
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
-
-    public function transactions()
+    public function sales()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Sale::class);
     }
 
-    /** Scopes */
     public function scopeActive($q)
     {
         return $q->where('is_active', true);

@@ -8,7 +8,6 @@ use App\Http\Requests\Menu\MenuUpdateRequest;
 use App\Models\Menu;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
 
@@ -16,7 +15,7 @@ class MenusController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('master/menu/Index', [
+        return inertia('master/menu/Index', [
             'menus' => Menu::with('permissions')->paginate(15),
             'parents' => Menu::whereNull('parent_id')->pluck('title', 'id')
         ]);
