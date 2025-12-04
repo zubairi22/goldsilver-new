@@ -75,17 +75,17 @@ const submit = () => {
     if (filtered.length === 0) return alert('Pilih minimal satu item');
 
     form.transform((data) => ({ ...data, items: filtered }));
-    form.post(route('buyback.gold.store'), {
+    form.post(route('gold.buyback.store'), {
         preserveScroll: true,
         onSuccess: () => {
             setTimeout(() => {
-                router.get('buyback.gold.index')
+                router.get('gold.buyback.index')
             }, 1000)
         },
     });
 };
 
-const goBack = () => router.get(route('transactions.sales.gold.index', { category: 'gold' }));
+const goBack = () => router.get(route('gold.transactions.sales.index', { category: 'gold' }));
 </script>
 
 <template>

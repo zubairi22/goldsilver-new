@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Buyback Emas', href: '#' },
 ]
 
-const { search } = useSearch('buyback.gold.index', filters.search, ['buybacks'])
+const { search } = useSearch('gold.buyback.index', filters.search, ['buybacks'])
 const { formatRupiah, formatDate } = useFormat()
 
 const status = ref(filters.status)
@@ -73,7 +73,7 @@ const applyFilters = () => {
         params.end = date.value[1]
     }
 
-    router.get(route('buyback.gold.index'), params, {
+    router.get(route('gold.buyback.index'), params, {
         preserveState: true,
         preserveScroll: true,
     })

@@ -19,7 +19,7 @@ const { formatRupiah } = useFormat()
 const search = ref(filters.search || '')
 
 function doSearch() {
-    router.get(route('damaged.gold.index'), { search: search.value }, {
+    router.get(route('gold.damaged.index'), { search: search.value }, {
         preserveScroll: true,
         preserveState: true,
     })
@@ -41,7 +41,7 @@ function openRestore(item: any) {
 
 function submitRestore() {
     router.patch(
-        route('damaged.gold.restore', restoreItem.value.id),
+        route('gold.damaged.restore', restoreItem.value.id),
         {
             name: restoreItem.value.newName,
             weight: restoreItem.value.newWeight,

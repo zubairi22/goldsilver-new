@@ -25,7 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Penjualan Emas', href: '#' },
 ]
 
-const { search } = useSearch('transactions.sales.gold.index', filters.search, ['sales'])
+const { search } = useSearch('gold.transactions.sales.index', filters.search, ['sales'])
 const { formatRupiah, formatDate } = useFormat()
 
 const status = ref(filters.status)
@@ -53,7 +53,7 @@ const applyFilters = () => {
         params.end = date.value[1]
     }
 
-    router.get(route('transactions.sales.gold.index', params), {}, {
+    router.get(route('gold.transactions.sales.index', params), {}, {
         preserveScroll: true,
         preserveState: true,
     })

@@ -138,7 +138,7 @@ const submitSale = () => {
         return
     }
 
-    form.post(route('transactions.sales.gold.store'), {
+    form.post(route('gold.transactions.sales.store'), {
         preserveScroll: true,
         onSuccess: () => {
             toast.success('Penjualan emas berhasil disimpan.')
