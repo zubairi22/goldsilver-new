@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
+    use GeneratesQrCode;
+
     protected $fillable = [
         'invoice_no',
         'category',
@@ -19,8 +22,15 @@ class Sale extends Model
         'remaining_amount',
         'status',
         'due_date',
-        'notes',
+        'qrcode'
     ];
+
+    protected $appends = ['status_label'];
+
+    public function items()
+    {
+        return $this->hasMany(SaleItem::class);
+    }
 
     public function customer()
     {
@@ -40,6 +50,16 @@ class Sale extends Model
     public function payments()
     {
         return $this->hasMany(SalePayment::class);
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            'paid'      => 'Selesai',
+            'partial'   => 'Sebagian',
+            'unpaid'    => 'Belum Dibayar',
+            default     => ucfirst($this->status),
+        };
     }
 
     public function scopeFilters($query, array $filters)
@@ -109,7 +129,7 @@ class Sale extends Model
         $this->remaining_amount = max(0, $this->total_price - $this->paid_amount);
 
         if ($this->remaining_amount <= 0) {
-            $this->status = 'completed';
+            $this->status = 'paid';
         } elseif ($this->paid_amount > 0) {
             $this->status = 'partial';
         } else {

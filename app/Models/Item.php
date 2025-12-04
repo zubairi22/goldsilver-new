@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Item extends Model implements HasMedia
 {
-    use InteractsWithMedia;
+    use InteractsWithMedia, GeneratesQrCode;
+
     protected $fillable = [
         'code',
         'name',
@@ -19,33 +23,89 @@ class Item extends Model implements HasMedia
         'price_buy',
         'price_sell',
         'status',
-        'qr_code',
-        'description',
+        'qrcode',
+        'source'
     ];
 
-    public function type()
+    protected $appends = ['status_label'];
+
+    protected static function booted(): void
+    {
+        static::creating(function ($item) {
+            $item->code = self::generateCode();
+        });
+
+        static::created(function ($item) {
+            $qrPath = $item->generateQrCode($item->code);
+
+            $item->updateQuietly([
+                'qrcode' => $qrPath,
+            ]);
+        });
+    }
+
+    public static function generateCode(): string
+    {
+        $prefix = 'GLD-';
+        $last = self::orderByDesc('id')->first();
+
+        $number = $last ? $last->id + 1 : 1;
+
+        return $prefix . str_pad($number, 6, '0', STR_PAD_LEFT);
+    }
+
+    public function type(): BelongsTo
     {
         return $this->belongsTo(ItemType::class, 'item_type_id');
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match($this->status) {
+            'ready'     => 'Siap Jual',
+            'sold'      => 'Terjual',
+            'damaged'   => 'Rusak',
+            'buyback'   => 'Buyback',
+            'not_ready' => 'Belum Siap',
+            default     => ucfirst($this->status),
+        };
     }
 
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('initial')->singleFile();
-
-        $this->addMediaCollection('buyback');
         $this->addMediaCollection('stock_opname');
     }
 
     public function registerMediaConversions(Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->width(300)
-            ->height(300)
-            ->sharpen(10);
+            ->format('webp')
+            ->fit(Fit::Max, 500, 500)
+            ->quality(80)
+            ->nonQueued();
     }
 
-    public function latestPhoto(string $collection = null)
+    public function getImageAttribute(): ?string
     {
-        return $this->getMedia($collection)->sortByDesc('created_at')->first();
+        return $this->getFirstMediaUrl('initial', 'thumb') ?: null;
+    }
+
+    public function scopeFilters($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->where(fn($x) =>
+                $x->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%")
+                );
+        });
+
+        $query->when(($filters['status'] ?? 'all') !== 'all', fn($q) =>
+            $q->where('status', $filters['status'])
+        );
+
+        $query->when(($filters['item_type_id'] ?? 'all') !== 'all', fn($q) =>
+            $q->where('item_type_id', $filters['item_type_id'])
+        );
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class MenusController extends Controller
 {
@@ -33,6 +34,11 @@ class MenusController extends Controller
         }
         $menu->permissions()->sync($permissionIds);
 
+        if (!empty($permissionIds)) {
+            $superAdmin = Role::findByName('super-admin');
+            $superAdmin->givePermissionTo($permissionIds);
+        }
+
         $this->flashSuccess('Tambah Menu Berhasil.');
         return Redirect::back();
     }
@@ -48,6 +54,11 @@ class MenusController extends Controller
             $permissionIds[] = $permission->id;
         }
         $menu->permissions()->sync($permissionIds);
+
+        if (!empty($permissionIds)) {
+            $superAdmin = Role::findByName('super-admin');
+            $superAdmin->givePermissionTo($permissionIds);
+        }
 
         $this->flashSuccess('Update Menu Berhasil.');
         return Redirect::back();

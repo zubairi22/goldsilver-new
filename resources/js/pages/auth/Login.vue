@@ -18,7 +18,7 @@ defineProps<{
 const form = useForm({
     email: 'admin@temantekno.com',
     password: 'password',
-    remember: false,
+    remember: true,
 });
 
 const isPasswordVisible = ref(false);

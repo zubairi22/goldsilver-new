@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MenuRolePermissionSeeder::class,
             ItemTypeSeeder::class,
+            PaymentMethodSeeder::class,
+            MigrateBarangToItemsSeeder::class,
+            MigratePenjualanSeeder::class,
         ]);
     }
 }

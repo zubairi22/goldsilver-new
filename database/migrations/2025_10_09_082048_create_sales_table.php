@@ -23,9 +23,9 @@ return new class extends Migration
             $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->nullOnDelete();
             $table->decimal('paid_amount', 15, 2)->default(0);
             $table->decimal('remaining_amount', 15, 2)->default(0);
-            $table->enum('status', ['unpaid', 'partial', 'completed'])->default('completed');
+            $table->enum('status', ['unpaid', 'partial', 'paid'])->default('paid');
             $table->date('due_date')->nullable();
-            $table->text('notes')->nullable();
+            $table->string('qrcode')->nullable();
             $table->timestamps();
         });
     }

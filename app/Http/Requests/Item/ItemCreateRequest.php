@@ -9,15 +9,13 @@ class ItemCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code'         => ['required', 'string', 'max:50'],
             'name'         => ['required', 'string', 'max:100'],
             'item_type_id' => ['required', 'exists:item_types,id'],
             'weight'       => ['required', 'numeric', 'min:0'],
             'price_buy'    => ['required', 'numeric', 'min:0'],
             'price_sell'   => ['required', 'numeric', 'min:0'],
             'status'       => ['required', 'string'],
-            'qr_code'      => ['nullable', 'string'],
-            'description'  => ['nullable', 'string'],
+            'image'        => ['nullable', 'image', 'max:2048'],
         ];
     }
 

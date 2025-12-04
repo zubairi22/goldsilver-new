@@ -13,5 +13,14 @@ export function useTime() {
         return formatter.format(new Date())
     }
 
-    return { formatNow }
+    function today(): string {
+        const now = new Date();
+        const offsetNow = new Date(
+            now.toLocaleString("en-US", { timeZone: "Asia/Makassar" })
+        );
+
+        return offsetNow.toISOString().slice(0, 10); // → 2025-02-18
+    }
+
+    return { formatNow, today }
 }

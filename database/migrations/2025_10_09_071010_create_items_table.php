@@ -18,11 +18,11 @@ return new class extends Migration
             $table->foreignId('item_type_id')->constrained('item_types')->cascadeOnDelete();
             $table->string('category')->default('gold');
             $table->double('weight');
-            $table->decimal('price_buy', 15);
-            $table->decimal('price_sell', 15);
-            $table->enum('status', ['ready', 'sold', 'damaged', 'buyback', 'not_ready'])->default('ready');
-            $table->string('qr_code')->nullable();
-            $table->text('description')->nullable();
+            $table->double('price_buy');
+            $table->double('price_sell');
+            $table->enum('status', ['ready', 'sold', 'damaged', 'buyback'])->default('ready');
+            $table->string('qrcode')->nullable();
+            $table->string('source')->default('stock');
             $table->timestamps();
         });
     }

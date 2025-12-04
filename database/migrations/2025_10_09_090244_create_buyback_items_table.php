@@ -18,9 +18,10 @@ return new class extends Migration
             $table->foreignId('item_id')->nullable()->constrained('items')->nullOnDelete();
 
             $table->string('manual_name')->nullable();
-            $table->decimal('weight', 10, 2)->nullable();
-            $table->decimal('price', 15, 2);
-            $table->decimal('subtotal', 15, 2);
+            $table->decimal('weight', 10)->nullable();
+            $table->double('price');
+            $table->double('subtotal');
+            $table->enum('condition', ['good','broken'])->nullable();
 
             $table->timestamps();
         });

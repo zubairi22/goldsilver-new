@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Item;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class GoldDamagedController extends Controller
+{
+    public function index()
+    {
+        $filters = [
+            'search' => request('search'),
+        ];
+
+        return inertia('damaged/gold/Index', [
+            'items' => Item::where('category', 'gold')
+                ->where('status', 'damaged')
+                ->when($filters['search'], fn($q, $v) =>
+                $q->where('name', 'like', "%{$v}%")
+                )
+                ->orderByDesc('id')
+                ->paginate(20)
+                ->withQueryString(),
+
+            'filters' => $filters,
+        ]);
+    }
+
+    public function restoreToStock(Request $request, Item $item)
+    {
+        $data = $request->validate([
+            'name'       => 'required|string|max:255',
+            'weight'     => 'required|numeric|min:0.01',
+            'price_sell' => 'required|numeric|min:0',
+        ]);
+
+        if ($item->status !== 'damaged') {
+            return back()->with('error', 'Item bukan dalam kondisi rusak.');
+        }
+
+        DB::transaction(function () use ($item, $data) {
+            $item->update([
+                'name'       => $data['name'],
+                'weight'     => $data['weight'],
+                'price_sell' => $data['price_sell'],
+                'status'     => 'ready',
+            ]);
+        });
+
+        $this->flashSuccess('Item berhasil dipulihkan dan masuk stok.');
+        return back();
+    }
+}

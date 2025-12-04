@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from "vue";
+import { ref, watch } from 'vue';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import DeleteButton from "@/components/DeleteButton.vue";
-import EditButton from "@/components/EditButton.vue";
+import DeleteButton from '@/components/DeleteButton.vue';
+import EditButton from '@/components/EditButton.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import PageNav from '@/components/PageNav.vue';
 import Heading from '@/components/Heading.vue';
@@ -15,32 +16,36 @@ import ItemForm from '@/pages/item/partial/ItemForm.vue';
 import { useSearch } from '@/composables/useSearch';
 import { LoaderCircle } from 'lucide-vue-next';
 import { useFormat } from '@/composables/useFormat';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Item', href: '#' },
+    { title: 'Barang', href: '#' },
 ];
 
-defineProps(['items', 'itemTypes']);
+const { items, itemTypes, filters } = defineProps(['items', 'itemTypes', 'filters']);
 
 const { search } = useSearch('store.items.index', route().params.search, ['items']);
 const { formatRupiah } = useFormat();
 
+const status = ref(filters.status || 'all');
+const item_type_id = ref(filters.item_type_id || 'all');
+
 const defaultForm = () => ({
-    code: '',
     name: '',
     item_type_id: '',
-    weight: '',
-    price_buy: '',
-    price_sell: '',
+    weight: 0,
+    price_buy: 0,
+    price_sell: 0,
     status: 'ready',
-    qr_code: '',
-    description: '',
+    image: null
 });
 
+const zoomImage = ref<string | null>(null);
+
 const addForm = useForm(defaultForm());
-const editForm = useForm({ id: '', ...defaultForm() });
-const deleteForm = useForm({ id: '' });
+const editForm = useForm({ _method: 'patch', id: '', ...defaultForm() });
 
 const addModal = ref(false);
 const editModal = ref(false);
@@ -55,11 +60,6 @@ const editItem = (item: any) => {
     editModal.value = true;
 };
 
-const deleteItem = (item: any) => {
-    deleteForm.id = item.id;
-    deleteModal.value = true;
-};
-
 const handleAdd = () => {
     addForm.post(route('store.items.store'), {
         preserveScroll: true,
@@ -71,7 +71,11 @@ const handleAdd = () => {
 };
 
 const handleEdit = () => {
-    editForm.patch(route('store.items.update', editForm.id), {
+    if (typeof editForm.image === 'string' && editForm.image) {
+        editForm.image = null;
+    }
+
+    editForm.post(route('store.items.update', editForm.id), {
         preserveScroll: true,
         onSuccess: () => {
             editModal.value = false;
@@ -80,29 +84,86 @@ const handleEdit = () => {
     });
 };
 
-const handleDelete = () => {
-    router.delete(route('store.items.destroy', deleteForm.id), {
+const handleDelete = (id: any) => {
+    router.delete(route('store.items.destroy', id), {
         preserveScroll: true,
         onSuccess: () => {
             deleteModal.value = false;
-            deleteForm.reset();
         },
     });
 };
+
+const applyFilters = () => {
+    const params: Record<string, any> = {};
+
+    if (search.value) params.search = search.value;
+    if (status.value !== 'all') params.status = status.value;
+    if (item_type_id.value !== 'all') params.item_type_id = item_type_id.value;
+
+    router.get(
+        route('store.items.index', params),
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+        },
+    );
+};
+
+watch([status, item_type_id], applyFilters);
 </script>
 
 <template>
-    <Head title="Item" />
+    <Head title="Barang" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Item" description="Kelola data item emas" />
-            <div class="mx-auto max-w-8xl">
+            <Heading class="mx-4" title="Barang" description="Kelola data barang emas dan perak" />
+            <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-                        <div class="flex flex-col justify-between md:flex-row mb-2">
+                        <!-- Filter Section -->
+                        <div class="mb-8 mt-2 flex flex-wrap items-center justify-between gap-4">
+                            <div class="flex flex-wrap items-center gap-4">
+                                <!-- Status -->
+                                <div class="w-40">
+                                    <Label class="mb-2">Status</Label>
+                                    <Select v-model="status">
+                                        <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="ready">Siap Jual</SelectItem>
+                                            <SelectItem value="sold">Terjual</SelectItem>
+                                            <SelectItem value="damaged">Rusak</SelectItem>
+                                            <SelectItem value="buyback">Buyback</SelectItem>
+                                            <SelectItem value="not_ready">Belum Siap</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <!-- Tipe Item -->
+                                <div class="w-48">
+                                    <Label class="mb-2">Tipe</Label>
+                                    <Select v-model="item_type_id">
+                                        <SelectTrigger><SelectValue placeholder="Tipe Barang" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem
+                                                v-for="(name, id) in itemTypes"
+                                                :key="id"
+                                                :value="id"
+                                            >
+                                                {{ name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2 flex flex-col justify-between md:flex-row">
                             <Button @click="addItem">Tambah Item</Button>
-                            <div class="mb-3 mt-3 md:mt-0 md:text-right">
+                            <div class="mt-3 mb-3 md:mt-0 md:text-right">
                                 <SearchInput v-model:search="search" />
                             </div>
                         </div>
@@ -111,39 +172,51 @@ const handleDelete = () => {
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead>Gambar</TableHead>
                                         <TableHead>Kode</TableHead>
                                         <TableHead>Nama</TableHead>
                                         <TableHead>Tipe</TableHead>
                                         <TableHead>Berat</TableHead>
                                         <TableHead>Harga Beli</TableHead>
                                         <TableHead>Harga Jual</TableHead>
-                                        <TableHead>Status</TableHead>
+                                        <TableHead class="text-center">Status</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     <TableRow v-for="item in items.data" :key="item.id">
+                                        <TableCell class="py-1">
+                                            <img
+                                                v-if="item.image"
+                                                :src="item.image"
+                                                class="h-12 w-12 cursor-pointer rounded object-cover"
+                                                @click="zoomImage = item.image"
+                                                alt="thumb"
+                                            />
+                                            <span v-else class="text-sm text-gray-400">Tidak ada</span>
+                                        </TableCell>
                                         <TableCell>{{ item.code }}</TableCell>
                                         <TableCell>{{ item.name }}</TableCell>
                                         <TableCell>{{ item.type?.name || '-' }}</TableCell>
                                         <TableCell>{{ item.weight }} gr</TableCell>
                                         <TableCell>{{ formatRupiah(item.price_buy) }}</TableCell>
                                         <TableCell>{{ formatRupiah(item.price_sell) }}</TableCell>
-                                        <TableCell>{{ item.status }}</TableCell>
-
-                                        <TableCell>
+                                        <TableCell class="text-center">
+                                            <Badge>
+                                                {{ item.status_label }}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell class="px-1">
                                             <EditButton @click="editItem(item)" />
                                         </TableCell>
-                                        <TableCell>
-                                            <DeleteButton @click="deleteItem(item)" />
+                                        <TableCell class="px-1">
+                                            <DeleteButton  @confirm="handleDelete(item.id)" />
                                         </TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="9" class="text-center text-gray-500">
-                                            Item tidak ditemukan
-                                        </TableCell>
+                                        <TableCell colspan="9" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -157,7 +230,7 @@ const handleDelete = () => {
     </AppLayout>
 
     <!-- Add Modal -->
-    <Dialog :open="addModal" @update:open="(val) => addModal = val">
+    <Dialog :open="addModal" @update:open="(val) => (addModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Tambah Item</DialogTitle>
@@ -169,7 +242,7 @@ const handleDelete = () => {
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="addModal = false">Batal</Button>
                 <Button :disabled="addForm.processing" @click="handleAdd">
-                    <LoaderCircle v-if="addForm.processing" class="w-4 h-4 animate-spin mr-2" />
+                    <LoaderCircle v-if="addForm.processing" class="mr-2 h-4 w-4 animate-spin" />
                     Simpan
                 </Button>
             </DialogFooter>
@@ -177,7 +250,7 @@ const handleDelete = () => {
     </Dialog>
 
     <!-- Edit Modal -->
-    <Dialog :open="editModal" @update:open="(val) => editModal = val">
+    <Dialog :open="editModal" @update:open="(val) => (editModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Edit Item</DialogTitle>
@@ -189,25 +262,23 @@ const handleDelete = () => {
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="editModal = false">Batal</Button>
                 <Button :disabled="editForm.processing" @click="handleEdit">
-                    <LoaderCircle v-if="editForm.processing" class="w-4 h-4 animate-spin mr-2" />
+                    <LoaderCircle v-if="editForm.processing" class="mr-2 h-4 w-4 animate-spin" />
                     Simpan
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <!-- Delete Modal -->
-    <Dialog :open="deleteModal" @update:open="(val) => deleteModal = val">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Hapus Item</DialogTitle>
-                <DialogDescription>Yakin ingin menghapus item ini?</DialogDescription>
-            </DialogHeader>
-
-            <DialogFooter class="gap-2">
-                <Button variant="secondary" @click="deleteModal = false">Batal</Button>
-                <Button variant="destructive" @click="handleDelete">Hapus</Button>
-            </DialogFooter>
+    <Dialog
+        :open="!!zoomImage"
+        @update:open="
+            (val) => {
+                if (!val) zoomImage = null;
+            }
+        "
+    >
+        <DialogContent class="max-h-[90vh] max-w-[90vw] overflow-hidden p-0">
+            <img :src="zoomImage || '/placeholder.webp'" class="h-full w-full object-contain" @click="zoomImage = null" alt="zoom" />
         </DialogContent>
     </Dialog>
 </template>

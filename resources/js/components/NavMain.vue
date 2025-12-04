@@ -24,7 +24,7 @@ const { toggleSidebar, state } = useSidebar()
 </script>
 
 <template>
-    <SidebarGroup class="mt-2 space-y-1">
+    <SidebarGroup class="space-y-1">
         <template v-for="item in items" :key="item.title">
             <SidebarMenu v-if="item.children?.length === 0">
                 <SidebarMenuItem>

@@ -7,14 +7,18 @@ import Heading from '@/components/Heading.vue'
 import SearchInput from '@/components/SearchInput.vue'
 import PageNav from '@/components/PageNav.vue'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { ref, watch } from 'vue'
 import { useSearch } from '@/composables/useSearch'
 import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge';
 
-const { sales, paymentMethods, filters } = defineProps(['sales', 'paymentMethods', 'filters'])
+const { filters } = defineProps(['sales', 'paymentMethods', 'filters'])
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -28,6 +32,14 @@ const status = ref(filters.status)
 const sale_type = ref(filters.sale_type)
 const payment_method_id = ref(filters.payment_method_id)
 const date = ref(filters.start && filters.end ? [filters.start, filters.end] : [])
+
+const saleModal = ref(false);
+const selectedSale = ref<any>(null);
+
+function openSaleModal(trx: any) {
+    selectedSale.value = trx;
+    saleModal.value = true;
+}
 
 const applyFilters = () => {
     const params: Record<string, any> = { category: 'gold' }
@@ -149,16 +161,20 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="sale in sales.data" :key="sale.id">
+                                    <TableRow v-for="sale in sales.data" :key="sale.id" @click="openSaleModal(sale)">
                                         <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
                                         <TableCell>{{ sale.invoice_no }}</TableCell>
                                         <TableCell>{{ sale.user?.name || '-' }}</TableCell>
                                         <TableCell>{{ sale.customer?.name || '-' }}</TableCell>
-                                        <TableCell class="text-right">{{ sale.total_weight.toFixed(2) }}</TableCell>
+                                        <TableCell class="text-right">{{ sale.total_weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.remaining_amount) }}</TableCell>
-                                        <TableCell class="text-center capitalize">{{ sale.status }}</TableCell>
+                                        <TableCell class="text-center capitalize">
+                                            <Badge>
+                                                {{ sale.status_label }}
+                                            </Badge>
+                                        </TableCell>
                                         <TableCell class="text-center">{{ sale.payment_method?.name || '-' }}</TableCell>
                                     </TableRow>
 
@@ -175,4 +191,132 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
             </div>
         </div>
     </AppLayout>
+
+    <Dialog :open="saleModal" @update:open="(val) => saleModal = val">
+        <DialogContent class="sm:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle class="mb-1">Detail Penjualan</DialogTitle>
+                <hr>
+            </DialogHeader>
+
+            <div v-if="selectedSale">
+                <!-- Info utama + QR -->
+                <div class="grid grid-cols-3 gap-4 mb-4 text-sm">
+
+                    <!-- Kiri (2 kolom): Detail -->
+                    <div class="col-span-2 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold">Invoice</p>
+                            <p>{{ selectedSale.invoice_no }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Tanggal</p>
+                            <p>{{ formatDate(selectedSale.created_at, 'dd MMM yyyy HH:mm') }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Pelanggan</p>
+                            <p>{{ selectedSale.customer?.name || '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Kasir</p>
+                            <p>{{ selectedSale.user?.name || '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Metode Pembayaran</p>
+                            <p>{{ selectedSale.payment_method?.name || '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Status</p>
+                            <p class="capitalize">{{ selectedSale.status_label }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Kanan (1 kolom): QR Code -->
+                    <div class="flex flex-col items-center justify-center p-4 text-center">
+
+                        <!-- QR dari storage Laravel -->
+                        <img
+                            :src="'/storage/' + selectedSale.qrcode"
+                            alt="QR"
+                            class="h-24 w-24 rounded shadow object-contain"
+                        />
+
+                        <p class="mt-4 text-md font-semibold">
+                            {{ selectedSale.invoice_no }}
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="mb-2">
+
+                <!-- Tabs Section -->
+                <Tabs default-value="item">
+                    <TabsList class="mb-4">
+                        <TabsTrigger value="item">Item</TabsTrigger>
+                        <TabsTrigger value="payment">Pembayaran</TabsTrigger>
+                    </TabsList>
+
+                    <!-- TAB ITEM -->
+                    <TabsContent value="item">
+                        <h3 class="font-semibold mb-2">Item</h3>
+
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Nama</TableHead>
+                                    <TableHead class="text-right">Berat (gr)</TableHead>
+                                    <TableHead class="text-right">Harga</TableHead>
+                                    <TableHead class="text-right">Subtotal</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="it in selectedSale.items" :key="it.id">
+                                    <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
+                                    <TableCell class="text-right">{{ it.weight }}</TableCell>
+                                    <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
+                                    <TableCell class="text-right">{{ formatRupiah(it.subtotal) }}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TabsContent>
+
+                    <!-- TAB PAYMENT -->
+                    <TabsContent value="payment">
+                        <h3 class="font-semibold mb-2">Pembayaran</h3>
+
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Tanggal</TableHead>
+                                    <TableHead class="text-right">Jumlah</TableHead>
+                                    <TableHead>Catatan</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="pay in selectedSale.payments" :key="pay.id">
+                                    <TableCell>{{ formatDate(pay.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
+                                    <TableCell class="text-right">{{ formatRupiah(pay.amount) }}</TableCell>
+                                    <TableCell>{{ pay.note }}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TabsContent>
+                </Tabs>
+            </div>
+
+            <DialogFooter class="flex justify-between mt-4">
+                <Button variant="secondary" @click="saleModal = false">
+                    Tutup
+                </Button>
+
+                <Button
+                    v-if="selectedSale"
+                    @click="router.get(route('buyback.gold.create',selectedSale.id))"
+                >
+                    Proses Buyback
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
 </template>

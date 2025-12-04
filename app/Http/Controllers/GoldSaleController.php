@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\customer;
+use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Sale;
 use App\Models\PaymentMethod;
@@ -10,20 +10,20 @@ use Illuminate\Http\Request;
 
 class GoldSaleController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $filters = [
-            'search'            => $request->input('search'),
-            'status'            => $request->input('status'),
-            'sale_type'         => $request->input('sale_type'),
-            'payment_method_id' => $request->input('payment_method_id'),
-            'start'             => $request->input('start'),
-            'end'               => $request->input('end'),
+            'search'            => request('search'),
+            'status'            => request('status'),
+            'sale_type'         => request('sale_type'),
+            'payment_method_id' => request('payment_method_id'),
+            'start'             => request('start'),
+            'end'               => request('end'),
             'category'          => 'gold',
         ];
 
         return inertia('sale/gold/Index', [
-            'sales' => Sale::with(['customer', 'user', 'paymentMethod'])
+            'sales' => Sale::with(['items.item', 'payments','customer', 'user', 'paymentMethod'])
                 ->filters($filters)
                 ->latest()
                 ->paginate(20)
@@ -37,10 +37,10 @@ class GoldSaleController extends Controller
     public function create()
     {
         return inertia('sale/gold/Create', [
-            'customers' => Customer::select('id', 'name')->orderBy('name')->get(),
+            'customers' => Customer::pluck('name', 'id'),
             'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
             'items' => Item::where('category', 'gold')
-                ->where('status', 'active')
+                ->where('status', 'ready')
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
@@ -54,7 +54,6 @@ class GoldSaleController extends Controller
             'mode' => 'required|in:auto,manual',
             'customer_id' => 'nullable|exists:customers,id',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
-            'note' => 'nullable|string|max:500',
             'paid_amount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:items,id',
@@ -63,13 +62,11 @@ class GoldSaleController extends Controller
             'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        // Hitung total harga & berat
         $totalWeight = collect($data['items'])->sum('weight');
         $totalPrice = collect($data['items'])->sum(fn($i) => $i['weight'] * $i['price']);
 
-        // Buat record penjualan
-        $sale = \App\Models\Sale::create([
-            'invoice_no' => \App\Models\Sale::generateInvoiceNo(),
+        $sale = Sale::create([
+            'invoice_no' => Sale::generateInvoiceNo(),
             'category' => 'gold',
             'sale_type' => $data['sale_type'],
             'customer_id' => $data['customer_id'],
@@ -78,12 +75,10 @@ class GoldSaleController extends Controller
             'total_weight' => $totalWeight,
             'total_price' => $totalPrice,
             'paid_amount' => $data['paid_amount'] ?? 0,
-            'remaining_amount' => 0, // nanti dihitung ulang
+            'remaining_amount' => 0,
             'status' => 'unpaid',
-            'notes' => $data['note'] ?? null,
         ]);
 
-        // Tambahkan item penjualan
         foreach ($data['items'] as $item) {
             $sale->items()->create([
                 'item_id' => $data['mode'] === 'auto' ? $item['id'] : null,
@@ -94,7 +89,6 @@ class GoldSaleController extends Controller
             ]);
         }
 
-        // Tambahkan pembayaran awal (jika ada)
         if (!empty($data['paid_amount']) && $data['paid_amount'] > 0) {
             $sale->payments()->create([
                 'payment_method_id' => $data['payment_method_id'],
@@ -104,12 +98,10 @@ class GoldSaleController extends Controller
             ]);
         }
 
-        // Rehitung total dan status
         $sale->refreshPaymentTotals();
 
-        return redirect()
-            ->route('transactions.sales.gold.index')
-            ->with('success', 'Penjualan emas berhasil disimpan.');
+        $this->flashSuccess('Penjualan emas berhasil disimpan.');
+        return back();
     }
 
 }

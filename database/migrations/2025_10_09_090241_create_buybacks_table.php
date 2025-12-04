@@ -21,7 +21,6 @@ return new class extends Migration
             $table->decimal('total_price', 15, 2)->default(0);
             $table->enum('payment_type', ['cash', 'non_cash'])->default('cash');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

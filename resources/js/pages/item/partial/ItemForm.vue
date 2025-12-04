@@ -4,22 +4,20 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import Multiselect from '@vueform/multiselect';
 import CurrencyInput from '@/components/CurrencyInput.vue';
-import { Textarea } from '@/components/ui/textarea';
 
 defineProps(['itemTypes']);
 
 const form = defineModel<any>('form');
+
+const handleImageChange = (e: Event) => {
+    const target = e.target as HTMLInputElement | null;
+    if (!target?.files?.length) return;
+    form.value.image = target.files[0];
+};
 </script>
 
 <template>
     <div class="p-1 space-y-5">
-
-        <!-- CODE -->
-        <div>
-            <Label for="code">Kode Item</Label>
-            <Input id="code" type="text" v-model="form.code" />
-            <InputError class="mt-1" :message="form.errors.code" />
-        </div>
 
         <!-- NAME -->
         <div>
@@ -43,7 +41,7 @@ const form = defineModel<any>('form');
         <!-- WEIGHT -->
         <div>
             <Label for="weight">Berat (gram)</Label>
-            <Input id="weight" type="number" min="0" step="0.001" v-model="form.weight" />
+            <Input id="weight" type="number" v-model="form.weight" />
             <InputError class="mt-1" :message="form.errors.weight" />
         </div>
 
@@ -67,23 +65,22 @@ const form = defineModel<any>('form');
             <Multiselect
                 v-model="form.status"
                 :options="{ ready: 'Ready', sold: 'Terjual', pending: 'Pending' }"
-                placeholder="Pilih Status"
             />
             <InputError class="mt-1" :message="form.errors.status" />
         </div>
 
-        <!-- QR CODE -->
         <div>
-            <Label for="qr_code">QR Code</Label>
-            <Input id="qr_code" type="text" v-model="form.qr_code" />
-            <InputError class="mt-1" :message="form.errors.qr_code" />
-        </div>
+            <Label for="image">Foto Item</Label>
 
-        <!-- DESCRIPTION -->
-        <div>
-            <Label for="description">Deskripsi</Label>
-            <Textarea id="description" v-model="form.description" rows="3" />
-            <InputError class="mt-1" :message="form.errors.description" />
+            <Input
+                id="image"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                @change="handleImageChange"
+            />
+
+            <InputError class="mt-1" :message="form.errors.image" />
         </div>
 
     </div>

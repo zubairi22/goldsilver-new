@@ -28,7 +28,6 @@ const defaultForm = () => ({
 
 const addForm = useForm(defaultForm())
 const editForm = useForm({ id: '', ...defaultForm() })
-const deleteForm = useForm({ id: '' })
 
 const addModal = ref(false)
 const editModal = ref(false)
@@ -38,11 +37,6 @@ const openEdit = (row: any) => {
     editForm.id = row.id
     editForm.name = row.name
     editModal.value = true
-}
-
-const openDelete = (row: any) => {
-    deleteForm.id = row.id
-    deleteModal.value = true
 }
 
 const handleAdd = () => {
@@ -59,10 +53,10 @@ const handleEdit = () => {
     })
 }
 
-const handleDelete = () => {
-    router.delete(route('store.item-types.destroy', deleteForm.id), {
+const handleDelete = (id: any) => {
+    router.delete(route('store.item-types.destroy', id), {
         preserveScroll: true,
-        onSuccess: () => { deleteModal.value = false; deleteForm.reset() },
+        onSuccess: () => { deleteModal.value = false },
     })
 }
 </script>
@@ -95,7 +89,7 @@ const handleDelete = () => {
                                             <EditButton @click="openEdit(t)" />
                                         </TableCell>
                                         <TableCell class="px-0.5">
-                                            <DeleteButton @click="openDelete(t)" />
+                                            <DeleteButton @confirm="handleDelete(t.id)" />
                                         </TableCell>
                                     </TableRow>
                                     <TableRow v-if="!itemTypes.total">
@@ -159,21 +153,6 @@ const handleDelete = () => {
                 <Button :disabled="editForm.processing" @click="handleEdit">
                     <LoaderCircle v-if="editForm.processing" class="h-4 w-4 animate-spin" /> Simpan
                 </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <!-- Delete Modal -->
-    <Dialog :open="deleteModal" @update:open="v => deleteModal = v">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Hapus Jenis Item</DialogTitle>
-                <DialogDescription>Data akan dihapus permanen.</DialogDescription>
-            </DialogHeader>
-
-            <DialogFooter class="gap-2">
-                <Button variant="secondary" @click="deleteModal = false">Batal</Button>
-                <Button variant="destructive" @click="handleDelete">Hapus</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

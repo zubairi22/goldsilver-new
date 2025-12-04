@@ -39,24 +39,21 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $appName = StoreSetting::first()->name ?? config('app.name');
+
         $shared = [
             ...parent::share($request),
-            'name' => StoreSetting::first()->name ?? config('app.name'),
+            'name' => $appName,
             'auth' => [
                 'user' => $request->user(),
                 'can' => $request->user() ? $request->user()->getPermissionsViaRoles()->pluck('name') : null,
             ],
-            'ziggy' => [
-                ...(new Ziggy)->toArray(),
-                'location' => $request->url(),
-            ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
                 'message' => fn () => $request->session()->get('message'),
-                'transaction_number' => fn () => $request->session()->get('transaction_number'),
             ],
             'og' => [
-                'title' => StoreSetting::first()->name ?? config('app.name'),
+                'title' => $appName,
                 'image' => public_path('/logo.png'),
             ]
         ];

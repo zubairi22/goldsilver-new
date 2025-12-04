@@ -7,8 +7,6 @@ use App\Http\Requests\Item\ItemUpdateRequest;
 use App\Models\Item;
 use App\Models\ItemType;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Throwable;
 use Illuminate\Support\Facades\DB;
@@ -17,16 +15,26 @@ class ItemsController extends Controller
 {
     public function index(): Response
     {
-        return inertia('item/Index', [
-            'items' => Item::with('type')
-                ->when(Request::get('search'), function ($query, $search) {
-                    $query->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('code', 'LIKE', "%{$search}%");
-                })
-                ->latest()
-                ->paginate(10),
+        $filters = [
+            'search'        => request('search'),
+            'status'        => request('status'),
+            'item_type_id'  => request('item_type_id'),
+        ];
 
-            'itemTypes' => ItemType::pluck('name', 'id')
+        $items = Item::with('type')
+            ->filters($filters)
+            ->latest()
+            ->paginate(10)
+            ->onEachSide(1)
+            ->withQueryString();
+
+        $items->each(fn ($i) => $i->append('image'));
+
+        return inertia('item/Index', [
+            'items' => $items,
+
+            'itemTypes' => ItemType::pluck('name', 'id'),
+            'filters' => $filters,
         ]);
     }
 
@@ -35,16 +43,22 @@ class ItemsController extends Controller
         try {
             DB::beginTransaction();
 
-            Item::create($request->validated());
+            $item = Item::create($request->validated());
+
+            if ($request->hasFile('image')) {
+                $item->addMedia($request->file('image'))
+                    ->toMediaCollection('initial');
+            }
 
             DB::commit();
+
             $this->flashSuccess('Item berhasil ditambahkan.');
 
-            return Redirect::back();
+            return back();
         } catch (Throwable $e) {
             DB::rollBack();
             $this->flashError('Terjadi kesalahan saat menambahkan item.', $e);
-            return Redirect::back();
+            return back();
         }
     }
 
@@ -55,14 +69,20 @@ class ItemsController extends Controller
 
             $item->update($request->validated());
 
+            if ($request->hasFile('image')) {
+                $item->clearMediaCollection('initial');
+                $item->addMedia($request->file('image'))
+                    ->toMediaCollection('initial');
+            }
+
             DB::commit();
             $this->flashSuccess('Item berhasil diperbarui.');
 
-            return Redirect::back();
+            return back();
         } catch (Throwable $e) {
             DB::rollBack();
             $this->flashError('Terjadi kesalahan saat memperbarui item.', $e);
-            return Redirect::back();
+            return back();
         }
     }
 
@@ -76,12 +96,12 @@ class ItemsController extends Controller
             DB::commit();
 
             $this->flashSuccess('Item berhasil dihapus.');
-            return Redirect::back();
+            return back();
 
         } catch (Throwable $e) {
             DB::rollBack();
             $this->flashError('Terjadi kesalahan saat menghapus item.', $e);
-            return Redirect::back();
+            return back();
         }
     }
 }
