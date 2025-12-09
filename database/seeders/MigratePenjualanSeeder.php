@@ -24,7 +24,6 @@ class MigratePenjualanSeeder extends Seeder
 
         DB::connection('old_mysql')
             ->table('penjualan')
-            ->where('status', 2)
             ->orderBy('idpenjualan')
             ->chunk(300, function ($rows) {
 
@@ -36,14 +35,14 @@ class MigratePenjualanSeeder extends Seeder
                     }
 
                     // ========== CATEGORY ==========
-                    $category = match ($row->jenisjual) {
+                    $category = match ((int)$row->jenisjual) {
                         1 => 'gold',
                         2 => 'silver',
                         default => 'gold',
                     };
 
                     // ========== SALE TYPE ==========
-                    $saleType = match ($row->kategorijual) {
+                    $saleType = match ((int)$row->kategorijual) {
                         1 => 'wholesale',
                         2 => 'retail',
                         default => 'retail',
@@ -71,7 +70,7 @@ class MigratePenjualanSeeder extends Seeder
                     $remaining  = max(0, $totalPrice - $paidAmount);
 
                     // ========== STATUS ==========
-                    $status = match ($row->status) {
+                    $status = match ((int)$row->status) {
                         1 => 'unpaid',
                         2 => 'paid',
                         default => 'unpaid',
