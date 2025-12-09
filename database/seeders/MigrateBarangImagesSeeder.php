@@ -12,7 +12,8 @@ class MigrateBarangImagesSeeder extends Seeder
     public function run(): void
     {
         Item::orderBy('id')
-            ->chunk(400, function ($items) {
+            ->limit(1000)
+            ->chunk(1000, function ($items) {
 
                 foreach ($items as $item) {
 

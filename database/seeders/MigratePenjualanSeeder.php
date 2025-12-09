@@ -25,7 +25,8 @@ class MigratePenjualanSeeder extends Seeder
         DB::connection('old_mysql')
             ->table('penjualan')
             ->orderBy('idpenjualan')
-            ->chunk(300, function ($rows) {
+            ->limit(1000)
+            ->chunk(1000, function ($rows) {
 
                 foreach ($rows as $row) {
 
