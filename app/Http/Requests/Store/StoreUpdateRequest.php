@@ -17,6 +17,7 @@ class StoreUpdateRequest extends FormRequest
             'store_name' => 'required|string|max:255',
             'phone'      => 'nullable|string|max:255',
             'instagram'  => 'nullable|string|max:255',
+            'address'    => 'nullable|string|max:255',
 
             'gold_invoice_color'   => 'required|string|max:20',
             'silver_invoice_color' => 'required|string|max:20',

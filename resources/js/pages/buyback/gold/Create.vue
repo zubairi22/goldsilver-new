@@ -161,7 +161,7 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                             <!-- Kanan: QR Code + Invoice -->
                             <div class="flex flex-col items-center justify-center p-4 text-center">
                                 <img
-                                    :src="'/storage/' + sale.qrcode"
+                                    :src="'/storage/' + sale.qr_path"
                                     alt="QR"
                                     class="h-24 w-24 rounded shadow"
                                 />

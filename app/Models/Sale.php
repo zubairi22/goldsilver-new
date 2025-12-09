@@ -20,12 +20,26 @@ class Sale extends Model
         'total_price',
         'paid_amount',
         'remaining_amount',
+        'change_amount',
         'status',
         'due_date',
-        'qrcode'
+        'notes',
+        'qr_path'
     ];
 
     protected $appends = ['status_label'];
+
+    protected static function booted()
+    {
+        static::creating(function ($sale) {
+            $sale->invoice_no = self::generateInvoiceNo();
+        });
+
+        static::created(function ($sale) {
+            $path = $sale->generateQrCode($sale->invoice_no);
+            $sale->updateQuietly(['qr_path' => $path]);
+        });
+    }
 
     public function items()
     {
@@ -125,8 +139,9 @@ class Sale extends Model
      */
     public function refreshPaymentTotals(): void
     {
-        $this->paid_amount = $this->payments()->sum('amount');
+        $this->paid_amount      = $this->payments()->sum('amount');
         $this->remaining_amount = max(0, $this->total_price - $this->paid_amount);
+        $this->change_amount    = max(0, $this->paid_amount - $this->total_price);
 
         if ($this->remaining_amount <= 0) {
             $this->status = 'paid';

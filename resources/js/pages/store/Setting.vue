@@ -9,20 +9,20 @@ import { LoaderCircle } from 'lucide-vue-next';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import type { BreadcrumbItem } from '@/types';
+import { Textarea } from '@/components/ui/textarea';
+
 
 const { settings } = defineProps(['settings']);
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Pengaturan Toko',
-        href: '#',
-    },
+    { title: 'Pengaturan Toko', href: '#' },
 ];
 
 const form = useForm({
     store_name: settings.store_name || '',
     phone: settings.phone || '',
     instagram: settings.instagram || '',
+    address: settings.address ?? '',
     gold_invoice_color: settings.gold_invoice_color || '#FFD700',
     silver_invoice_color: settings.silver_invoice_color || '#C0C0C0',
     footer_gold_wholesale: settings.footer_gold_wholesale || '',
@@ -32,9 +32,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.patch(route('store.settings.update'), {
-        preserveScroll: true,
-    });
+    form.patch(route('store.settings.update'), { preserveScroll: true });
 };
 </script>
 
@@ -44,79 +42,66 @@ const submit = () => {
 
         <StoreLayout>
             <div class="flex max-w-3xl flex-col space-y-6">
-                <div class="flex justify-between items-center">
-                    <HeadingSmall
-                        title="Informasi Toko"
-                        description="Perbarui informasi toko & konfigurasi nota"
-                    />
-                </div>
+
+                <HeadingSmall
+                    title="Informasi Toko"
+                    description="Perbarui informasi toko & konfigurasi nota"
+                />
 
                 <form @submit.prevent="submit" class="space-y-6">
 
                     <!-- Store Name -->
                     <div class="grid gap-2">
                         <Label for="store_name">Nama Toko</Label>
-                        <Input
-                            id="store_name"
-                            v-model="form.store_name"
-                            required
-                            placeholder="Nama toko"
-                        />
+                        <Input id="store_name" v-model="form.store_name" required />
                         <InputError :message="form.errors.store_name" />
                     </div>
 
                     <!-- Phone -->
                     <div class="grid gap-2">
                         <Label for="phone">Nomor Telepon</Label>
-                        <Input
-                            id="phone"
-                            v-model="form.phone"
-                            placeholder="08123456789"
-                        />
+                        <Input id="phone" v-model="form.phone" />
                         <InputError :message="form.errors.phone" />
                     </div>
 
                     <!-- Instagram -->
                     <div class="grid gap-2">
                         <Label for="instagram">Instagram</Label>
-                        <Input
-                            id="instagram"
-                            v-model="form.instagram"
-                            placeholder="@tokoku"
-                        />
+                        <Input id="instagram" v-model="form.instagram" />
                         <InputError :message="form.errors.instagram" />
+                    </div>
+
+                    <!-- Address -->
+                    <div class="grid gap-2">
+                        <Label for="address">Alamat Toko</Label>
+                        <textarea
+                            id="address"
+                            v-model="form.address"
+                            rows="2"
+                            class="mt-1 block w-full rounded-md border p-2 text-sm"
+                        />
+                        <InputError :message="form.errors.address" />
                     </div>
 
                     <!-- Colors -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="grid gap-2">
-                            <Label for="gold_invoice_color">Warna Nota Emas</Label>
-                            <Input
-                                id="gold_invoice_color"
-                                type="color"
-                                v-model="form.gold_invoice_color"
-                            />
-                            <InputError :message="form.errors.gold_invoice_color" />
+                            <Label>Warna Nota Emas</Label>
+                            <Input type="color" v-model="form.gold_invoice_color" />
                         </div>
-
                         <div class="grid gap-2">
-                            <Label for="silver_invoice_color">Warna Nota Perak</Label>
-                            <Input
-                                id="silver_invoice_color"
-                                type="color"
-                                v-model="form.silver_invoice_color"
-                            />
-                            <InputError :message="form.errors.silver_invoice_color" />
+                            <Label>Warna Nota Perak</Label>
+                            <Input type="color" v-model="form.silver_invoice_color" />
                         </div>
                     </div>
 
                     <!-- Footer Gold Wholesale -->
                     <div class="grid gap-2">
                         <Label for="footer_gold_wholesale">Footer Emas (Grosir)</Label>
-                        <textarea
+                        <Textarea
                             id="footer_gold_wholesale"
                             v-model="form.footer_gold_wholesale"
-                            rows="3"
+                            rows="5"
                             class="mt-1 block w-full rounded-md border p-2 text-sm"
                             placeholder="Teks footer untuk nota emas grosir"
                         />
@@ -126,10 +111,10 @@ const submit = () => {
                     <!-- Footer Gold Retail -->
                     <div class="grid gap-2">
                         <Label for="footer_gold_retail">Footer Emas (Retail)</Label>
-                        <textarea
+                        <Textarea
                             id="footer_gold_retail"
                             v-model="form.footer_gold_retail"
-                            rows="3"
+                            rows="5"
                             class="mt-1 block w-full rounded-md border p-2 text-sm"
                         />
                         <InputError :message="form.errors.footer_gold_retail" />
@@ -138,10 +123,10 @@ const submit = () => {
                     <!-- Footer Silver Wholesale -->
                     <div class="grid gap-2">
                         <Label for="footer_silver_wholesale">Footer Perak (Grosir)</Label>
-                        <textarea
+                        <Textarea
                             id="footer_silver_wholesale"
                             v-model="form.footer_silver_wholesale"
-                            rows="3"
+                            rows="5"
                             class="mt-1 block w-full rounded-md border p-2 text-sm"
                         />
                         <InputError :message="form.errors.footer_silver_wholesale" />
@@ -150,10 +135,10 @@ const submit = () => {
                     <!-- Footer Silver Retail -->
                     <div class="grid gap-2">
                         <Label for="footer_silver_retail">Footer Perak (Retail)</Label>
-                        <textarea
+                        <Textarea
                             id="footer_silver_retail"
                             v-model="form.footer_silver_retail"
-                            rows="3"
+                            rows="5"
                             class="mt-1 block w-full rounded-md border p-2 text-sm"
                         />
                         <InputError :message="form.errors.footer_silver_retail" />
@@ -170,6 +155,4 @@ const submit = () => {
             </div>
         </StoreLayout>
     </AppLayout>
-
 </template>
-

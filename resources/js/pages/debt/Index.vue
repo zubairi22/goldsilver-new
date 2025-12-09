@@ -1,133 +1,90 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import Heading from '@/components/Heading.vue';
-import { useFormat } from '@/composables/useFormat';
-import type { BreadcrumbItem } from '@/types';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import ChevronButton from '@/components/ChevronButton.vue';
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
-import InputError from '@/components/InputError.vue';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import Icon from '@/components/Icon.vue';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import CurrencyInput from '@/components/CurrencyInput.vue';
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, useForm } from '@inertiajs/vue3'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import Heading from '@/components/Heading.vue'
+import { useFormat } from '@/composables/useFormat'
+import type { BreadcrumbItem } from '@/types'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { ref } from 'vue'
+import { LoaderCircle } from 'lucide-vue-next'
+import InputError from '@/components/InputError.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Piutang', href: '#' },
-];
+]
 
-defineProps(['customers', 'invoices', 'paymentMethods']);
-
-const { formatRupiah, formatDate } = useFormat();
-
-const form = useForm({
-    customer_id: '',
-    settlement_amount: 0,
-    payment_method_id: '',
-});
-
-const invoiceForm = useForm({
-    transaction_id: '',
-    due_date_days: 1,
-});
-
-const settlementModal = ref(false);
-const detailModal = ref(false);
-const invoiceModal = ref(false);
-const invoiceListModal = ref(false);
-
-const selectedPayment = ref();
-
-const settleDebt = (customer: any) => {
-    form.customer_id = customer.id;
-    settlementModal.value = true;
-};
-
-const detailPayment = (transaction: any) => {
-    selectedPayment.value = transaction;
-    detailModal.value = true;
-};
-
-const generateInvoice = (transaction: any) => {
-    invoiceForm.transaction_id = transaction.id;
-    invoiceModal.value = true;
-};
-
-const openValue = ref<number[]>([]);
-
-const toggleValue = (valueId: number) => {
-    if (openValue.value.includes(valueId)) {
-        openValue.value = openValue.value.filter((id: number) => id !== valueId);
-    } else {
-        openValue.value.push(valueId);
-    }
-};
-
-const handleSettlement = () => {
-    form.post(route('transaction.debt.settle', form.customer_id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            settlementModal.value = false;
-            form.reset();
-        },
-    });
-};
-
-const handleGenerateInvoice = () => {
-    invoiceForm.post(route('transaction.debt.invoice.generate', invoiceForm.transaction_id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            invoiceModal.value = false;
-            invoiceForm.reset();
-        },
-    });
-};
-
-const cancelDebtModal = ref(false)
-
-const cancelForm = useForm({
-    transaction_id: '',
-    reason: '',
-    items: [] as {
-        transaction_item_id: number
-        product_name: string
-        unit_name: string
-        quantity: number
-        cancel_qty: number
-    }[],
+const props = defineProps({
+    sales: Object,
+    paymentMethods: Array,
 })
 
-const openCancelDebtModal = (trx: any) => {
-    cancelForm.transaction_id = trx.id
-    cancelForm.items = trx.items.map((it: any) => ({
-        transaction_item_id: it.id,
-        product_name: it.product.name,
-        unit_name: it.unit.name,
-        quantity: it.quantity,
-        cancel_qty: 0,
-    }))
-    cancelDebtModal.value = true
+const { formatRupiah, formatDate } = useFormat()
+
+/* -------------------------------
+    SETTLEMENT
+--------------------------------*/
+const settlementModal = ref(false)
+const selectedSale = ref<any>(null)
+
+const settleForm = useForm({
+    amount: 0,
+    payment_method_id: '',
+})
+
+const openSettlement = (sale: any) => {
+    selectedSale.value = sale
+    settlementModal.value = true
 }
 
-const submitCancelDebt = () => {
-    cancelForm.post(route('transaction.debt.cancel.item', cancelForm.transaction_id), {
+const handleSettlement = () => {
+    settleForm.post(route('transactions.debts.settle', selectedSale.value.id), {
         preserveScroll: true,
         onSuccess: () => {
-            cancelDebtModal.value = false
-            cancelForm.reset()
+            settlementModal.value = false
+            settleForm.reset()
         },
     })
+}
+
+/* -------------------------------
+    DUE DATE
+--------------------------------*/
+const dueDateModal = ref(false)
+
+const dueDateForm = useForm({
+    due_date_days: 1,
+})
+
+const openDueDate = (sale: any) => {
+    selectedSale.value = sale
+    dueDateModal.value = true
+}
+
+const handleDueDate = () => {
+    dueDateForm.post(route('transactions.debts.dueDate', selectedSale.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            dueDateModal.value = false
+            dueDateForm.reset()
+        },
+    })
+}
+
+/* -------------------------------
+    DETAIL PEMBAYARAN
+--------------------------------*/
+const detailModal = ref(false)
+
+const openDetail = (sale: any) => {
+    selectedSale.value = sale
+    detailModal.value = true
 }
 
 </script>
@@ -137,23 +94,8 @@ const submitCancelDebt = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <div class="flex items-center justify-between">
-                <Heading class="mx-4" title="Piutang" description="Riwayat transaksi yang masih berstatus belum lunas" />
-                <Button
-                    class="mx-4 relative"
-                    variant="outline"
-                    size="lg"
-                    @click="invoiceListModal = true"
-                >
-                    Daftar Invoice
-                    <span
-                        v-if="invoices?.length"
-                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center"
-                    >
-                        {{ invoices.length }}
-                    </span>
-                </Button>
-            </div>
+            <Heading class="mx-4" title="Piutang" description="Daftar transaksi yang masih memiliki piutang" />
+
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
@@ -161,95 +103,49 @@ const submitCancelDebt = () => {
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead class="w-8"></TableHead>
+                                        <TableHead>Kode</TableHead>
                                         <TableHead>Pelanggan</TableHead>
-                                        <TableHead class="text-right">Total Piutang</TableHead>
+                                        <TableHead>Kasir</TableHead>
+                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead class="text-right">Total</TableHead>
+                                        <TableHead class="text-right">Dibayar</TableHead>
+                                        <TableHead class="text-right">Sisa</TableHead>
+                                        <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <template v-for="customer in customers.data" :key="customer.id">
-                                        <TableRow>
-                                            <TableCell>
-                                                <ChevronButton
-                                                    :isOpen="openValue.includes(customer.id)"
-                                                    title="Transaksi"
-                                                    @click="toggleValue(customer.id)"
-                                                />
-                                            </TableCell>
-                                            <TableCell @click="toggleValue(customer.id)">
-                                                {{ customer.name }}
-                                            </TableCell>
-                                            <TableCell class="text-right">
-                                                {{ formatRupiah(customer.total_debt) }}
-                                            </TableCell>
-                                            <TableCell class="w-8 text-right">
-                                                <Button @click="settleDebt(customer)">Bayar</Button>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow v-if="openValue.includes(customer.id)">
-                                            <TableCell />
-                                            <TableCell colSpan="6">
-                                                <Table class="w-full">
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead class="w-44">Kode</TableHead>
-                                                            <TableHead>Kasir</TableHead>
-                                                            <TableHead>Tanggal</TableHead>
-                                                            <TableHead class="text-right">Total</TableHead>
-                                                            <TableHead class="text-right">Bayar</TableHead>
-                                                            <TableHead class="text-right">Piutang</TableHead>
-                                                            <TableHead class="w-8" />
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        <TableRow v-for="trx in customer.transactions" :key="trx.id">
-                                                            <TableCell>
-                                                                {{ trx.transaction_number }}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {{ trx.user.name }}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {{ formatDate(trx.created_at) }}
-                                                            </TableCell>
-                                                            <TableCell class="text-right">
-                                                                {{ formatRupiah(trx.total_price) }}
-                                                            </TableCell>
-                                                            <TableCell class="text-right">
-                                                                {{ formatRupiah(trx.paid_amount) }}
-                                                            </TableCell>
-                                                            <TableCell class="text-right text-red-600">
-                                                                {{ formatRupiah(trx.total_price - trx.paid_amount) }}
-                                                            </TableCell>
-                                                            <TableCell class="px-2">
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger as-child>
-                                                                        <Button variant="secondary">
-                                                                            <icon name="EllipsisVertical" />
-                                                                        </Button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent class="w-40">
-                                                                        <DropdownMenuItem @click="detailPayment(trx)">
-                                                                            Detail Pembayaran
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem @click="openCancelDebtModal(trx)">
-                                                                            Cancel Produk
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem @click="generateInvoice(trx)">
-                                                                            Buat Invoice
-                                                                        </DropdownMenuItem>
-                                                                    </DropdownMenuContent>
-                                                                </DropdownMenu>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    </TableBody>
-                                                </Table>
-                                            </TableCell>
-                                        </TableRow>
-                                    </template>
-                                    <TableRow v-if="!customers.total">
-                                        <TableCell />
-                                        <TableCell colspan="6">Belum ada piutang.</TableCell>
+                                    <TableRow v-for="sale in sales.data" :key="sale.id">
+                                        <TableCell>{{ sale.invoice_no }}</TableCell>
+                                        <TableCell>{{ sale.customer?.name ?? '-' }}</TableCell>
+                                        <TableCell>{{ sale.user?.name }}</TableCell>
+
+                                        <TableCell>
+                                            {{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}
+                                        </TableCell>
+
+                                        <TableCell class="text-right">
+                                            {{ formatRupiah(sale.total_price) }}
+                                        </TableCell>
+
+                                        <TableCell class="text-right">
+                                            {{ formatRupiah(sale.paid_amount) }}
+                                        </TableCell>
+
+                                        <TableCell class="text-right text-red-600 font-semibold">
+                                            {{ formatRupiah(sale.remaining_amount) }}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <div class="flex gap-2">
+                                                <Button size="sm" @click="openDetail(sale)">Detail</Button>
+                                                <Button size="sm" @click="openSettlement(sale)">Bayar</Button>
+                                                <Button size="sm" variant="secondary" @click="openDueDate(sale)">Jatuh Tempo</Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+
+                                    <TableRow v-if="sales.total === 0">
+                                        <TableCell colspan="8" class="text-center py-6">Tidak ada piutang</TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -260,220 +156,104 @@ const submitCancelDebt = () => {
         </div>
     </AppLayout>
 
-    <Dialog :open="settlementModal" @update:open="(val) => (settlementModal = val)">
+    <!-- ===========================
+        MODAL PEMBAYARAN
+    ==============================-->
+    <Dialog :open="settlementModal" @update:open="v => (settlementModal = v)">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Pembayaran Utang</DialogTitle>
-                <DialogDescription>Masukkan jumlah pembayaran untuk piutang</DialogDescription>
+                <DialogTitle>Pembayaran Piutang</DialogTitle>
             </DialogHeader>
 
             <div>
-                <Label for="settlement_amount">Jumlah Pembayaran</Label>
-                <CurrencyInput v-model="form.settlement_amount" required />
-                <InputError class="mt-2" :message="form.errors.settlement_amount" />
+                <Label>Jumlah Pembayaran</Label>
+                <CurrencyInput v-model="settleForm.amount" required />
+                <InputError :message="settleForm.errors.amount" />
             </div>
 
-            <div>
-                <Label for="method">Metode Pembayaran</Label>
-                <Select v-model="form.payment_method_id">
-                    <SelectTrigger class="w-full">
-                        <SelectValue placeholder="Pilih Metode Pembayaran" />
-                    </SelectTrigger>
-                    <SelectContent class="w-60">
-                        <SelectGroup>
-                            <SelectItem v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
-                                {{ pm.name }}
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <InputError :message="form.errors.payment_method_id" class="mt-1" />
+            <div class="mt-3">
+                <Label>Metode Pembayaran</Label>
+                <select v-model="settleForm.payment_method_id" class="w-full border rounded p-2">
+                    <option value="">Pilih...</option>
+                    <option v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
+                        {{ pm.name }}
+                    </option>
+                </select>
+                <InputError :message="settleForm.errors.payment_method_id" />
             </div>
 
             <DialogFooter>
                 <Button variant="secondary" @click="settlementModal = false">Batal</Button>
-                <Button :disabled="form.processing" @click="handleSettlement">
-                    <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Proses Pembayaran
+                <Button :disabled="settleForm.processing" @click="handleSettlement">
+                    <LoaderCircle v-if="settleForm.processing" class="h-4 w-4 animate-spin" />
+                    Bayar
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="detailModal" @update:open="(val) => (detailModal = val)">
+    <!-- ===========================
+        DETAIL PEMBAYARAN
+    ==============================-->
+    <Dialog :open="detailModal" @update:open="v => (detailModal = v)">
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Detail Pembayaran</DialogTitle>
             </DialogHeader>
-            <DialogDescription>
-                <div>
-                    <p><strong>Kode Transaksi:</strong> {{ selectedPayment?.transaction_number }}</p>
-                    <p><strong>Tanggal:</strong> {{ formatDate(selectedPayment?.created_at) }}</p>
-                    <p><strong>Total Piutang:</strong> {{ formatRupiah(selectedPayment?.total_price) }}</p>
-                    <p><strong>Jumlah Bayar:</strong> {{ formatRupiah(selectedPayment?.paid_amount) }}</p>
-                    <p><strong>Sisa Piutang:</strong> {{ formatRupiah(selectedPayment?.total_price - selectedPayment?.paid_amount) }}</p>
 
-                    <h3>Daftar Pembayaran:</h3>
-                    <Table class="mt-2 border">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead class="w-44">Jumlah Bayar</TableHead>
-                                <TableHead>Tanggal Pembayaran</TableHead>
-                                <TableHead>Catatan</TableHead>
-                                <TableHead>Metode</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="payment in selectedPayment?.payments" :key="payment.id">
-                                <TableCell>{{ formatRupiah(payment.amount) }}</TableCell>
-                                <TableCell>{{ formatDate(payment.paid_at) }}</TableCell>
-                                <TableCell>{{ payment.notes }}</TableCell>
-                                <TableCell>{{ payment.payment_method?.name }}</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-            </DialogDescription>
-            <DialogFooter>
-                <Button variant="secondary" @click="detailModal = false">Tutup</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+            <div v-if="selectedSale">
+                <p><strong>Kode:</strong> {{ selectedSale.invoice_no }}</p>
+                <p><strong>Total:</strong> {{ formatRupiah(selectedSale.total_price) }}</p>
+                <p><strong>Dibayar:</strong> {{ formatRupiah(selectedSale.paid_amount) }}</p>
+                <p><strong>Sisa:</strong> {{ formatRupiah(selectedSale.remaining_amount) }}</p>
 
-    <Dialog :open="invoiceModal" @update:open="(val) => (invoiceModal = val)">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Buat Invoice</DialogTitle>
-                <DialogDescription>Masukkan berapa hari invoice harus dilunasi</DialogDescription>
-            </DialogHeader>
-
-            <div>
-                <Label for="settlement_amount">Tenor Invoice</Label>
-                <Input v-model="invoiceForm.due_date_days" type="number" min="1" required />
-                <InputError class="mt-2" :message="invoiceForm.errors.due_date_days" />
-            </div>
-
-            <DialogFooter>
-                <Button variant="secondary" @click="invoiceModal = false">Batal</Button>
-                <Button :disabled="invoiceForm.processing" @click="handleGenerateInvoice">
-                    <LoaderCircle v-if="invoiceForm.processing" class="h-4 w-4 animate-spin" />
-                    Buat Invoice
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <Dialog :open="invoiceListModal" @update:open="(val) => (invoiceListModal = val)">
-        <DialogContent class="sm:max-w-4xl">
-            <DialogHeader>
-                <DialogTitle>Daftar Invoice</DialogTitle>
-            </DialogHeader>
-
-            <div>
-                <Table class="mt-2">
+                <Table class="mt-4">
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-44">Nama Pelanggan</TableHead>
-                            <TableHead class="text-center">Tanggal Jatuh Tempo</TableHead>
-                            <TableHead class="text-center">Total</TableHead>
-                            <TableHead class="w-8" />
+                            <TableHead>Jumlah</TableHead>
+                            <TableHead>Tanggal</TableHead>
+                            <TableHead>Metode</TableHead>
+                            <TableHead>Catatan</TableHead>
                         </TableRow>
                     </TableHeader>
+
                     <TableBody>
-                        <TableRow v-for="invoice in invoices" :key="invoice.id">
-                            <TableCell class="text-center">{{ invoice.transaction.customer.name }}</TableCell>
-                            <TableCell class="text-center">{{ formatDate(invoice.due_date, 'dd MMMM yyyy') }}</TableCell>
-                            <TableCell class="text-center">{{ formatRupiah(invoice.transaction.total_price ) }}</TableCell>
-                            <TableCell>
-                                <Button>
-                                    <a :href="route('transaction.debt.invoice.view', invoice)" target="_blank"> Unduh Invoice </a>
-                                </Button>
-                            </TableCell>
+                        <TableRow v-for="pay in selectedSale.payments" :key="pay.id">
+                            <TableCell>{{ formatRupiah(pay.amount) }}</TableCell>
+                            <TableCell>{{ formatDate(pay.created_at) }}</TableCell>
+                            <TableCell>{{ pay.payment_method?.name }}</TableCell>
+                            <TableCell>{{ pay.note }}</TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>
             </div>
 
             <DialogFooter>
-                <Button variant="secondary" @click="invoiceListModal = false">Tutup</Button>
+                <Button @click="detailModal = false">Tutup</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="cancelDebtModal" @update:open="(v) => (cancelDebtModal = v)">
+    <!-- ===========================
+        MODAL DUE DATE
+    ==============================-->
+    <Dialog :open="dueDateModal" @update:open="v => (dueDateModal = v)">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Cancel Item Piutang</DialogTitle>
-                <DialogDescription>Pilih item dan jumlah yang ingin dibatalkan.</DialogDescription>
+                <DialogTitle>Atur Jatuh Tempo</DialogTitle>
             </DialogHeader>
 
-            <div class="space-y-4">
-                <div class="overflow-x-auto">
-                    <Table class="w-full">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Produk</TableHead>
-                                <TableHead class="text-center w-20">Qty</TableHead>
-                                <TableHead class="text-right w-48">Qty Cancel</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="(it, idx) in cancelForm.items" :key="it.transaction_item_id">
-                                <TableCell>
-                                    <div class="font-medium">{{ it.product_name }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ it.unit_name }}</div>
-                                </TableCell>
-                                <TableCell class="text-center">
-                                    {{ it.quantity }}
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    <div class="inline-flex items-center justify-center gap-2" @click.stop>
-                                        <Button
-                                            size="icon"
-                                            class="h-7 w-7"
-                                            @click.stop="cancelForm.items[idx].cancel_qty = Math.max(0, (cancelForm.items[idx].cancel_qty || 0) - 1)"
-                                        >
-                                            -
-                                        </Button>
-
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            class="text-center"
-                                            :max="it.quantity"
-                                            v-model.number="cancelForm.items[idx].cancel_qty"
-                                        />
-
-                                        <Button
-                                            size="icon"
-                                            class="h-7 w-7"
-                                            @click.stop="cancelForm.items[idx].cancel_qty = Math.min((cancelForm.items[idx].cancel_qty || 0) + 1, it.quantity)"
-                                        >
-                                            +
-                                        </Button>
-                                    </div>
-                                    <InputError :message="(cancelForm.errors as any)[`items.${idx}.quantity`]" class="mt-1" />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-if="!cancelForm.items.length">
-                                <TableCell colspan="6">Tidak ada item.</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-
-                <div>
-                    <Label>Alasan Cancel (opsional)</Label>
-                    <Textarea rows="3" v-model="cancelForm.reason" />
-                    <InputError :message="cancelForm.errors.reason" class="mt-1" />
-                </div>
+            <div>
+                <Label>Tenor (hari)</Label>
+                <Input type="number" v-model="dueDateForm.due_date_days" min="1" />
+                <InputError :message="dueDateForm.errors.due_date_days" />
             </div>
 
-            <DialogFooter class="gap-2">
-                <Button variant="secondary" @click="cancelDebtModal = false">Batal</Button>
-                <Button :disabled="cancelForm.processing || !cancelForm.items.some(i => i.cancel_qty > 0)" @click="submitCancelDebt">
-                    <LoaderCircle v-if="cancelForm.processing" class="mr-2 h-4 w-4 animate-spin" />
-                    Konfirmasi Cancel
+            <DialogFooter>
+                <Button variant="secondary" @click="dueDateModal = false">Batal</Button>
+                <Button :disabled="dueDateForm.processing" @click="handleDueDate">
+                    <LoaderCircle v-if="dueDateForm.processing" class="h-4 w-4 animate-spin" />
+                    Simpan
                 </Button>
             </DialogFooter>
         </DialogContent>

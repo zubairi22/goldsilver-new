@@ -35,6 +35,11 @@ class GoldBuybackController extends Controller
 
     public function create(Sale $sale)
     {
+        if ($sale->status !== 'paid') {
+            $this->flashError('Transaksi belum lunas, buyback tidak diizinkan.');
+            return back();
+        }
+
         $sale->load(['items.item', 'customer', 'user']);
 
         $sale->items->each(function ($saleItem) {

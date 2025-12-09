@@ -9,24 +9,23 @@ use Illuminate\Support\Str;
 
 trait GeneratesQrCode
 {
-    public function generateQrCode(string $value): string
+    public function generateQrCode(string $value, string $folderSubPath = 'general'): string
     {
+        $writer = new PngWriter();
         $qr = new QrCode($value);
 
-        $writer = new PngWriter();
+        $baseFolder = 'qrcodes/' . trim($folderSubPath, '/');
 
-        $folder = 'qrcodes';
-        $file = Str::random(20) . '.png';
-        $path = $folder . '/' . $file;
-
-        if (!Storage::disk('public')->exists($folder)) {
-            Storage::disk('public')->makeDirectory($folder);
+        if (!Storage::disk('public')->exists($baseFolder)) {
+            Storage::disk('public')->makeDirectory($baseFolder);
         }
 
+        $filename = Str::uuid() . '.png';
+        $filePath = "{$baseFolder}/{$filename}";
+
         $result = $writer->write($qr);
+        Storage::disk('public')->put($filePath, $result->getString());
 
-        Storage::disk('public')->put($path, $result->getString());
-
-        return $path;
+        return $filePath;
     }
 }

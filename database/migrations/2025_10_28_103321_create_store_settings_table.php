@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('store_name')->default('Toko Emas Kita');
             $table->string('phone')->nullable();
             $table->string('instagram')->nullable();
+            $table->string('address')->nullable();
 
             $table->string('gold_invoice_color')->default('#FFD700');
             $table->string('silver_invoice_color')->default('#C0C0C0');

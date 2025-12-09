@@ -30,6 +30,11 @@ class MigratePenjualanSeeder extends Seeder
 
                 foreach ($rows as $row) {
 
+                    if (Sale::where('invoice_no', 'PJ-' . $row->idpenjualan)->exists()) {
+                        Log::info("Skip: Invoice sudah ada → PJ-{$row->idpenjualan}");
+                        continue;
+                    }
+
                     // ========== CATEGORY ==========
                     $category = match ($row->jenisjual) {
                         1 => 'gold',
@@ -62,7 +67,7 @@ class MigratePenjualanSeeder extends Seeder
                         $paidAmount = 0;
                     }
 
-                    $totalPrice = $row->hargatotal ?? 0;
+                    $totalPrice = $row->harganet ?? 0;
                     $remaining  = max(0, $totalPrice - $paidAmount);
 
                     // ========== STATUS ==========
@@ -85,7 +90,7 @@ class MigratePenjualanSeeder extends Seeder
 
                         if ($resp->successful()) {
 
-                            $folder = 'qrcodes';
+                            $folder = 'qrcodes/sales';
                             if (!Storage::disk('public')->exists($folder)) {
                                 Storage::disk('public')->makeDirectory($folder);
                             }
@@ -96,22 +101,40 @@ class MigratePenjualanSeeder extends Seeder
                             $qrPath = $folder . '/' . $filename;
                         } else {
                             Log::warning("Gagal download QR: ID {$row->idpenjualan}");
-
-                            $qrPath = $this->generateQrCode('PJ-' . $row->idpenjualan);
                         }
                     } catch (\Exception $e) {
                         Log::warning("Error download QR: ID {$row->idpenjualan}");
+                    }
 
-                        $qrPath = $this->generateQrCode('PJ-' . $row->idpenjualan);
+                    $customerId = null;
+
+                    if (!empty($row->namapembeli)) {
+                        $buyer = trim($row->namapembeli);
+
+                        if ($buyer !== '') {
+                            $existing = DB::table('customers')
+                                ->whereRaw('LOWER(name) = ?', [strtolower($buyer)])
+                                ->first();
+
+                            if ($existing) {
+                                $customerId = $existing->id;
+                            } else {
+                                $customerId = DB::table('customers')->insertGetId([
+                                    'name'       => $buyer,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                            }
+                        }
                     }
 
                     // ========== INSERT SALE ==========
-                    $sale = Sale::create([
+                    $sale = Sale::createQuietly([
                         'invoice_no'        => 'PJ-' . $row->idpenjualan,
-                        'qrcode'           => $qrPath,
+                        'qr_path'           => $qrPath,
                         'category'          => $category,
                         'sale_type'         => $saleType,
-                        'customer_id'       => null,
+                        'customer_id'       => $customerId,
                         'user_id'           => $row->userid ?? 1,
                         'total_weight'      => $row->berattotal ?? 0,
                         'total_price'       => $totalPrice,
@@ -119,6 +142,8 @@ class MigratePenjualanSeeder extends Seeder
                         'paid_amount'       => $paidAmount,
                         'remaining_amount'  => $remaining,
                         'status'            => $status,
+                        'change_amount'     => $row->kembalibayar ?? 0,
+                        'notes'             => $row->keterangan ?? '',
                         'created_at'        => $row->tglpenjualan ?? $row->datecreated,
                         'updated_at'        => $row->tglpenjualan ?? $row->datecreated,
                     ]);

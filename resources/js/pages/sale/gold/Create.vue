@@ -1,167 +1,216 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, useForm } from '@inertiajs/vue3'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { computed, ref } from 'vue'
-import { useFormat } from '@/composables/useFormat'
-import { toast } from 'vue-sonner'
-import type { BreadcrumbItem } from '@/types'
-import Multiselect from '@vueform/multiselect'
-import InputError from '@/components/InputError.vue'
-import DeleteButton from '@/components/DeleteButton.vue'
-import { Textarea } from '@/components/ui/textarea'
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { computed, ref, watch } from 'vue';
+import { useFormat } from '@/composables/useFormat';
+import { toast } from 'vue-sonner';
+import type { BreadcrumbItem } from '@/types';
+import Multiselect from '@vueform/multiselect';
+import InputError from '@/components/InputError.vue';
+import DeleteButton from '@/components/DeleteButton.vue';
 import CurrencyInput from '@/components/CurrencyInput.vue';
+import { Textarea } from '@/components/ui/textarea';
+import Icon from '@/components/Icon.vue';
+import QrScanner from '@/components/QrScanner.vue';
 
-const { formatRupiah } = useFormat()
+const { formatRupiah } = useFormat();
 
-defineProps(['paymentMethods', 'customers', 'items'])
+const { cashiers } = defineProps(['paymentMethods', 'customers', 'items', 'cashiers']);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Penjualan Emas', href: '/sale/gold' },
     { title: 'Tambah', href: '#' },
-]
+];
 
 const form = useForm({
     category: 'gold',
     sale_type: 'retail',
     mode: 'auto',
     customer_id: '',
-    payment_method_id: '',
+    payment_method_id: 1,
     paid_amount: 0,
+    cashier_id: cashiers?.[0]?.id ?? null,
+    password: '',
+    qr_token: '',
+    notes: '',
     items: <any>[],
-})
+});
 
-const showAddItemModal = ref(false)
-const editIndex = ref<number|null>(null)
+const verifyModal = ref(false);
+const successModal = ref(false);
+const savedSale = ref<any>(null);
+
+const showAddItemModal = ref(false);
+const editIndex = ref<number | null>(null);
 
 const modalItem = ref<any>({
     id: null,
     manual_name: '',
     weight: 0,
     price: 0,
-})
+});
 
+// ---- Item logic ----
 const addItem = () => {
-    modalItem.value = { id: null, manual_name: '', weight: 0, price: 0 }
-    editIndex.value = null
-    showAddItemModal.value = true
-}
+    modalItem.value = { id: null, manual_name: '', weight: 0, price: 0 };
+    editIndex.value = null;
+    showAddItemModal.value = true;
+};
 
 const editItem = (index: number) => {
-    const it = form.items[index]
+    const it = form.items[index];
     modalItem.value = {
         id: it.id ?? null,
         manual_name: it.manual_name ?? '',
         weight: it.weight,
         price: it.price,
-    }
-    editIndex.value = index
-    showAddItemModal.value = true
-}
+    };
+    editIndex.value = index;
+    showAddItemModal.value = true;
+};
 
 const removeItem = (index: number) => {
-    form.items.splice(index, 1)
-}
+    form.items.splice(index, 1);
+};
 
 const modalSubtotal = computed(() => {
-    const w = Number(modalItem.value.weight || 0)
-    const p = Number(modalItem.value.price || 0)
-    return Math.round(w * p)
-})
-
-const totalPrice = computed(() => {
-    const total = form.items.reduce((sum: any, i: any) => sum + Number(i.subtotal || 0), 0)
-    return Math.round(total)
-})
-
-const totalWeight = computed(() =>
-    form.items.reduce((sum: any, i: any) => sum + Number(i.weight || 0), 0)
-)
-
-const change = computed(() => {
-    const raw = Number(form.paid_amount) - Number(totalPrice.value);
-    const clean = Math.round(raw);
-    return clean < 0 ? 0 : clean;
+    const w = Number(modalItem.value.weight || 0);
+    const p = Number(modalItem.value.price || 0);
+    return Math.round(w * p);
 });
-
 
 const saveModalItem = () => {
     if (form.mode === 'auto' && !modalItem.value.id) {
-        toast.error('Silakan pilih barang dari stok.')
-        return
+        toast.error('Silakan pilih barang dari stok.');
+        return;
     }
     if (form.mode === 'manual' && !modalItem.value.manual_name) {
-        toast.error('Nama barang harus diisi.')
-        return
+        toast.error('Nama barang harus diisi.');
+        return;
     }
     if (modalSubtotal.value <= 0) {
-        toast.error('Berat dan harga harus lebih dari 0.')
-        return
+        toast.error('Berat dan harga harus valid.');
+        return;
     }
 
     form.items.push({
         ...modalItem.value,
         mode: form.mode,
-        subtotal: Math.round(modalSubtotal.value),
-    })
+        subtotal: modalSubtotal.value,
+    });
 
-    showAddItemModal.value = false
-}
+    showAddItemModal.value = false;
+};
 
 const updateModalItem = () => {
-    if (editIndex.value === null) return
-
+    if (editIndex.value === null) return;
     form.items[editIndex.value] = {
         ...modalItem.value,
         mode: form.mode,
-        subtotal: Math.round(modalSubtotal.value),
-    }
+        subtotal: modalSubtotal.value,
+    };
+    editIndex.value = null;
+    showAddItemModal.value = false;
+};
 
-    editIndex.value = null
-    showAddItemModal.value = false
-}
+// ---- Payment & summary ----
+const totalPrice = computed(() => {
+    return Math.round(
+        form.items.reduce((sum: any, i: any) => sum + Number(i.subtotal || 0), 0)
+    );
+});
+
+const totalWeight = computed(() => {
+    return Number(
+        form.items.reduce((sum: number, i: any) => sum + Number(i.weight || 0), 0).toFixed(2)
+    );
+});
+
+const change = computed(() => {
+    const raw = Number(form.paid_amount) - Number(totalPrice.value);
+    return raw < 0 ? 0 : Math.round(raw);
+});
 
 const setExactPayment = () => {
-    form.paid_amount = Number(totalPrice.value)
-}
+    form.paid_amount = Number(totalPrice.value);
+};
 
-const submitSale = () => {
+// ---- Verification ----
+const openVerifyModal = () => {
     if (!form.items.length) {
-        toast.error('Minimal 1 item harus ditambahkan.')
-        return
+        toast.error('Minimal 1 item harus ditambahkan.');
+        return;
     }
+    verifyModal.value = true;
+};
 
+const submitSaleFinal = () => {
     form.post(route('gold.transactions.sales.store'), {
         preserveScroll: true,
-        onSuccess: () => {
-            toast.success('Penjualan emas berhasil disimpan.')
-            form.reset()
+        onSuccess: (page) => {
+            savedSale.value = page.props.flash.sale;
+
+            verifyModal.value = false;
+            successModal.value = true;
+
+            form.reset();
         },
-        onError: () => {
-            toast.error('Terjadi kesalahan saat menyimpan. Periksa kembali input.')
-        },
-    })
-}
+    });
+};
+
+// ---- Success handling ----
+const printReceipt = () => {
+    window.open(route('gold.transactions.sales.print', savedSale.value.id), '_blank');
+};
+
+const scanModal = ref(false);
+
+const onQrScanned = (token: string) => {
+    form.qr_token = token;
+
+    const cashier = cashiers.find((c: any) => c.qr_token === token);
+    if (cashier) {
+        form.cashier_id = cashier.id;
+        toast.success('Kasir terverifikasi via QR!');
+    } else {
+        toast.error('QR tidak dikenal.');
+    }
+};
+
+watch(successModal, (val) => {
+    if (!val && savedSale.value) {
+        toast.info('Akan dialihkan ke halaman daftar penjualan.');
+        setTimeout(() => {
+            router.visit(route('gold.transactions.sales.index'));
+        }, 1500);
+    }
+});
 </script>
 
 <template>
     <Head title="Tambah Penjualan Emas" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="py-6 px-4">
+
+        <div class="px-4 py-6">
             <div class="max-w-8xl mx-auto space-y-6">
+
+                <!-- INFO PENJUALAN -->
                 <Card>
                     <CardHeader>
                         <CardTitle class="mb-1">Informasi Penjualan Emas</CardTitle>
-                        <hr>
+                        <hr />
                     </CardHeader>
-                    <CardContent class="grid md:grid-cols-2 gap-4">
+
+                    <CardContent class="grid gap-4 md:grid-cols-2">
+
                         <div>
                             <Label>Tipe Penjualan</Label>
                             <Select v-model="form.sale_type">
@@ -171,7 +220,6 @@ const submitSale = () => {
                                     <SelectItem value="wholesale">Partai</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="form.errors.sale_type" />
                         </div>
 
                         <div>
@@ -183,18 +231,19 @@ const submitSale = () => {
                                     <SelectItem value="manual">Manual</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="form.errors.mode" />
                         </div>
+
                     </CardContent>
                 </Card>
 
+                <!-- ITEM -->
                 <Card>
                     <CardHeader>
-                        <div class="flex justify-between items-center mb-1">
+                        <div class="mb-1 flex items-center justify-between">
                             <CardTitle>Daftar Item</CardTitle>
                             <Button @click="addItem">Tambah Item</Button>
                         </div>
-                        <hr>
+                        <hr />
                     </CardHeader>
 
                     <CardContent>
@@ -223,27 +272,28 @@ const submitSale = () => {
                                             </span>
                                             <span v-else>{{ item.manual_name }}</span>
                                         </TableCell>
+
                                         <TableCell>{{ item.weight }} g</TableCell>
                                         <TableCell>{{ formatRupiah(item.price) }}</TableCell>
                                         <TableCell>{{ formatRupiah(item.subtotal) }}</TableCell>
+
                                         <TableCell @click.stop>
                                             <DeleteButton size="icon" @confirm="removeItem(index)" />
                                         </TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="!form.items.length">
-                                        <TableCell colspan="10" class="text-center py-4">
+                                        <TableCell colspan="10" class="py-4 text-center">
                                             Belum ada item yang ditambahkan.
                                         </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
                         </div>
-
-                        <InputError class="mt-2" :message="form.errors.items" />
                     </CardContent>
                 </Card>
 
+                <!-- PEMBAYARAN -->
                 <Card>
                     <CardHeader>
                         <CardTitle class="mb-1">Pembayaran</CardTitle>
@@ -252,33 +302,34 @@ const submitSale = () => {
 
                     <CardContent class="space-y-8">
 
-                        <!-- SUMMARY BOX -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="p-4 rounded-lg bg-muted/40 border">
+                        <!-- Summary Box -->
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div class="rounded-lg border bg-muted/40 p-4">
                                 <div class="text-sm text-muted-foreground">Total Berat</div>
-                                <div class="font-bold text-2xl mt-1">{{ totalWeight.toFixed(2) }} g</div>
+                                <div class="mt-1 text-2xl font-bold">{{ totalWeight }} g</div>
                             </div>
 
-                            <div class="p-4 rounded-lg bg-muted/40 border">
+                            <div class="rounded-lg border bg-muted/40 p-4">
                                 <div class="text-sm text-muted-foreground">Total Harga</div>
-                                <div class="font-bold text-2xl mt-1">{{ formatRupiah(totalPrice) }}</div>
+                                <div class="mt-1 text-2xl font-bold">{{ formatRupiah(totalPrice) }}</div>
                             </div>
 
-                            <div class="p-4 rounded-lg bg-muted/40 border">
+                            <div class="rounded-lg border bg-muted/40 p-4">
                                 <div class="text-sm text-muted-foreground">Kembalian</div>
-                                <div class="font-bold text-2xl mt-1">{{ formatRupiah(change) }}</div>
+                                <div class="mt-1 text-2xl font-bold">{{ formatRupiah(change) }}</div>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Detail Payment -->
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+
                             <div class="flex flex-col gap-6">
+
                                 <div>
                                     <Label>Jenis Pembayaran</Label>
-                                    <Select v-model="form.payment_method_id" @change="form.clearErrors('payment_method_id')">
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Pilih metode pembayaran" />
-                                        </SelectTrigger>
-                                        <SelectContent class="w-80">
+                                    <Select v-model="form.payment_method_id">
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
                                             <SelectGroup>
                                                 <SelectItem
                                                     v-for="pm in paymentMethods"
@@ -290,60 +341,66 @@ const submitSale = () => {
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
-                                    <InputError :message="form.errors.payment_method_id" />
                                 </div>
 
                                 <div>
                                     <Label>Bayar</Label>
                                     <div class="flex items-center gap-2">
                                         <CurrencyInput
-                                            v-model.number="form.paid_amount"
-                                            @input="form.clearErrors('paid_amount')"
+                                            v-model="form.paid_amount"
                                             class="flex-1"
                                         />
-
-                                        <Button
-                                            type="button"
-                                            class="whitespace-nowrap"
-                                            @click="setExactPayment"
-                                        >
-                                            PAS
-                                        </Button>
+                                        <Button type="button" @click="setExactPayment">PAS</Button>
                                     </div>
-
-                                    <InputError :message="form.errors.paid_amount" />
                                 </div>
+
                             </div>
 
                             <div class="flex flex-col gap-6">
 
                                 <div>
                                     <Label>Pelanggan</Label>
-                                    <Multiselect v-model="form.customer_id" :options="customers" />
-                                    <InputError :message="form.errors.customer_id" />
+                                    <Multiselect
+                                        v-model="form.customer_id"
+                                        :options="customers"
+                                        searchable
+                                        placeholder="Pilih atau tambah pelanggan"
+                                        :create-option="true"
+                                        :add-option="true"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label>Keterangan</Label>
+                                    <Textarea
+                                        v-model="form.notes"
+                                        rows="2"
+                                        placeholder="Tulis keterangan..."
+                                    />
                                 </div>
 
                             </div>
                         </div>
 
                         <div class="pt-4 text-right">
-                            <Button @click="submitSale" :disabled="form.processing" class="px-6">
-                                <span v-if="form.processing">Menyimpan...</span>
-                                <span v-else>Simpan Transaksi</span>
-                            </Button>
+                            <Button @click="openVerifyModal" class="px-6">Simpan Transaksi</Button>
                         </div>
+
                     </CardContent>
                 </Card>
+
             </div>
         </div>
 
-        <Dialog v-model:open="showAddItemModal">
+        <!-- MODAL: ADD ITEM -->
+        <Dialog v-model:open="showAddItemModal" @update:open="(val) => (showAddItemModal = val)">
             <DialogContent class="max-w-md">
                 <DialogHeader>
                     <DialogTitle>{{ editIndex === null ? 'Tambah Item' : 'Edit Item' }}</DialogTitle>
                 </DialogHeader>
 
                 <div class="space-y-4">
+
                     <div v-if="form.mode === 'auto'">
                         <Label>Barang dari Stok</Label>
                         <Multiselect
@@ -353,10 +410,10 @@ const submitSale = () => {
                             label="name"
                             searchable
                             placeholder="Pilih barang"
-                            @change="(value) => {
-                                const it = items.find((p: any) => p.id === value)
-                                modalItem.price = it?.price_sell ?? 0
-                                modalItem.weight = it?.weight ?? 0
+                            @change="value => {
+                                const it = items.find((p: any) => p.id === value);
+                                modalItem.price = it?.price_sell ?? 0;
+                                modalItem.weight = it?.weight ?? 0;
                             }"
                         />
                     </div>
@@ -368,25 +425,135 @@ const submitSale = () => {
 
                     <div>
                         <Label>Berat (g)</Label>
-                        <Input type="number" min="0" step="0.01" v-model.number="modalItem.weight" />
+                        <Input type="number" v-model.number="modalItem.weight" />
                     </div>
 
                     <div>
                         <Label>Harga</Label>
-                        <Input type="number" min="0" v-model.number="modalItem.price" />
+                        <Input type="number" v-model.number="modalItem.price" />
                     </div>
 
                     <div class="flex justify-between">
                         <span>Subtotal</span>
                         <span class="font-semibold">{{ formatRupiah(modalSubtotal) }}</span>
                     </div>
+
                 </div>
 
                 <DialogFooter>
                     <Button variant="outline" @click="showAddItemModal = false">Batal</Button>
-
                     <Button v-if="editIndex === null" @click="saveModalItem">Tambah</Button>
-                    <Button v-else @click="updateModalItem">Simpan Perubahan</Button>
+                    <Button v-else @click="updateModalItem">Simpan</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- MODAL: VERIFIKASI TRANSAKSI -->
+        <Dialog v-model:open="verifyModal" @update:open="(val) => (verifyModal = val)">
+            <DialogContent class="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Verifikasi Transaksi</DialogTitle>
+                    <DialogDescription>Pilih kasir & masukkan password kasir untuk melanjutkan.</DialogDescription>
+                </DialogHeader>
+
+                <div class="space-y-4">
+
+                    <div>
+                        <Label>Pilih Kasir</Label>
+                        <Select
+                            v-model="form.cashier_id"
+                            :disabled="!$page.props.auth.isAdmin"
+                        >
+                            <SelectTrigger><SelectValue placeholder="Pilih kasir" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectItem
+                                        v-for="c in cashiers"
+                                        :key="c.id"
+                                        :value="c.id"
+                                    >
+                                        {{ c.name }}
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
+                        <InputError :message="form.errors.cashier_id" />
+                    </div>
+
+                    <div>
+                        <Label>Password / QR Kasir</Label>
+
+                        <div class="flex items-center gap-2">
+                            <Input type="password" v-model="form.password" class="flex-1" />
+
+                            <!-- Tombol Scan QR -->
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                @click="scanModal = true"
+                            >
+                                <icon name="camera"/>
+                            </Button>
+                        </div>
+
+                        <InputError :message="form.errors.password" />
+                    </div>
+
+                </div>
+
+                <DialogFooter class="mt-4">
+                    <Button variant="outline" @click="verifyModal = false">Batal</Button>
+                    <Button @click="submitSaleFinal">Verifikasi & Simpan</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- MODAL: SCAN QR -->
+        <QrScanner v-model:open="scanModal" @scanned="onQrScanned" />
+
+        <!-- MODAL: SUCCESS -->
+        <Dialog :open="successModal" @update:open="(val) => (successModal = val)">
+            <DialogContent class="sm:max-w-xl">
+                <DialogHeader>
+                    <DialogTitle>Transaksi Berhasil</DialogTitle>
+                </DialogHeader>
+
+                <div v-if="savedSale" class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Invoice</span>
+                        <span class="font-semibold">{{ savedSale.invoice_no }}</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Total Berat</span>
+                        <span class="font-semibold">{{ savedSale.total_weight }} gr</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Total Harga</span>
+                        <span class="font-semibold">{{ formatRupiah(savedSale.total_price) }}</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Dibayar</span>
+                        <span class="font-semibold">{{ formatRupiah(savedSale.paid_amount) }}</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Kembalian</span>
+                        <span class="font-semibold">{{ formatRupiah(savedSale.change_amount) }}</span>
+                    </div>
+
+                    <div v-if="savedSale.notes" class="flex justify-between">
+                        <span class="text-muted-foreground">Catatan</span>
+                        <span class="font-semibold">{{ savedSale.notes }}</span>
+                    </div>
+                </div>
+
+                <DialogFooter class="mt-4 flex justify-end gap-3">
+                    <Button variant="secondary" @click="successModal = false">Tutup</Button>
+                    <Button @click="printReceipt()">Cetak Nota</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -11,6 +11,7 @@ class StoreSetting extends Model
         'store_name',
         'phone',
         'instagram',
+        'address',
         'gold_invoice_color',
         'silver_invoice_color',
         'footer_gold_wholesale',

@@ -19,13 +19,15 @@ return new class extends Migration
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('total_weight', 10, 2)->default(0);
-            $table->decimal('total_price', 15, 2)->default(0);
+            $table->integer('total_price')->default(0);
             $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->nullOnDelete();
-            $table->decimal('paid_amount', 15, 2)->default(0);
-            $table->decimal('remaining_amount', 15, 2)->default(0);
+            $table->integer('paid_amount')->default(0);
+            $table->integer('remaining_amount')->default(0);
+            $table->integer('change_amount')->default(0);
             $table->enum('status', ['unpaid', 'partial', 'paid'])->default('paid');
             $table->date('due_date')->nullable();
-            $table->string('qrcode')->nullable();
+            $table->text('notes')->nullable();
+            $table->string('qr_path')->nullable();
             $table->timestamps();
         });
     }

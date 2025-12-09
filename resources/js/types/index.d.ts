@@ -4,6 +4,7 @@ import type { Config } from 'ziggy-js';
 export interface Auth {
     user: User;
     can: string[]
+    isAdmin: boolean
 }
 
 export interface BreadcrumbItem {
@@ -35,7 +36,7 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
 export type Flash = {
     status: string | null;
     message: string | null;
-    transaction_number: string | null;
+    sale: any;
 };
 
 export interface User {

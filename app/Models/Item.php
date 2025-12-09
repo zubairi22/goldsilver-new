@@ -23,7 +23,7 @@ class Item extends Model implements HasMedia
         'price_buy',
         'price_sell',
         'status',
-        'qrcode',
+        'qr_path',
         'source'
     ];
 
@@ -39,7 +39,7 @@ class Item extends Model implements HasMedia
             $qrPath = $item->generateQrCode($item->code);
 
             $item->updateQuietly([
-                'qrcode' => $qrPath,
+                'qr_path' => $qrPath,
             ]);
         });
     }

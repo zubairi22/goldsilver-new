@@ -43,10 +43,10 @@ class MigrateBarangToItemsSeeder extends Seeder
                         'created_at'    => $b->datecreated,
                     ]);
 
-                    $qrPath = $item->generateQrCode($qr);
+                    $qrPath = $item->generateQrCode($qr, 'items');
 
                     $item->update([
-                        'qrcode' => $qrPath
+                        'qr_path' => $qrPath
                     ]);
                 }
 

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class customer extends Model
+class Customer extends Model
 {
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'phone', 'address'];
 
     public function sales()
     {
@@ -18,8 +18,11 @@ class customer extends Model
         return $this->hasMany(Buyback::class);
     }
 
-    public function credits()
+    public function scopeFilter($query, array $filters)
     {
-        return $this->hasMany(Credit::class);
+        $query->when($filters['search'] ?? null, fn ($q, $search) =>
+        $q->where('name', 'like', "%{$search}%")
+            ->orWhere('phone', 'like', "%{$search}%")
+        );
     }
 }

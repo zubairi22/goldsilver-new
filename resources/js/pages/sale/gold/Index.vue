@@ -17,6 +17,7 @@ import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/Icon.vue';
 
 const { filters } = defineProps(['sales', 'paymentMethods', 'filters'])
 
@@ -39,6 +40,10 @@ const selectedSale = ref<any>(null);
 function openSaleModal(trx: any) {
     selectedSale.value = trx;
     saleModal.value = true;
+}
+
+const printReceipt = () => {
+    window.open(route('gold.transactions.sales.print', selectedSale.value.id), '_blank')
 }
 
 const applyFilters = () => {
@@ -236,7 +241,7 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
 
                         <!-- QR dari storage Laravel -->
                         <img
-                            :src="'/storage/' + selectedSale.qrcode"
+                            :src="'/storage/' + selectedSale.qr_path"
                             alt="QR"
                             class="h-24 w-24 rounded shadow object-contain"
                         />
@@ -310,7 +315,15 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                 </Button>
 
                 <Button
-                    v-if="selectedSale"
+                    v-if="selectedSale && selectedSale.paid_amount > 0"
+                    @click="printReceipt()"
+                    class="bg-blue-500 hover:bg-blue-500/90"
+                >
+                    <icon name="printer"/>
+                </Button>
+
+                <Button
+                    v-if="selectedSale && selectedSale.status === 'paid'"
                     @click="router.get(route('buyback.gold.create',selectedSale.id))"
                 >
                     Proses Buyback
