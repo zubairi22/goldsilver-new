@@ -46,6 +46,19 @@ class MenuRolePermissionSeeder extends Seeder
 
         $admin->assignRole($role);
 
+        $cashierRole = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'web']);
+        $cashierRole->syncPermissions([1, 5, 6, 9]);
+
+        $cashier = User::firstOrCreate(
+            ['email' => 'kasir@temantekno.com'],
+            [
+                'name' => 'Kasir',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        $cashier->assignRole($cashierRole);
+
         $menus = [
             ['id' => 1,  'title' => 'Dashboard', 'url' => 'dashboard', 'parent_id' => null, 'icon' => 'LayoutDashboard', 'sort' => 1],
             ['id' => 2,  'title' => 'Master', 'url' => 'master', 'parent_id' => null, 'icon' => 'Database', 'sort' => 10],

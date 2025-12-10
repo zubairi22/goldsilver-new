@@ -164,6 +164,10 @@ class MigratePenjualanSeeder extends Seeder
 
                         if ($item) {
                             $itemId = $item->id;
+
+                            $item->updateQuietly([
+                                'status' => 'sold',
+                            ]);
                         } else {
                             $manualName = "Barang Lama #" . $d->idbarang;
                             Log::warning("Item Tidak Ditemukan (detail): IDBARANG {$d->idbarang}, CODE {$code}");

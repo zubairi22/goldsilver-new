@@ -8,7 +8,6 @@ use App\Http\Requests\Store\PaymentMethodUpdateRequest;
 use App\Models\PaymentMethod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 
 class PaymentMethodController extends Controller
@@ -22,13 +21,7 @@ class PaymentMethodController extends Controller
 
     public function store(PaymentMethodCreateRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')?->store('payment_methods', 'public');
-        }
-
-        PaymentMethod::create($data);
+        PaymentMethod::create($request->validated());
 
         $this->flashSuccess('Tambah Metode Pembayaran Berhasil.');
         return Redirect::back();
@@ -36,17 +29,7 @@ class PaymentMethodController extends Controller
 
     public function update(PaymentMethodUpdateRequest $request, PaymentMethod $payment_method): RedirectResponse
     {
-        $data = $request->validated();
-
-        if ($request->hasFile('image')) {
-            if ($payment_method->image_path && Storage::disk('public')->exists($payment_method->image_path)) {
-                Storage::disk('public')->delete($payment_method->image_path);
-            }
-
-            $data['image_path'] = $request->file('image')?->store('payment_methods', 'public');
-        }
-
-        $payment_method->update($data);
+        $payment_method->update($request->validated());
 
         $this->flashSuccess('Update Metode Pembayaran Berhasil.');
         return Redirect::back();
@@ -54,10 +37,6 @@ class PaymentMethodController extends Controller
 
     public function destroy(PaymentMethod $payment_method): RedirectResponse
     {
-        if ($payment_method->image_path && Storage::disk('public')->exists($payment_method->image_path)) {
-            Storage::disk('public')->delete($payment_method->image_path);
-        }
-
         $payment_method->delete();
 
         $this->flashSuccess('Hapus Metode Pembayaran Berhasil.');

@@ -25,7 +25,7 @@ defineProps<{
                 <InputError class="mt-2" :message="form.errors.email"/>
             </div>
             <div class="mt-4">
-                <Label class="mb-8" for="role">Role</Label>
+                <Label for="role">Role</Label>
                 <Select v-model="form.role">
                     <SelectTrigger id="role" class="w-full">
                         <SelectValue placeholder="Pilih Role" />

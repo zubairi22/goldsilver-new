@@ -29,21 +29,14 @@ const defaultForm = () => ({
 
 const addForm = useForm(defaultForm());
 const editForm = useForm({id: "", ...defaultForm() });
-const deleteForm = useForm({ id: '' });
 
 const addRoleModal = ref(false);
 const editRoleModal = ref(false);
-const deleteRoleModal = ref(false);
 
 const editRole = (role: any) => {
     Object.assign(editForm, role);
     editForm.permissions = role.permissions.map((permission: any) => permission.name);
     editRoleModal.value = true;
-};
-
-const deleteRole = (role: any) => {
-    deleteForm.id = role.id;
-    deleteRoleModal.value = true;
 };
 
 const handleAddRole = () => {
@@ -66,13 +59,9 @@ const handleEditRole = () => {
     });
 };
 
-const handleDeleteRole = () => {
-    router.delete(route('master.roles.destroy', deleteForm.id), {
+const handleDeleteRole = (roleId: number) => {
+    router.delete(route('master.roles.destroy', roleId), {
         preserveScroll: true,
-        onSuccess: () => {
-            deleteRoleModal.value = false;
-            deleteForm.reset();
-        },
     });
 };
 
@@ -117,7 +106,7 @@ const handleDeleteRole = () => {
                                             <EditButton @click="editRole(role)" />
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <DeleteButton v-show="role.name !== 'super-admin'" @click="deleteRole(role)" />
+                                            <DeleteButton v-show="role.name !== 'super-admin'" @confirm="handleDeleteRole(role.id)" />
                                         </TableCell>
                                     </TableRow>
                                     <TableRow v-if="!roles.total">
@@ -160,23 +149,6 @@ const handleDeleteRole = () => {
                 <Button variant="secondary" @click="editRoleModal = false">Batal</Button>
                 <Button :disabled="editForm.processing" @click="handleEditRole">
                     Simpan
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <Dialog :open="deleteRoleModal" @update:open="(val) => deleteRoleModal = val">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Hapus Peran</DialogTitle>
-                <DialogDescription class="mt-2">
-                    Apakah Anda yakin ingin menghapus peran ini? Setelah dihapus, semua data terkait akan dihapus secara permanen.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter class="mt-2">
-                <Button variant="secondary" @click="deleteRoleModal = false">Batal</Button>
-                <Button variant="destructive" @click="handleDeleteRole">
-                    Hapus
                 </Button>
             </DialogFooter>
         </DialogContent>

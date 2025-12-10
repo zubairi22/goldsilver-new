@@ -19,6 +19,7 @@ import { useFormat } from '@/composables/useFormat';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon.vue';
+import ImageModal from '@/components/ImageModal.vue';   // ⬅ Tambahkan ini
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -57,18 +58,13 @@ const defaultForm = () => ({
     image: null as string | null,
 });
 
-const zoomImage = ref<string | null>(null);
-
 const addForm = useForm(defaultForm());
 const editForm = useForm({ _method: 'patch', id: '', ...defaultForm() });
 
 const addModal = ref(false);
 const editModal = ref(false);
-const deleteModal = ref(false);
 
-const addItem = () => {
-    addModal.value = true;
-};
+const addItem = () => addModal.value = true;
 
 const editItem = (item: any) => {
     Object.assign(editForm, item);
@@ -86,9 +82,7 @@ const handleAdd = () => {
 };
 
 const handleEdit = () => {
-    if (typeof editForm.image === 'string' && editForm.image) {
-        editForm.image = null;
-    }
+    if (typeof editForm.image === 'string' && editForm.image) editForm.image = null;
 
     editForm.post(route('store.items.update', editForm.id), {
         preserveScroll: true,
@@ -102,27 +96,19 @@ const handleEdit = () => {
 const handleDelete = (id: any) => {
     router.delete(route('store.items.destroy', id), {
         preserveScroll: true,
-        onSuccess: () => {
-            deleteModal.value = false;
-        },
     });
 };
 
 const applyFilters = () => {
     const params: Record<string, any> = {};
-
     if (search.value) params.search = search.value;
     if (status.value !== 'all') params.status = status.value;
     if (item_type_id.value !== 'all') params.item_type_id = item_type_id.value;
 
-    router.get(
-        route('store.items.index', params),
-        {},
-        {
-            preserveScroll: true,
-            preserveState: true,
-        },
-    );
+    router.get(route('store.items.index', params), {}, {
+        preserveScroll: true,
+        preserveState: true,
+    });
 };
 
 watch([status, item_type_id], applyFilters);
@@ -133,32 +119,39 @@ watch([status, item_type_id], applyFilters);
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <div class="mx-4 flex flex-col items-center justify-between md:flex-row mb-4">
-                <Heading class="md:mr-6" title="Barang" description="Kelola data barang emas dan perak" />
+            <!-- Bagian Atas -->
+            <div class="mx-4 space-y-4 md:flex items-center md:justify-between md:space-y-0">
 
-                <div class="flex space-x-2">
-                    <Card class="w-60 gap-1 border-emerald-200 bg-emerald-50">
+                <!-- Heading -->
+                <Heading class="md:mr-6 flex-1" title="Barang" description="Kelola data barang emas dan perak" />
+
+                <!-- Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
+
+                    <Card class="py-4 gap-1 border-emerald-200 bg-emerald-50">
                         <CardHeader class="flex flex-row items-center justify-between">
                             <CardTitle class="text-sm font-medium text-emerald-700">Total Barang</CardTitle>
-                            <Icon name="DollarSign" class="h-5 w-5 text-emerald-600" />
+                            <Icon name="DollarSign" class="h-4 w-4 text-emerald-600" />
                         </CardHeader>
                         <CardContent>
                             <p class="text-xl font-bold text-emerald-800">{{ totalItems }} (pcs)</p>
                         </CardContent>
                     </Card>
 
-                    <Card class="w-60 gap-1 border-yellow-200 bg-yellow-50">
+                    <Card class="py-4 gap-1 border-yellow-200 bg-yellow-50">
                         <CardHeader class="flex flex-row items-center justify-between">
                             <CardTitle class="text-sm font-medium text-yellow-700">Total Berat</CardTitle>
-                            <Icon name="CheckCircle" class="h-5 w-5 text-yellow-600" />
+                            <Icon name="CheckCircle" class="h-4 w-4 text-yellow-600" />
                         </CardHeader>
                         <CardContent>
                             <p class="text-xl font-bold text-yellow-800">{{ totalWeight.toFixed(2) }} (gr)</p>
                         </CardContent>
                     </Card>
+
                 </div>
             </div>
 
+            <!-- Card Tipe Barang -->
             <div class="grid gap-4 py-2 px-4 pb-6">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
                     <Card v-for="(total, itemTypeId) in itemTypeTotals" :key="itemTypeId" class="gap-2 bg-blue-50 border-blue-200">
@@ -171,16 +164,14 @@ watch([status, item_type_id], applyFilters);
                         </CardContent>
                     </Card>
                 </div>
-
             </div>
 
+            <!-- Tabel Utama -->
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-                        <!-- Filter Section -->
                         <div class="mt-2 mb-8 flex flex-wrap items-center justify-between gap-4">
                             <div class="flex flex-wrap items-center gap-4">
-                                <!-- Status -->
                                 <div class="w-40">
                                     <Label class="mb-2">Status</Label>
                                     <Select v-model="status">
@@ -196,7 +187,6 @@ watch([status, item_type_id], applyFilters);
                                     </Select>
                                 </div>
 
-                                <!-- Tipe Item -->
                                 <div class="w-48">
                                     <Label class="mb-2">Tipe</Label>
                                     <Select v-model="item_type_id">
@@ -235,39 +225,43 @@ watch([status, item_type_id], applyFilters);
                                         <TableHead class="w-8" />
                                     </TableRow>
                                 </TableHeader>
+
                                 <TableBody>
                                     <TableRow v-for="item in items.data" :key="item.id">
                                         <TableCell class="py-1">
-                                            <img
+                                            <ImageModal
                                                 v-if="item.image"
                                                 :src="item.image"
-                                                class="h-12 w-12 cursor-pointer rounded object-cover"
-                                                @click="zoomImage = item.image"
-                                                alt="thumb"
+                                                :filename="`item-${item.name.replace(/\s+/g, '_')}.png`"
+                                                trigger
                                             />
                                             <span v-else class="text-sm text-gray-400">Tidak ada</span>
                                         </TableCell>
+
                                         <TableCell>{{ item.code }}</TableCell>
                                         <TableCell>{{ item.name }}</TableCell>
                                         <TableCell>{{ item.type?.name || '-' }}</TableCell>
                                         <TableCell>{{ item.weight }} gr</TableCell>
                                         <TableCell>{{ formatRupiah(item.price_buy) }}</TableCell>
                                         <TableCell>{{ formatRupiah(item.price_sell) }}</TableCell>
+
                                         <TableCell class="text-center">
-                                            <Badge>
-                                                {{ item.status_label }}
-                                            </Badge>
+                                            <Badge>{{ item.status_label }}</Badge>
                                         </TableCell>
+
                                         <TableCell class="px-1">
                                             <EditButton @click="editItem(item)" />
                                         </TableCell>
+
                                         <TableCell class="px-1">
                                             <DeleteButton @confirm="handleDelete(item.id)" />
                                         </TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="9" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
+                                        <TableCell colspan="9" class="text-center text-gray-500">
+                                            Item tidak ditemukan
+                                        </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -281,7 +275,7 @@ watch([status, item_type_id], applyFilters);
     </AppLayout>
 
     <!-- Add Modal -->
-    <Dialog :open="addModal" @update:open="(val) => (addModal = val)">
+    <Dialog :open="addModal" @update:open="(val) => addModal = val">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Tambah Item</DialogTitle>
@@ -301,7 +295,7 @@ watch([status, item_type_id], applyFilters);
     </Dialog>
 
     <!-- Edit Modal -->
-    <Dialog :open="editModal" @update:open="(val) => (editModal = val)">
+    <Dialog :open="editModal" @update:open="(val) => editModal = val">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Edit Item</DialogTitle>
@@ -317,19 +311,6 @@ watch([status, item_type_id], applyFilters);
                     Simpan
                 </Button>
             </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <Dialog
-        :open="!!zoomImage"
-        @update:open="
-            (val) => {
-                if (!val) zoomImage = null;
-            }
-        "
-    >
-        <DialogContent class="max-h-[90vh] max-w-[90vw] overflow-hidden p-0">
-            <img :src="zoomImage || '/placeholder.webp'" class="h-full w-full object-contain" @click="zoomImage = null" alt="zoom" />
         </DialogContent>
     </Dialog>
 </template>

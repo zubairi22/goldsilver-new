@@ -1,28 +1,17 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
 import {Head, router, useForm} from '@inertiajs/vue3';
-import {ref, watch} from "vue";
-import {throttle} from "lodash";
+import {ref} from "vue";
 import DeleteButton from "@/components/DeleteButton.vue";
 import EditButton from "@/components/EditButton.vue";
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table/index.js';
 import { Badge } from '@/components/ui/badge/index.js';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogClose
-} from '@/components/ui/dialog';
-import SearchInput from '@/components/SearchInput.vue';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import PageNav from '@/components/PageNav.vue';
 import MenuForm from '@/pages/master/menu/MenuForm.vue';
 import type { BreadcrumbItem } from '@/types/index.js';
-import { useSearch } from '@/composables/useSearch';
 import Heading from '@/components/Heading.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 
@@ -45,21 +34,14 @@ const defaultForm = () => ({
 
 const addForm = useForm(defaultForm());
 const editForm = useForm({id: '', ...defaultForm()});
-const deleteForm = useForm({id: ''});
 
 const addMenuModal = ref(false);
 const editMenuModal = ref(false);
-const deleteMenuModal = ref(false);
 
 const editMenu = (menu: any) => {
     Object.assign(editForm, menu);
     editForm.permissions = menu.permissions.map((permission: any) => permission.name);
     editMenuModal.value = true;
-};
-
-const deleteMenu = (menu: any) => {
-    deleteForm.id = menu.id;
-    deleteMenuModal.value = true;
 };
 
 const handleAddMenu = () => {
@@ -82,13 +64,9 @@ const handleEditMenu = () => {
     });
 };
 
-const handleDeleteMenu = () => {
-    router.delete(route('master.menus.destroy', deleteForm.id), {
+const handleDeleteMenu = (menuId: number) => {
+    router.delete(route('master.menus.destroy', menuId), {
         preserveScroll: true,
-        onSuccess: () => {
-            deleteMenuModal.value = false
-            deleteForm.reset()
-        },
     });
 };
 
@@ -132,7 +110,7 @@ const handleDeleteMenu = () => {
                                             <EditButton @click="editMenu(menu)"/>
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <DeleteButton @click="deleteMenu(menu)"/>
+                                            <DeleteButton @click="handleDeleteMenu(menu.id)"/>
                                         </TableCell>
                                     </TableRow>
                                     <TableRow v-if="!menus.total">
@@ -197,27 +175,6 @@ const handleDeleteMenu = () => {
                 >
                     <LoaderCircle v-if="editForm.processing" class="h-4 w-4 animate-spin" />
                     Simpan
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    <Dialog :open="deleteMenuModal" @update:open="(val) => deleteMenuModal = val">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>
-                    Hapus Menu
-                </DialogTitle>
-                <DialogDescription class="mt-2">
-                    Apakah Anda yakin ingin menghapus menu ini ? Setelah dihapus, semua sumber daya dan datanya akan dihapus secara permanen.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter class="gap-2">
-                <Button variant="secondary" @click="deleteMenuModal = false">
-                    Batal
-                </Button>
-                <Button variant="destructive" @click="handleDeleteMenu">
-                    Hapus Akun
                 </Button>
             </DialogFooter>
         </DialogContent>

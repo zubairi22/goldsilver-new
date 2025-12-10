@@ -64,7 +64,7 @@ const handleImageChange = (e: Event) => {
             <Label for="status">Status</Label>
             <Multiselect
                 v-model="form.status"
-                :options="{ ready: 'Ready', sold: 'Terjual', pending: 'Pending' }"
+                :options="{ ready: 'Siap Jual', sold: 'Terjual', damaged: 'Rusak', buyback: 'Buyback' }"
             />
             <InputError class="mt-1" :message="form.errors.status" />
         </div>

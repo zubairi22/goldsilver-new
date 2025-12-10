@@ -15,6 +15,11 @@ import type { BreadcrumbItem } from '@/types'
 import EditButton from '@/components/EditButton.vue';
 import DeleteButton from '@/components/DeleteButton.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
+import { Badge } from '@/components/ui/badge'
+import {
+    Select, SelectContent, SelectGroup, SelectItem,
+    SelectTrigger, SelectValue
+} from '@/components/ui/select'
 
 defineProps(['payment_methods'])
 
@@ -23,100 +28,108 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Metode Pembayaran', href: '#' },
 ]
 
+// default form
 const defaultForm = () => ({
     name: '',
-    code: '',
-    image: null,
+    is_active: 1,
 })
 
 const addForm = useForm(defaultForm())
-const editForm = useForm({_method: 'patch', id: '', ...defaultForm() })
-const deleteForm = useForm({ id: '' })
+const editForm = useForm({ _method: 'patch', id: '', ...defaultForm() })
 
 const addModal = ref(false)
 const editModal = ref(false)
-const deleteModal = ref(false)
 
 const openEdit = (row: any) => {
     editForm.id = row.id
     editForm.name = row.name
-    editForm.code = row.code
+    editForm.is_active = row.is_active
     editModal.value = true
-}
-const openDelete = (row: any) => {
-    deleteForm.id = row.id
-    deleteModal.value = true
 }
 
 const handleAdd = () => {
     addForm.post(route('store.payment-methods.store'), {
         preserveScroll: true,
-        onSuccess: () => { addModal.value = false; addForm.reset() },
+        onSuccess: () => {
+            addModal.value = false
+            addForm.reset()
+        },
     })
 }
 
 const handleEdit = () => {
-    if (!(editForm.image as any instanceof File)) editForm.image = null
-
     editForm.post(route('store.payment-methods.update', editForm.id), {
         preserveScroll: true,
-        onSuccess: () => { editModal.value = false; editForm.reset() },
+        onSuccess: () => {
+            editModal.value = false
+            editForm.reset()
+        },
     })
 }
 
-const handleDelete = () => {
-    router.delete(route('store.payment-methods.destroy', deleteForm.id), {
+const handleDelete = (paymentId: number) => {
+    router.delete(route('store.payment-methods.destroy', paymentId), {
         preserveScroll: true,
-        onSuccess: () => { deleteModal.value = false; deleteForm.reset() },
     })
 }
 </script>
 
 <template>
     <Head title="Metode Pembayaran" />
+
     <AppLayout :breadcrumbs="breadcrumbs">
         <StoreLayout>
             <div class="space-y-6">
                 <HeadingSmall class="mx-4" title="Metode Pembayaran" description="Kelola metode pembayaran untuk kasir" />
+
                 <div class="mx-auto max-w-8xl">
                     <Card class="py-4 md:mx-4">
                         <CardContent>
-                            <div class="flex flex-col justify-between md:flex-row mb-2">
-                                <div class="mb-3 md:mb-0">
-                                    <Button @click="addModal = true">Tambah Metode Pembayaran</Button>
-                                </div>
+                            <div class="flex justify-between mb-3">
+                                <Button @click="addModal = true">Tambah Metode Pembayaran</Button>
                             </div>
 
                             <div class="overflow-x-auto">
                                 <Table class="w-full">
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead class="w-16">Gambar</TableHead>
                                             <TableHead>Nama</TableHead>
-                                            <TableHead>Kode</TableHead>
-                                            <TableHead class="w-8"></TableHead>
-                                            <TableHead class="w-8"></TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead class="w-8" />
+                                            <TableHead class="w-8" />
                                         </TableRow>
                                     </TableHeader>
+
                                     <TableBody>
                                         <TableRow v-for="pm in payment_methods.data" :key="pm.id">
-                                            <TableCell>
-                                                <img v-if="pm.image_path" :src="'/storage/' + pm.image_path" alt="logo" class="w-16 object-contain" />
-                                            </TableCell>
                                             <TableCell>{{ pm.name }}</TableCell>
-                                            <TableCell>{{ pm.code }}</TableCell>
-                                            <TableCell class="px-0.5">
-                                                <EditButton @click="openEdit(pm)"/>
+
+                                            <TableCell>
+                                                <Badge
+                                                    :variant="pm.is_active ? 'success' : 'destructive'"
+                                                    class="capitalize"
+                                                >
+                                                    {{ pm.is_active ? 'Aktif' : 'Nonaktif' }}
+                                                </Badge>
                                             </TableCell>
-                                            <TableCell class="px-0.5">
-                                                <DeleteButton @click="openDelete(pm)"/>
+
+                                            <TableCell class="px-1">
+                                                <EditButton @click="openEdit(pm)" />
+                                            </TableCell>
+
+                                            <TableCell class="px-1">
+                                                <DeleteButton @confirm="handleDelete(pm.id)" />
                                             </TableCell>
                                         </TableRow>
+
                                         <TableRow v-if="!payment_methods.total">
-                                            <TableCell colspan="6" class="text-center text-gray-500">Data tidak ditemukan.</TableCell>
+                                            <TableCell colspan="4" class="text-center text-gray-500">
+                                                Data tidak ditemukan.
+                                            </TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
+
                                 <PageNav :data="payment_methods" />
                             </div>
                         </CardContent>
@@ -126,82 +139,92 @@ const handleDelete = () => {
         </StoreLayout>
     </AppLayout>
 
+    <!-- Modal Tambah -->
     <Dialog :open="addModal" @update:open="v => addModal = v">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Tambah Metode Pembayaran</DialogTitle>
                 <DialogDescription>Masukkan detail metode pembayaran.</DialogDescription>
             </DialogHeader>
+
             <div class="space-y-3">
                 <div>
-                    <label class="text-sm mb-1 block">Nama</label>
+                    <Label class="text-sm mb-1 block">Nama</Label>
                     <Input v-model="addForm.name" />
                     <InputError :message="addForm.errors.name" />
                 </div>
+
                 <div>
-                    <label class="text-sm mb-1 block">Kode</label>
-                    <Input v-model="addForm.code" />
-                    <InputError :message="addForm.errors.code" />
-                </div>
-                <div>
-                    <label class="text-sm mb-1 block">Gambar</label>
-                    <Input type="file"
-                           @change="(e: any) => addForm.image = e.target.files[0]" />
-                    <InputError :message="addForm.errors.image" />
+                    <Label class="text-sm mb-1 block">Status</Label>
+
+                    <Select v-model="addForm.is_active">
+                        <SelectTrigger class="w-full">
+                            <SelectValue placeholder="Pilih Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem :value="1">Aktif</SelectItem>
+                                <SelectItem :value="0">Nonaktif</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+
+                    <InputError :message="addForm.errors.is_active" />
                 </div>
             </div>
+
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="addModal = false">Batal</Button>
                 <Button :disabled="addForm.processing" @click="handleAdd">
-                    <LoaderCircle v-if="addForm.processing" class="h-4 w-4 animate-spin" /> Simpan
+                    <LoaderCircle v-if="addForm.processing" class="h-4 w-4 animate-spin" />
+                    Simpan
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
+    <!-- Modal Edit -->
     <Dialog :open="editModal" @update:open="v => editModal = v">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Edit Metode Pembayaran</DialogTitle>
                 <DialogDescription>Perbarui data metode pembayaran.</DialogDescription>
             </DialogHeader>
+
             <div class="space-y-3">
                 <div>
-                    <label class="text-sm mb-1 block">Nama</label>
+                    <Label class="text-sm mb-1 block">Nama</Label>
                     <Input v-model="editForm.name" />
                     <InputError :message="editForm.errors.name" />
                 </div>
+
                 <div>
-                    <label class="text-sm mb-1 block">Kode</label>
-                    <Input v-model="editForm.code" />
-                    <InputError :message="editForm.errors.code" />
-                </div>
-                <div>
-                    <label class="text-sm mb-1 block">Gambar</label>
-                    <Input type="file"
-                           @change="(e: any) => editForm.image = e.target.files[0]" />
-                    <InputError :message="editForm.errors.image" />
+                    <Label class="text-sm mb-1 block">Status</Label>
+
+                    <Select v-model="editForm.is_active">
+                        <SelectTrigger class="w-full">
+                            <SelectValue placeholder="Pilih Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem :value="1">Aktif</SelectItem>
+                                <SelectItem :value="0">Nonaktif</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+
+                    <InputError :message="editForm.errors.is_active" />
                 </div>
             </div>
+
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="editModal = false">Batal</Button>
                 <Button :disabled="editForm.processing" @click="handleEdit">
-                    <LoaderCircle v-if="editForm.processing" class="h-4 w-4 animate-spin" /> Simpan
+                    <LoaderCircle v-if="editForm.processing" class="h-4 w-4 animate-spin" />
+                    Simpan
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="deleteModal" @update:open="v => deleteModal = v">
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Hapus Metode Pembayaran</DialogTitle>
-                <DialogDescription>Data akan dihapus permanen.</DialogDescription>
-            </DialogHeader>
-            <DialogFooter class="gap-2">
-                <Button variant="secondary" @click="deleteModal = false">Batal</Button>
-                <Button variant="destructive" @click="handleDelete">Hapus</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
 </template>

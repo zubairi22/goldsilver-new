@@ -31,7 +31,6 @@ const editForm = useForm({ id: '', ...defaultForm() })
 
 const addModal = ref(false)
 const editModal = ref(false)
-const deleteModal = ref(false)
 
 const openEdit = (row: any) => {
     editForm.id = row.id
@@ -56,7 +55,6 @@ const handleEdit = () => {
 const handleDelete = (id: any) => {
     router.delete(route('store.item-types.destroy', id), {
         preserveScroll: true,
-        onSuccess: () => { deleteModal.value = false },
     })
 }
 </script>
