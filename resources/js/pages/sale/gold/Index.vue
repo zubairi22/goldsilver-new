@@ -324,7 +324,7 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
 
                 <Button
                     v-if="selectedSale && selectedSale.status === 'paid'"
-                    @click="router.get(route('buyback.gold.create',selectedSale.id))"
+                    @click="router.get(route('gold.buyback.create', selectedSale.id))"
                 >
                     Proses Buyback
                 </Button>

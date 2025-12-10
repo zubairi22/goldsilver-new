@@ -81,7 +81,7 @@ class Item extends Model implements HasMedia
     {
         $this->addMediaConversion('thumb')
             ->format('webp')
-            ->fit(Fit::Max, 500, 500)
+            ->fit(Fit::Max, 800, 800)
             ->quality(80)
             ->nonQueued();
     }

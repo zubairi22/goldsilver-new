@@ -16,6 +16,7 @@ import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import ImageModal from '@/components/ImageModal.vue';
 
 const { buybacks, filters } = defineProps(['buybacks', 'filters'])
 
@@ -166,6 +167,7 @@ watch([status, payment_type, date], applyFilters)
                                                     <Table class="w-full">
                                                         <TableHeader class="border-b-2">
                                                             <TableRow>
+                                                                <TableHead>Gambar</TableHead>
                                                                 <TableHead>Nama</TableHead>
                                                                 <TableHead class="text-right">Berat</TableHead>
                                                                 <TableHead class="text-right">Harga</TableHead>
@@ -176,7 +178,13 @@ watch([status, payment_type, date], applyFilters)
 
                                                         <TableBody>
                                                             <TableRow v-for="it in bb.items" :key="it.id">
-
+                                                                <TableCell>
+                                                                    <ImageModal
+                                                                        v-if="it.image"
+                                                                        :src="it.image"
+                                                                        trigger
+                                                                    />
+                                                                </TableCell>
                                                                 <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
                                                                 <TableCell class="text-right">{{ it.weight }}</TableCell>
                                                                 <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>

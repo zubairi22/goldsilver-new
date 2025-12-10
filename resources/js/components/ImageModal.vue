@@ -30,7 +30,7 @@ const close = () => {
             v-if="trigger && src"
             :src="src"
             alt="image"
-            class="h-12 w-12 cursor-pointer rounded object-cover"
+            class="h-15 w-15 cursor-pointer rounded object-cover"
             @click="internalOpen = true; emit('update:open', true)"
         />
 
@@ -55,7 +55,7 @@ const close = () => {
                     <Button variant="secondary" @click="close">Tutup</Button>
 
                     <Button
-                        v-if="src"
+                        v-if="src && filename"
                         :href="src"
                         as="a"
                         :download="filename"

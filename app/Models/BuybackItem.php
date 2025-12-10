@@ -22,7 +22,7 @@ class BuybackItem extends Model implements HasMedia
         'condition',
     ];
 
-    protected $appends = ['condition_label'];
+    protected $appends = ['image', 'condition_label'];
 
     public function buyback()
     {
@@ -43,6 +43,11 @@ class BuybackItem extends Model implements HasMedia
         };
     }
 
+    public function getImageAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('buyback_images', 'thumb') ?: null;
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('buyback_images')->singleFile();
@@ -52,7 +57,7 @@ class BuybackItem extends Model implements HasMedia
     {
         $this->addMediaConversion('thumb')
             ->format('webp')
-            ->fit(Fit::Max, 500, 500)
+            ->fit(Fit::Max, 800, 800)
             ->quality(80)
             ->nonQueued();
     }

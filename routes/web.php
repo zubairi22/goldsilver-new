@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\CashierController;
 use App\Http\Controllers\GoldDebtController;
 use App\Http\Controllers\GoldBuybackController;
 use App\Http\Controllers\GoldDamagedController;
@@ -12,7 +11,6 @@ use App\Http\Controllers\Master\MenusController;
 use App\Http\Controllers\Master\RolesController;
 use App\Http\Controllers\Master\UsersController;
 use App\Http\Controllers\ItemsController;
-use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\Store\PaymentMethodController;
 use App\Http\Controllers\Store\StoreController;
 use Illuminate\Support\Facades\Route;
@@ -32,13 +30,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('item-types', ItemTypesController::class)->except(['show', 'create', 'edit']);
         Route::resource('items', ItemsController::class)->except(['show', 'create', 'edit']);
 
-        Route::resource('purchases', PurchasesController::class)->except(['show']);
-        Route::patch('purchases/receive/{purchase}', [PurchasesController::class, 'receive'])->name('purchases.receive');
-
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
     });
-
-    Route::resource('cashier', CashierController::class)->except(['show', 'create', 'edit']);
 
     Route::name('gold.')->group(function () {
         Route::name('transactions.sales.')->prefix('transactions/sales')->group(function () {

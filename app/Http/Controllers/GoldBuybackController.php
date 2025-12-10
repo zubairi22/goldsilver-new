@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Buyback\GoldBuybackStoreRequest;
 use App\Models\Buyback;
 use App\Models\BuybackItem;
 use App\Models\Item;
@@ -55,19 +56,9 @@ class GoldBuybackController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(GoldBuybackStoreRequest $request)
     {
-        $validated = $request->validate([
-            'sale_id' => 'required|exists:sales,id',
-
-            'items'                => 'required|array|min:1',
-            'items.*.item_id'      => 'required|exists:items,id',
-            'items.*.sale_item_id' => 'required|exists:sale_items,id',
-            'items.*.buyback_weight' => 'required|numeric|min:0.01',
-            'items.*.buyback_price'  => 'required|numeric|min:1',
-
-            'items.*.image'  => 'nullable|image|max:4096',
-        ]);
+        $validated = $request->validated();
 
         try {
             DB::transaction(function () use ($validated) {
@@ -111,9 +102,14 @@ class GoldBuybackController extends Controller
                     $item->update(['status' => 'buyback']);
 
                     if (!empty($d['image'])) {
-                        $buybackItem
+                        $media = $buybackItem
                             ->addMedia($d['image'])
-                            ->toMediaCollection('buyback_image');
+                            ->toMediaCollection('buyback_images');
+
+                        $originalPath = $media->getPath();
+                        if (file_exists($originalPath)) {
+                            @unlink($originalPath);
+                        }
                     }
                 }
             });
