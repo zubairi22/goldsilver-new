@@ -29,6 +29,8 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 9, 'name' => 'manage damaged', 'guard_name' => 'web'],
             ['id' => 10, 'name' => 'manage debts', 'guard_name' => 'web'],
             ['id' => 11, 'name' => 'manage customers', 'guard_name' => 'web'],
+
+            ['id' => 12, 'name' => 'manage cashier', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);
@@ -68,7 +70,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 5,  'title' => 'Manajemen Toko', 'url' => 'store', 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 9],
             ['id' => 6,  'title' => 'Pengaturan', 'url' => 'store.settings.index', 'parent_id' => 5, 'icon' => 'Settings2', 'sort' => 1],
 
-            ['id' => 7,  'title' => 'Transaksi Emas', 'url' => 'gold', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 2],
+            ['id' => 7,  'title' => 'Transaksi Emas', 'url' => 'gold', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 3],
             ['id' => 8,  'title' => 'Daftar Penjualan', 'url' => 'gold.transactions.sales.index', 'parent_id' => 7, 'icon' => 'Receipt', 'sort' => 1],
             ['id' => 9,  'title' => 'Buyback', 'url' => 'gold.buyback.index', 'parent_id' => 7, 'icon' => 'RefreshCw', 'sort' => 3],
 
@@ -80,6 +82,8 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 14, 'title' => 'Daftar Piutang', 'url' => 'gold.transactions.debts.index', 'parent_id' => 7, 'icon' => 'FileText', 'sort' => 5],
 
             ['id' => 15, 'title' => 'Pelanggan', 'url' => 'store.customers.index', 'parent_id' => 5, 'icon' => 'Users', 'sort' => 4],
+
+            ['id' => 16, 'title' => 'Kasir', 'url' => 'cashier.index', 'parent_id' => null, 'icon' => 'Banknote', 'sort' => 2],
         ];
 
         Menu::insert($menus);
@@ -105,6 +109,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['menu_id' => 14, 'permission_id' => 10],
 
             ['menu_id' => 15, 'permission_id' => 11],
+            ['menu_id' => 16, 'permission_id' => 12],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);

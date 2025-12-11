@@ -19,7 +19,7 @@ import { useFormat } from '@/composables/useFormat';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon.vue';
-import ImageModal from '@/components/ImageModal.vue';   // ⬅ Tambahkan ini
+import ImageModal from '@/components/ImageModal.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },

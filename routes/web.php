@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CashierController;
 use App\Http\Controllers\GoldDebtController;
 use App\Http\Controllers\GoldBuybackController;
 use App\Http\Controllers\GoldDamagedController;
@@ -22,6 +23,11 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+    Route::get('/cashier', [CashierController::class, 'index'])->name('cashier.index');
+    Route::post('/cashier/open', [CashierController::class, 'open'])->name('cashier.open');
+    Route::post('/cashier/close', [CashierController::class, 'close'])->name('cashier.close');
+    Route::post('/cashier/scan', [CashierController::class, 'scan'])->name('cashier.scan');
+
     Route::middleware('role:super-admin')->name('store.')->prefix('store')->group(function () {
         Route::get('settings', [StoreController::class, 'index'])->name('settings.index');
         Route::patch('settings', [StoreController::class, 'update'])->name('settings.update');
@@ -33,33 +39,35 @@ Route::middleware('auth')->group(function () {
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
     });
 
-    Route::name('gold.')->group(function () {
-        Route::name('transactions.sales.')->prefix('transactions/sales')->group(function () {
-            Route::get('gold', [GoldSaleController::class, 'index'])->name('index');
-            Route::get('gold/create', [GoldSaleController::class, 'create'])->name('create');
-            Route::post('gold', [GoldSaleController::class, 'store'])->name('store');
+    Route::middleware('cashier.open')->group(function () {
+        Route::name('gold.')->group(function () {
+            Route::name('transactions.sales.')->prefix('transactions/sales')->group(function () {
+                Route::get('gold', [GoldSaleController::class, 'index'])->name('index');
+                Route::get('gold/create', [GoldSaleController::class, 'create'])->name('create');
+                Route::post('gold', [GoldSaleController::class, 'store'])->name('store');
 
-            Route::get('gold/{sale}/print', [GoldSaleController::class, 'print'])->name('print');
+                Route::get('gold/{sale}/print', [GoldSaleController::class, 'print'])->name('print');
+            });
+
+            Route::name('buyback.')->prefix('buyback')->group(function () {
+                Route::get('gold', [GoldBuybackController::class, 'index'])->name('index');
+                Route::get('gold/create/{sale}', [GoldBuybackController::class, 'create'])->name('create');
+                Route::post('gold/store', [GoldBuybackController::class, 'store'])->name('store');
+                Route::patch('gold/item/{buybackItem}/qc', [GoldBuybackController::class, 'processQC'])->name('item.qc');
+            });
+
+            Route::name('damaged.')->prefix('damaged')->group(function () {
+                Route::get('gold', [GoldDamagedController::class, 'index'])->name('index');
+                Route::patch('gold/{item}/restore', [GoldDamagedController::class, 'restoreToStock'])->name('restore');
+            });
+
+            Route::name('transactions.debts.')->prefix('transactions/debts')->group(function () {
+                Route::get('gold', [GoldDebtController::class, 'index'])->name('index');
+                Route::post('gold/settle/{sale}', [GoldDebtController::class, 'settleDebt'])->name('settle');
+                Route::post('gold/due-date/{sale}', [GoldDebtController::class, 'setDueDate'])->name('dueDate');
+            });
+
         });
-
-        Route::name('buyback.')->prefix('buyback')->group(function () {
-            Route::get('gold', [GoldBuybackController::class, 'index'])->name('index');
-            Route::get('gold/create/{sale}', [GoldBuybackController::class, 'create'])->name('create');
-            Route::post('gold/store', [GoldBuybackController::class, 'store'])->name('store');
-            Route::patch('gold/item/{buybackItem}/qc', [GoldBuybackController::class, 'processQC'])->name('item.qc');
-        });
-
-        Route::name('damaged.')->prefix('damaged')->group(function () {
-            Route::get('gold', [GoldDamagedController::class, 'index'])->name('index');
-            Route::patch('gold/{item}/restore', [GoldDamagedController::class, 'restoreToStock'])->name('restore');
-        });
-
-        Route::name('transactions.debts.')->prefix('transactions/debts')->group(function () {
-            Route::get('gold', [GoldDebtController::class, 'index'])->name('index');
-            Route::post('gold/settle/{sale}', [GoldDebtController::class, 'settleDebt'])->name('settle');
-            Route::post('gold/due-date/{sale}', [GoldDebtController::class, 'setDueDate'])->name('dueDate');
-        });
-
     });
 
     Route::middleware('role:super-admin')->name('master.')->prefix('master')->group(function () {

@@ -27,7 +27,6 @@ class CashierSession extends Model
         return $this->belongsTo(User::class, 'closed_by');
     }
 
-    // Mengecek apakah ada sesi kasir yang terbuka hari ini
     public static function isOpen(): bool
     {
         return self::where('status', 'open')
@@ -35,7 +34,6 @@ class CashierSession extends Model
             ->exists();
     }
 
-    // Mengambil sesi kasir aktif hari ini
     public static function current(): ?self
     {
         return self::where('status', 'open')
@@ -44,53 +42,48 @@ class CashierSession extends Model
             ->first();
     }
 
-    // Membuka kasir baru (hanya bisa jika belum ada sesi hari ini)
     public static function open(float $initialCash, int $adminId): self
     {
-        // Tutup otomatis sesi lama sebelum membuka baru
         self::autoCloseOldSessions();
 
-        // Cegah membuka kasir dua kali di hari yang sama
         if (self::isOpen()) {
-            throw new \Exception('Cashier session for today is already open.');
+            throw new \Exception('Kasir hari ini sudah dibuka.');
         }
 
         return self::create([
-            'opened_by' => $adminId,
-            'initial_cash' => $initialCash,
-            'status' => 'open',
-            'opened_at' => now(),
+            'opened_by'     => $adminId,
+            'initial_cash'  => $initialCash,
+            'status'        => 'open',
+            'opened_at'     => now(),
         ]);
     }
 
-    // Menutup kasir aktif hari ini
     public static function close(int $adminId, ?float $closingCash = null): void
     {
         $session = self::current();
 
         if (!$session) {
-            throw new \Exception('No active cashier session found for today.');
+            throw new \Exception('Tidak ada kasir aktif hari ini.');
         }
 
         $session->update([
-            'closed_by' => $adminId,
-            'closing_cash' => $closingCash,
-            'status' => 'closed',
-            'closed_at' => now(),
-            'auto_closed' => false,
+            'closed_by'    => $adminId,
+            'closing_cash' => $closingCash ?? 0,
+            'status'       => 'closed',
+            'closed_at'    => now(),
+            'auto_closed'  => false,
         ]);
     }
 
-    // Menutup sesi kasir lama yang masih terbuka dari hari sebelumnya
     public static function autoCloseOldSessions(): void
     {
         self::where('status', 'open')
             ->whereDate('opened_at', '<', now()->toDateString())
             ->update([
-                'status' => 'closed',
-                'closed_at' => now(),
+                'status'      => 'closed',
+                'closed_at'   => now(),
                 'auto_closed' => true,
-                'closed_by' => null,
+                'closed_by'   => null,
             ]);
     }
 }

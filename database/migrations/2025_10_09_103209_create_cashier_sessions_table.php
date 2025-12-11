@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('opened_by')->constrained('users')->cascadeOnDelete();
             $table->foreignId('closed_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->decimal('initial_cash', 15, 2)->default(0);
+            $table->integer('initial_cash')->default(0);
+            $table->integer('closing_cash')->nullable();
             $table->boolean('auto_closed')->default(false);
             $table->enum('status', ['open', 'closed'])->default('open');
             $table->timestamp('opened_at')->nullable();

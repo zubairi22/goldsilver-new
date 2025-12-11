@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'cashier.open' => \App\Http\Middleware\EnsureCashierIsOpen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

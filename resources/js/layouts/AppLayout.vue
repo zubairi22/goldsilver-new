@@ -16,7 +16,7 @@ withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
 
-const isAdmin = usePage().props.auth.user.roles.some((role: any) => role.name.includes('admin'));
+const isAdmin = usePage().props.auth.isAdmin
 
 const Layout = computed(() => (isAdmin ? AppSidebarLayout : AppHeaderLayout));
 
@@ -24,9 +24,9 @@ watchEffect(() => {
     const flash = usePage().props.flash as any;
     if (flash?.message) {
         if (flash.status === 'error') {
-            toast.error(flash.message);
+            queueMicrotask(() => toast.error(flash.message));
         } else {
-            toast.success(flash.message);
+            queueMicrotask(() => toast.success(flash.message));
         }
     }
 });
