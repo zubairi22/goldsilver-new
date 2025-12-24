@@ -40,7 +40,9 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('cashier.open')->group(function () {
 
-        Route::prefix('{category}')->whereIn('category', ['gold', 'silver'])->group(function () {
+        // Rute untuk Gold
+        Route::prefix('gold')->group(function () {
+
             Route::prefix('debt')
                 ->name('gold.debt.')
                 ->group(function () {
@@ -73,6 +75,10 @@ Route::middleware('auth')->group(function () {
                     Route::post('/', [SaleController::class, 'store'])->name('store');
                     Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
                 });
+        });
+
+        // Rute untuk Silver
+        Route::prefix('silver')->group(function () {
 
             Route::prefix('debt')
                 ->name('silver.debt.')
@@ -108,6 +114,7 @@ Route::middleware('auth')->group(function () {
                 });
         });
     });
+
 
     Route::middleware('role:super-admin')->prefix('master')->name('master.')->group(function () {
         Route::resource('users', UsersController::class);
