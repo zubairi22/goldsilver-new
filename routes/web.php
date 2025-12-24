@@ -73,9 +73,6 @@ Route::middleware('auth')->group(function () {
                     Route::post('/', [SaleController::class, 'store'])->name('store');
                     Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
                 });
-        });
-
-        Route::prefix('silver')->group(function () {
 
             Route::prefix('debt')
                 ->name('silver.debt.')
