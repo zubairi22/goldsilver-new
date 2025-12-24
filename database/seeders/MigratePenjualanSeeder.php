@@ -135,7 +135,7 @@ class MigratePenjualanSeeder extends Seeder
                         'category'          => $category,
                         'sale_type'         => $saleType,
                         'customer_id'       => $customerId,
-                        'user_id'           => $row->userid ?? 1,
+                        'user_id'           => 1,
                         'total_weight'      => $row->berattotal ?? 0,
                         'total_price'       => $totalPrice,
                         'payment_method_id' => $paymentMethodId,
