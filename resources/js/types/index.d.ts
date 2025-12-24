@@ -15,11 +15,13 @@ export interface BreadcrumbItem {
 export interface NavItem {
     title: string;
     url: string;
+    param: string;
     icon: string;
     isActive?: boolean;
     children?: {
         title: string
         url: string
+        param: string;
         icon: string
     }[]
 }

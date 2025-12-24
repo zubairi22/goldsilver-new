@@ -57,7 +57,7 @@ const { toggleSidebar, state } = useSidebar()
                             <SidebarMenuSub>
                                 <SidebarMenuSubItem v-for="subItem in item.children" :key="subItem.title">
                                     <SidebarMenuButton as-child :is-active="route().current(subItem.url)">
-                                        <Link :href="route(subItem.url)">
+                                        <Link :href="route(subItem.url , subItem.param)">
                                             <icon :name="subItem.icon" v-if="subItem.icon" />
                                             <span>{{ subItem.title }}</span>
                                         </Link>
