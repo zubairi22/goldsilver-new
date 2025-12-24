@@ -39,12 +39,9 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('cashier.open')->group(function () {
-
-        // Rute untuk Gold
-        Route::prefix('gold')->group(function () {
-
+        Route::prefix('{category}')->whereIn('category', ['gold', 'silver'])->group(function () {
             Route::prefix('debt')
-                ->name('gold.debt.')
+                ->name('debt.')
                 ->group(function () {
                     Route::get('/', [DebtController::class, 'index'])->name('index');
                     Route::post('/settle/{sale}', [DebtController::class, 'settle'])->name('settle');
@@ -52,7 +49,7 @@ Route::middleware('auth')->group(function () {
                 });
 
             Route::prefix('buyback')
-                ->name('gold.buyback.')
+                ->name('buyback.')
                 ->group(function () {
                     Route::get('/', [BuybackController::class, 'index'])->name('index');
                     Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
@@ -61,51 +58,14 @@ Route::middleware('auth')->group(function () {
                 });
 
             Route::prefix('damaged')
-                ->name('gold.damaged.')
+                ->name('damaged.')
                 ->group(function () {
                     Route::get('/', [DamagedController::class, 'index'])->name('index');
                     Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
                 });
 
             Route::prefix('sale')
-                ->name('gold.sales.')
-                ->group(function () {
-                    Route::get('/', [SaleController::class, 'index'])->name('index');
-                    Route::get('/create', [SaleController::class, 'create'])->name('create');
-                    Route::post('/', [SaleController::class, 'store'])->name('store');
-                    Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
-                });
-        });
-
-        // Rute untuk Silver
-        Route::prefix('silver')->group(function () {
-
-            Route::prefix('debt')
-                ->name('silver.debt.')
-                ->group(function () {
-                    Route::get('/', [DebtController::class, 'index'])->name('index');
-                    Route::post('/settle/{sale}', [DebtController::class, 'settle'])->name('settle');
-                    Route::post('/due-date/{sale}', [DebtController::class, 'setDueDate'])->name('dueDate');
-                });
-
-            Route::prefix('buyback')
-                ->name('silver.buyback.')
-                ->group(function () {
-                    Route::get('/', [BuybackController::class, 'index'])->name('index');
-                    Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
-                    Route::post('/', [BuybackController::class, 'store'])->name('store');
-                    Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
-                });
-
-            Route::prefix('damaged')
-                ->name('silver.damaged.')
-                ->group(function () {
-                    Route::get('/', [DamagedController::class, 'index'])->name('index');
-                    Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
-                });
-
-            Route::prefix('sale')
-                ->name('silver.sales.')
+                ->name('sales.')
                 ->group(function () {
                     Route::get('/', [SaleController::class, 'index'])->name('index');
                     Route::get('/create', [SaleController::class, 'create'])->name('create');
@@ -114,7 +74,6 @@ Route::middleware('auth')->group(function () {
                 });
         });
     });
-
 
     Route::middleware('role:super-admin')->prefix('master')->name('master.')->group(function () {
         Route::resource('users', UsersController::class);
