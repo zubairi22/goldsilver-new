@@ -34,6 +34,10 @@ class MigratePenjualanSeeder extends Seeder
                         continue;
                     }
 
+                    if (!$row->harganet) {
+                        continue;
+                    }
+
                     // ========== CATEGORY ==========
                     $category = match ((int)$row->jenisjual) {
                         1 => 'gold',
