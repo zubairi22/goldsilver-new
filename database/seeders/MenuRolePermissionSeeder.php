@@ -67,26 +67,26 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 6,  'title' => 'Pengaturan', 'url' => 'store.settings.index', 'parent_id' => 5, 'icon' => 'Settings2', 'sort' => 1],
 
             ['id' => 7,  'title' => 'Transaksi Emas', 'url' => 'gold', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 3],
-            ['id' => 8,  'title' => 'Daftar Penjualan Emas', 'url' => 'transactions.sales.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Receipt', 'sort' => 1],
+            ['id' => 8,  'title' => 'Daftar Penjualan Emas', 'url' => 'sales.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Receipt', 'sort' => 1],
             ['id' => 9,  'title' => 'Buyback Emas', 'url' => 'buyback.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'RefreshCw', 'sort' => 3],
 
             ['id' => 10, 'title' => 'Jenis Item', 'url' => 'store.item-types.index', 'parent_id' => 5, 'icon' => 'Tags', 'sort' => 2],
             ['id' => 11, 'title' => 'Daftar Item', 'url' => 'store.items.index', 'parent_id' => 5, 'icon' => 'PackageSearch', 'sort' => 3],
 
             ['id' => 12, 'title' => 'Barang Rusak Emas', 'url' => 'damaged.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'PackageX', 'sort' => 4],
-            ['id' => 13, 'title' => 'Penjualan Emas', 'url' => 'transactions.sales.create', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Store', 'sort' => 2],
-            ['id' => 14, 'title' => 'Daftar Piutang Emas', 'url' => 'transactions.debts.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'FileText', 'sort' => 5],
+            ['id' => 13, 'title' => 'Penjualan Emas', 'url' => 'sales.create', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Store', 'sort' => 2],
+            ['id' => 14, 'title' => 'Daftar Piutang Emas', 'url' => 'debt.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'FileText', 'sort' => 5],
 
             ['id' => 15, 'title' => 'Pelanggan', 'url' => 'store.customers.index', 'parent_id' => 5, 'icon' => 'Users', 'sort' => 4],
 
             ['id' => 16, 'title' => 'Kasir', 'url' => 'cashier.index', 'parent_id' => null, 'icon' => 'Banknote', 'sort' => 2],
 
             ['id' => 17, 'title' => 'Transaksi Perak', 'url' => 'silver', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 4],
-            ['id' => 18, 'title' => 'Daftar Penjualan Perak', 'url' => 'transactions.sales.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Receipt', 'sort' => 1],
+            ['id' => 18, 'title' => 'Daftar Penjualan Perak', 'url' => 'sales.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Receipt', 'sort' => 1],
             ['id' => 19, 'title' => 'Buyback Perak', 'url' => 'buyback.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'RefreshCw', 'sort' => 3],
             ['id' => 20, 'title' => 'Barang Rusak Perak', 'url' => 'damaged.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'PackageX', 'sort' => 4],
-            ['id' => 21, 'title' => 'Penjualan Perak', 'url' => 'transactions.sales.create', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 2],
-            ['id' => 22, 'title' => 'Daftar Piutang Perak', 'url' => 'transactions.debts.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'FileText', 'sort' => 5],
+            ['id' => 21, 'title' => 'Penjualan Perak', 'url' => 'sales.create', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 2],
+            ['id' => 22, 'title' => 'Daftar Piutang Perak', 'url' => 'debt.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'FileText', 'sort' => 5],
         ];
 
         Menu::insert($menus);
