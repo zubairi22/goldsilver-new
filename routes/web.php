@@ -39,8 +39,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('cashier.open')->group(function () {
-        Route::prefix('gold')->group(function () {
 
+        Route::prefix('{category}')->whereIn('category', ['gold', 'silver'])->group(function () {
             Route::prefix('debt')
                 ->name('gold.debt.')
                 ->group(function () {
@@ -111,7 +111,6 @@ Route::middleware('auth')->group(function () {
                 });
         });
     });
-
 
     Route::middleware('role:super-admin')->prefix('master')->name('master.')->group(function () {
         Route::resource('users', UsersController::class);
