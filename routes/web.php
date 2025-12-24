@@ -39,45 +39,80 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('cashier.open')->group(function () {
+        // Grup untuk kategori 'gold'
+        Route::prefix('gold')->group(function () {
 
-        Route::prefix('{category}/sale')
-            ->whereIn('category', ['gold', 'silver'])
-            ->name('{category}.sales.')
-            ->group(function () {
-                Route::get('/', [SaleController::class, 'index'])->name('index');
-                Route::get('/create', [SaleController::class, 'create'])->name('create');
-                Route::post('/', [SaleController::class, 'store'])->name('store');
-                Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
-            });
+            Route::prefix('debt')
+                ->name('gold.debt.')
+                ->group(function () {
+                    Route::get('/', [DebtController::class, 'index'])->name('index');
+                    Route::post('/settle/{sale}', [DebtController::class, 'settle'])->name('settle');
+                    Route::post('/due-date/{sale}', [DebtController::class, 'setDueDate'])->name('dueDate');
+                });
 
-        Route::prefix('{category}/buyback')
-            ->whereIn('category', ['gold', 'silver'])
-            ->name('{category}.buyback.')
-            ->group(function () {
-                Route::get('/', [BuybackController::class, 'index'])->name('index');
-                Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
-                Route::post('/', [BuybackController::class, 'store'])->name('store');
-                Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
-            });
+            Route::prefix('buyback')
+                ->name('gold.buyback.')
+                ->group(function () {
+                    Route::get('/', [BuybackController::class, 'index'])->name('index');
+                    Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
+                    Route::post('/', [BuybackController::class, 'store'])->name('store');
+                    Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
+                });
 
-        Route::prefix('{category}/damaged')
-            ->whereIn('category', ['gold', 'silver'])
-            ->name('{category}.damaged.')
-            ->group(function () {
-                Route::get('/', [DamagedController::class, 'index'])->name('index');
-                Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
-            });
+            Route::prefix('damaged')
+                ->name('gold.damaged.')
+                ->group(function () {
+                    Route::get('/', [DamagedController::class, 'index'])->name('index');
+                    Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
+                });
 
-        Route::prefix('{category}/debt')
-            ->whereIn('category', ['gold', 'silver'])
-            ->name('{category}.debt.')
-            ->group(function () {
-                Route::get('/', [DebtController::class, 'index'])->name('index');
-                Route::post('/settle/{sale}', [DebtController::class, 'settle'])->name('settle');
-                Route::post('/due-date/{sale}', [DebtController::class, 'setDueDate'])->name('dueDate');
-            });
+            Route::prefix('sale')
+                ->name('gold.sales.')
+                ->group(function () {
+                    Route::get('/', [SaleController::class, 'index'])->name('index');
+                    Route::get('/create', [SaleController::class, 'create'])->name('create');
+                    Route::post('/', [SaleController::class, 'store'])->name('store');
+                    Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
+                });
+        });
 
+        Route::prefix('silver')->group(function () {
+
+            Route::prefix('debt')
+                ->name('silver.debt.')
+                ->group(function () {
+                    Route::get('/', [DebtController::class, 'index'])->name('index');
+                    Route::post('/settle/{sale}', [DebtController::class, 'settle'])->name('settle');
+                    Route::post('/due-date/{sale}', [DebtController::class, 'setDueDate'])->name('dueDate');
+                });
+
+            Route::prefix('buyback')
+                ->name('silver.buyback.')
+                ->group(function () {
+                    Route::get('/', [BuybackController::class, 'index'])->name('index');
+                    Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
+                    Route::post('/', [BuybackController::class, 'store'])->name('store');
+                    Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
+                });
+
+            Route::prefix('damaged')
+                ->name('silver.damaged.')
+                ->group(function () {
+                    Route::get('/', [DamagedController::class, 'index'])->name('index');
+                    Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
+                });
+
+            Route::prefix('sale')
+                ->name('silver.sales.')
+                ->group(function () {
+                    Route::get('/', [SaleController::class, 'index'])->name('index');
+                    Route::get('/create', [SaleController::class, 'create'])->name('create');
+                    Route::post('/', [SaleController::class, 'store'])->name('store');
+                    Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
+                });
+        });
     });
+
 
     Route::middleware('role:super-admin')->prefix('master')->name('master.')->group(function () {
         Route::resource('users', UsersController::class);
