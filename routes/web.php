@@ -41,7 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('cashier.open')->group(function () {
         Route::prefix('{category}')->whereIn('category', ['gold', 'silver'])->group(function () {
             Route::prefix('debt')
-                ->name('debt.')
+                ->name('{category}.debt.')
                 ->group(function () {
                     Route::get('/', [DebtController::class, 'index'])->name('index');
                     Route::post('/settle/{sale}', [DebtController::class, 'settle'])->name('settle');
@@ -49,7 +49,7 @@ Route::middleware('auth')->group(function () {
                 });
 
             Route::prefix('buyback')
-                ->name('buyback.')
+                ->name('{category}.buyback.')
                 ->group(function () {
                     Route::get('/', [BuybackController::class, 'index'])->name('index');
                     Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
@@ -58,14 +58,14 @@ Route::middleware('auth')->group(function () {
                 });
 
             Route::prefix('damaged')
-                ->name('damaged.')
+                ->name('{category}.damaged.')
                 ->group(function () {
                     Route::get('/', [DamagedController::class, 'index'])->name('index');
                     Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
                 });
 
             Route::prefix('sale')
-                ->name('sales.')
+                ->name('{category}.sales.')
                 ->group(function () {
                     Route::get('/', [SaleController::class, 'index'])->name('index');
                     Route::get('/create', [SaleController::class, 'create'])->name('create');
