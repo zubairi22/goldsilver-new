@@ -24,6 +24,7 @@ class MigratePenjualanSeeder extends Seeder
 
         DB::connection('old_mysql')
             ->table('penjualan')
+            ->where('harganet', '>', 0)
             ->orderBy('idpenjualan')
             ->chunk(1000, function ($rows) {
 
@@ -31,10 +32,6 @@ class MigratePenjualanSeeder extends Seeder
 
                     if (Sale::where('invoice_no', 'PJ-' . $row->idpenjualan)->exists()) {
                         Log::info("Skip: Invoice sudah ada → PJ-{$row->idpenjualan}");
-                        continue;
-                    }
-
-                    if (!$row->harganet) {
                         continue;
                     }
 
