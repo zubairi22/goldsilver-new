@@ -12,20 +12,26 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useFormat } from '@/composables/useFormat'
+import type { BreadcrumbItem } from '@/types'
 
-const { items, filters } = defineProps(['items', 'filters'])
+const { items, filters, category } = defineProps(['items', 'filters', 'category'])
 const { formatRupiah } = useFormat()
 
 const search = ref(filters.search || '')
 
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: `Produk Rusak (${category.toUpperCase()})`, href: '#' },
+]
+
 function doSearch() {
-    router.get(route('gold.damaged.index'), { search: search.value }, {
-        preserveScroll: true,
-        preserveState: true,
-    })
+    router.get(
+        route('damaged.index', category),
+        { search: search.value },
+        { preserveScroll: true, preserveState: true }
+    )
 }
 
-// Modal State
 const restoreModal = ref(false)
 const restoreItem = ref<any>(null)
 
@@ -41,7 +47,7 @@ function openRestore(item: any) {
 
 function submitRestore() {
     router.patch(
-        route('gold.damaged.restore', restoreItem.value.id),
+        route('damaged.restore', { category, item: restoreItem.value.id }),
         {
             name: restoreItem.value.newName,
             weight: restoreItem.value.newWeight,
@@ -55,27 +61,31 @@ function submitRestore() {
 </script>
 
 <template>
-    <Head title="Produk Rusak - Emas" />
+    <Head :title="`Produk Rusak - ${category.toUpperCase()}`" />
 
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Produk Rusak" description="Daftar item emas hasil buyback yang rusak" />
+            <Heading
+                class="mx-4"
+                title="Produk Rusak"
+                :description="`Daftar item ${category} hasil buyback yang rusak`"
+            />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
 
-                        <!-- SEARCH -->
                         <div class="flex justify-end mb-4">
                             <div class="w-full lg:w-80">
-                                <SearchInput v-model:search="search" @keyup.enter="doSearch" />
+                                <SearchInput
+                                    v-model:search="search"
+                                    @keyup.enter="doSearch"
+                                />
                             </div>
                         </div>
 
-                        <!-- TABLE -->
                         <div class="overflow-x-auto">
                             <Table class="w-full">
-
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Kode</TableHead>
@@ -92,7 +102,6 @@ function submitRestore() {
                                         <TableCell>{{ it.name }}</TableCell>
                                         <TableCell class="text-right">{{ it.weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(it.price_sell) }}</TableCell>
-
                                         <TableCell class="text-center">
                                             <Button @click="openRestore(it)">
                                                 Pulihkan Stok
@@ -106,7 +115,6 @@ function submitRestore() {
                                         </TableCell>
                                     </TableRow>
                                 </TableBody>
-
                             </Table>
 
                             <PageNav :data="items" />
@@ -118,16 +126,13 @@ function submitRestore() {
         </div>
     </AppLayout>
 
-    <!-- RESTORE MODAL -->
-    <Dialog :open="restoreModal" @update:open="(v) => restoreModal = v">
+    <Dialog :open="restoreModal" @update:open="v => restoreModal = v">
         <DialogContent class="max-w-md">
-
             <DialogHeader>
                 <DialogTitle>Pulihkan Produk ke Stok</DialogTitle>
             </DialogHeader>
 
             <div v-if="restoreItem">
-
                 <Label>Nama Produk</Label>
                 <Input v-model="restoreItem.newName" class="mb-3" />
 
@@ -136,15 +141,12 @@ function submitRestore() {
 
                 <Label>Harga Jual</Label>
                 <Input type="number" step="100" v-model="restoreItem.newSellPrice" class="mb-3" />
-
             </div>
 
             <DialogFooter>
                 <Button variant="secondary" @click="restoreModal = false">Batal</Button>
                 <Button @click="submitRestore">Simpan</Button>
             </DialogFooter>
-
         </DialogContent>
     </Dialog>
-
 </template>

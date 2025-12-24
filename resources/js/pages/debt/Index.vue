@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, useForm } from '@inertiajs/vue3'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import Heading from '@/components/Heading.vue'
 import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
@@ -15,22 +15,18 @@ import { LoaderCircle } from 'lucide-vue-next'
 import InputError from '@/components/InputError.vue'
 import CurrencyInput from '@/components/CurrencyInput.vue'
 
+const { sales, paymentMethods, category } = defineProps(['sales', 'paymentMethods', 'category'])
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Piutang', href: '#' },
+    { title: `Piutang (${category.toUpperCase()})`, href: '#' },
 ]
-
-const props = defineProps({
-    sales: Object,
-    paymentMethods: Array,
-})
 
 const { formatRupiah, formatDate } = useFormat()
 
-/* -------------------------------
-    SETTLEMENT
---------------------------------*/
 const settlementModal = ref(false)
+const dueDateModal = ref(false)
+const detailModal = ref(false)
 const selectedSale = ref<any>(null)
 
 const settleForm = useForm({
@@ -38,63 +34,62 @@ const settleForm = useForm({
     payment_method_id: '',
 })
 
+const dueDateForm = useForm({
+    due_date_days: 1,
+})
+
 const openSettlement = (sale: any) => {
     selectedSale.value = sale
     settlementModal.value = true
 }
-
-const handleSettlement = () => {
-    settleForm.post(route('transactions.debts.settle', selectedSale.value.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            settlementModal.value = false
-            settleForm.reset()
-        },
-    })
-}
-
-/* -------------------------------
-    DUE DATE
---------------------------------*/
-const dueDateModal = ref(false)
-
-const dueDateForm = useForm({
-    due_date_days: 1,
-})
 
 const openDueDate = (sale: any) => {
     selectedSale.value = sale
     dueDateModal.value = true
 }
 
-const handleDueDate = () => {
-    dueDateForm.post(route('transactions.debts.dueDate', selectedSale.value.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            dueDateModal.value = false
-            dueDateForm.reset()
-        },
-    })
-}
-
-/* -------------------------------
-    DETAIL PEMBAYARAN
---------------------------------*/
-const detailModal = ref(false)
-
 const openDetail = (sale: any) => {
     selectedSale.value = sale
     detailModal.value = true
 }
 
+const handleSettlement = () => {
+    settleForm.post(
+        route('debt.settle', { category, sale: selectedSale.value.id }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                settlementModal.value = false
+                settleForm.reset()
+            },
+        }
+    )
+}
+
+const handleDueDate = () => {
+    dueDateForm.post(
+        route('debt.dueDate', { category, sale: selectedSale.value.id }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                dueDateModal.value = false
+                dueDateForm.reset()
+            },
+        }
+    )
+}
 </script>
 
 <template>
-    <Head title="Piutang" />
+    <Head :title="`Piutang - ${category.toUpperCase()}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Piutang" description="Daftar transaksi yang masih memiliki piutang" />
+            <Heading
+                class="mx-4"
+                title="Piutang"
+                :description="`Daftar transaksi ${category} yang masih memiliki piutang`"
+            />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
@@ -113,39 +108,33 @@ const openDetail = (sale: any) => {
                                         <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
+
                                 <TableBody>
                                     <TableRow v-for="sale in sales.data" :key="sale.id">
                                         <TableCell>{{ sale.invoice_no }}</TableCell>
                                         <TableCell>{{ sale.customer?.name ?? '-' }}</TableCell>
                                         <TableCell>{{ sale.user?.name }}</TableCell>
-
-                                        <TableCell>
-                                            {{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}
-                                        </TableCell>
-
-                                        <TableCell class="text-right">
-                                            {{ formatRupiah(sale.total_price) }}
-                                        </TableCell>
-
-                                        <TableCell class="text-right">
-                                            {{ formatRupiah(sale.paid_amount) }}
-                                        </TableCell>
-
+                                        <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
                                         <TableCell class="text-right text-red-600 font-semibold">
                                             {{ formatRupiah(sale.remaining_amount) }}
                                         </TableCell>
-
                                         <TableCell>
                                             <div class="flex gap-2">
                                                 <Button size="sm" @click="openDetail(sale)">Detail</Button>
                                                 <Button size="sm" @click="openSettlement(sale)">Bayar</Button>
-                                                <Button size="sm" variant="secondary" @click="openDueDate(sale)">Jatuh Tempo</Button>
+                                                <Button size="sm" variant="secondary" @click="openDueDate(sale)">
+                                                    Jatuh Tempo
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="sales.total === 0">
-                                        <TableCell colspan="8" class="text-center py-6">Tidak ada piutang</TableCell>
+                                        <TableCell colspan="8" class="text-center py-6">
+                                            Tidak ada piutang
+                                        </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -156,10 +145,7 @@ const openDetail = (sale: any) => {
         </div>
     </AppLayout>
 
-    <!-- ===========================
-        MODAL PEMBAYARAN
-    ==============================-->
-    <Dialog :open="settlementModal" @update:open="v => (settlementModal = v)">
+    <Dialog :open="settlementModal" @update:open="v => settlementModal = v">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Pembayaran Piutang</DialogTitle>
@@ -167,7 +153,7 @@ const openDetail = (sale: any) => {
 
             <div>
                 <Label>Jumlah Pembayaran</Label>
-                <CurrencyInput v-model="settleForm.amount" required />
+                <CurrencyInput v-model="settleForm.amount" />
                 <InputError :message="settleForm.errors.amount" />
             </div>
 
@@ -192,10 +178,7 @@ const openDetail = (sale: any) => {
         </DialogContent>
     </Dialog>
 
-    <!-- ===========================
-        DETAIL PEMBAYARAN
-    ==============================-->
-    <Dialog :open="detailModal" @update:open="v => (detailModal = v)">
+    <Dialog :open="detailModal" @update:open="v => detailModal = v">
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Detail Pembayaran</DialogTitle>
@@ -234,10 +217,7 @@ const openDetail = (sale: any) => {
         </DialogContent>
     </Dialog>
 
-    <!-- ===========================
-        MODAL DUE DATE
-    ==============================-->
-    <Dialog :open="dueDateModal" @update:open="v => (dueDateModal = v)">
+    <Dialog :open="dueDateModal" @update:open="v => dueDateModal = v">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Atur Jatuh Tempo</DialogTitle>

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Buyback\GoldBuybackStoreRequest;
 use App\Models\Buyback;
 use App\Models\BuybackItem;
 use App\Models\Item;
@@ -10,9 +9,9 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class GoldBuybackController extends Controller
+class BuybackController extends Controller
 {
-    public function index()
+    public function index(string $category)
     {
         $filters = [
             'search' => request('search'),
@@ -20,10 +19,11 @@ class GoldBuybackController extends Controller
             'payment_type' => request('payment_type'),
             'start' => request('start'),
             'end' => request('end'),
-            'category' => 'gold',
+            'category' => $category,
         ];
 
-        return inertia('buyback/gold/Index', [
+        return inertia('buyback/Index', [
+            'category' => $category,
             'buybacks' => Buyback::with(['customer', 'user', 'items.item'])
                 ->filters($filters)
                 ->latest()
@@ -34,11 +34,15 @@ class GoldBuybackController extends Controller
         ]);
     }
 
-    public function create(Sale $sale)
+    public function create(string $category, Sale $sale)
     {
         if ($sale->status !== 'paid') {
             $this->flashError('Transaksi belum lunas, buyback tidak diizinkan.');
             return back();
+        }
+
+        if ($sale->category !== $category) {
+            abort(404);
         }
 
         $sale->load(['items.item', 'customer', 'user']);
@@ -49,30 +53,39 @@ class GoldBuybackController extends Controller
             }
         });
 
-        return inertia('buyback/gold/Create', [
+        return inertia('buyback/Create', [
+            'category' => $category,
             'sale' => $sale,
             'customer' => $sale->customer,
             'items' => $sale->items,
         ]);
     }
 
-    public function store(GoldBuybackStoreRequest $request)
+    public function store(Request $request, string $category)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'customer_id' => 'nullable|exists:customers,id',
+            'items' => 'required|array|min:1',
+            'items.*.item_id' => 'required|exists:items,id',
+            'items.*.buyback_weight' => 'required|numeric|min:0.01',
+            'items.*.buyback_price' => 'required|numeric|min:0',
+            'items.*.manual_name' => 'nullable|string|max:255',
+            'items.*.image' => 'nullable|image|max:2048',
+        ]);
 
         try {
-            DB::transaction(function () use ($validated) {
+            DB::transaction(function () use ($validated, $category) {
 
                 foreach ($validated['items'] as $d) {
                     $item = Item::findOrFail($d['item_id']);
-
                     if ($item->status === 'buyback') {
                         throw new \Exception("Item {$item->name} sudah pernah di-buyback.");
                     }
                 }
 
                 $totalWeight = collect($validated['items'])->sum('buyback_weight');
-                $totalPrice  = collect($validated['items'])->sum(fn($i) =>
+                $totalPrice  = collect($validated['items'])->sum(fn ($i) =>
                     $i['buyback_weight'] * $i['buyback_price']
                 );
 
@@ -81,7 +94,7 @@ class GoldBuybackController extends Controller
                     'sale_id'      => $validated['sale_id'],
                     'customer_id'  => $validated['customer_id'] ?? null,
                     'user_id'      => auth()->id(),
-                    'category'     => 'gold',
+                    'category'     => $category,
                     'payment_type' => 'cash',
                     'total_weight' => $totalWeight,
                     'total_price'  => $totalPrice,
@@ -106,9 +119,9 @@ class GoldBuybackController extends Controller
                             ->addMedia($d['image'])
                             ->toMediaCollection('buyback_images');
 
-                        $originalPath = $media->getPath();
-                        if (file_exists($originalPath)) {
-                            @unlink($originalPath);
+                        $path = $media->getPath();
+                        if (file_exists($path)) {
+                            @unlink($path);
                         }
                     }
                 }
@@ -123,7 +136,7 @@ class GoldBuybackController extends Controller
         }
     }
 
-    public function processQC(Request $request, BuybackItem $item)
+    public function processQC(Request $request, string $category, BuybackItem $buybackItem)
     {
         $data = $request->validate([
             'condition'   => 'required|in:good,broken',
@@ -132,52 +145,35 @@ class GoldBuybackController extends Controller
             'price_sell'  => 'nullable|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($item, $data) {
+        DB::transaction(function () use ($buybackItem, $data, $category) {
 
             $finalWeight = $data['condition'] === 'good'
-                ? ($data['weight'] ?? $item->weight)
-                : $item->weight;
+                ? ($data['weight'] ?? $buybackItem->weight)
+                : $buybackItem->weight;
 
-            $item->update([
+            $buybackItem->update([
                 'condition'    => $data['condition'],
                 'manual_name'  => $data['name'],
                 'weight'       => $finalWeight,
-                'subtotal'     => $item->price * $finalWeight,
+                'subtotal'     => $buybackItem->price * $finalWeight,
             ]);
 
-            /*
-            |--------------------------------------------------------------------------
-            | 1. Jika item_id NULL → ini adalah manual item
-            |--------------------------------------------------------------------------
-            */
-            if (!$item->item_id) {
-
+            if (!$buybackItem->item_id) {
                 if ($data['condition'] === 'good') {
-
                     Item::create([
                         'name'       => $data['name'],
-                        'category'   => 'gold',
+                        'category'   => $category,
                         'weight'     => $finalWeight,
-                        'price_buy'  => $item->price,
+                        'price_buy'  => $buybackItem->price,
                         'price_sell' => $data['price_sell'],
                         'status'     => 'ready',
                         'source'     => 'buyback',
                     ]);
-
                 }
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | 2. Jika item stok (punya item_id)
-            |--------------------------------------------------------------------------
-            */
-            $product = Item::find($item->item_id);
-
-            if (!$product) {
-                throw new \Exception("Data item stok tidak ditemukan.");
-            }
+            $product = Item::findOrFail($buybackItem->item_id);
 
             if ($data['condition'] === 'good') {
                 $product->update([
@@ -194,5 +190,4 @@ class GoldBuybackController extends Controller
         $this->flashSuccess('QC berhasil diproses.');
         return back();
     }
-
 }

@@ -9,30 +9,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useSearch } from '@/composables/useSearch'
 import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import ImageModal from '@/components/ImageModal.vue';
+import ImageModal from '@/components/ImageModal.vue'
 
-const { buybacks, filters } = defineProps(['buybacks', 'filters'])
+const props = defineProps(['buybacks', 'filters', 'category'])
+
+const categoryLabel = computed(() =>
+    props.category === 'gold' ? 'Emas' : 'Perak'
+)
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Buyback Emas', href: '#' },
+    { title: `Buyback ${categoryLabel.value}`, href: '#' },
 ]
 
-const { search } = useSearch('gold.buyback.index', filters.search, ['buybacks'])
+const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], {
+    category: props.category,
+})
+
 const { formatRupiah, formatDate } = useFormat()
 
-const status = ref(filters.status)
-const payment_type = ref(filters.payment_type)
-const date = ref(filters.start && filters.end ? [filters.start, filters.end] : [])
+const status = ref(props.filters.status)
+const payment_type = ref(props.filters.payment_type)
+const date = ref(
+    props.filters.start && props.filters.end
+        ? [props.filters.start, props.filters.end]
+        : []
+)
 
-// QC State
 const qcModal = ref(false)
 const qcItem = ref<any>(null)
 
@@ -44,27 +54,27 @@ function openQC(item: any) {
         newWeight: item.weight,
         newSellPrice: item.item?.price_sell ?? 0,
     }
-
     qcModal.value = true
 }
 
 function submitQC() {
     router.patch(
-        route('buyback.gold.item.qc', qcItem.value.id),
+        route('buyback.item.qc', {
+            category: props.category,
+            buybackItem: qcItem.value.id,
+        }),
         {
             name: qcItem.value.newName,
             weight: qcItem.value.newWeight,
             price_sell: qcItem.value.newSellPrice,
-            condition: qcItem.value.newCondition
+            condition: qcItem.value.newCondition,
         },
-        {
-            onSuccess: () => qcModal.value = false
-        }
+        { onSuccess: () => (qcModal.value = false) }
     )
 }
 
 const applyFilters = () => {
-    const params: Record<string, any> = { category: 'gold' }
+    const params: Record<string, any> = { category: props.category }
 
     if (search.value) params.search = search.value
     if (status.value !== 'all') params.status = status.value
@@ -74,7 +84,7 @@ const applyFilters = () => {
         params.end = date.value[1]
     }
 
-    router.get(route('gold.buyback.index'), params, {
+    router.get(route('buyback.index', { category: props.category }), params, {
         preserveState: true,
         preserveScroll: true,
     })
@@ -84,43 +94,39 @@ watch([status, payment_type, date], applyFilters)
 </script>
 
 <template>
-    <Head title="Buyback Emas" />
+    <Head :title="`Buyback ${categoryLabel}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Buyback Emas" description="Daftar transaksi buyback emas" />
+            <Heading
+                class="mx-4"
+                :title="`Buyback ${categoryLabel}`"
+                :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()}`"
+            />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-
-                        <!-- FILTERS -->
                         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                            <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex gap-4">
+                                <Select v-model="status">
+                                    <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="approved">Disetujui</SelectItem>
+                                        <SelectItem value="rejected">Ditolak</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                                <div class="w-40">
-                                    <Select v-model="status">
-                                        <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="approved">Disetujui</SelectItem>
-                                            <SelectItem value="rejected">Ditolak</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div class="w-40">
-                                    <Select v-model="payment_type">
-                                        <SelectTrigger><SelectValue placeholder="Pembayaran" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="cash">Cash</SelectItem>
-                                            <SelectItem value="non_cash">Non Cash</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
+                                <Select v-model="payment_type">
+                                    <SelectTrigger><SelectValue placeholder="Pembayaran" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua</SelectItem>
+                                        <SelectItem value="cash">Cash</SelectItem>
+                                        <SelectItem value="non_cash">Non Cash</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div class="w-full sm:w-auto lg:w-80">
@@ -128,13 +134,11 @@ watch([status, payment_type, date], applyFilters)
                             </div>
                         </div>
 
-                        <!-- TABLE -->
                         <div class="overflow-x-auto">
                             <Table class="w-full">
-
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead class="w-40">Tanggal</TableHead>
+                                        <TableHead>Tanggal</TableHead>
                                         <TableHead>No Buyback</TableHead>
                                         <TableHead>Pelanggan</TableHead>
                                         <TableHead>Kasir</TableHead>
@@ -145,11 +149,8 @@ watch([status, payment_type, date], applyFilters)
                                 </TableHeader>
 
                                 <TableBody>
-
                                     <template v-for="bb in buybacks.data" :key="bb.id">
-
-                                        <!-- HEADER -->
-                                        <TableRow class="bg-white">
+                                        <TableRow>
                                             <TableCell>{{ formatDate(bb.created_at) }}</TableCell>
                                             <TableCell>{{ bb.buyback_no }}</TableCell>
                                             <TableCell>{{ bb.customer?.name || '-' }}</TableCell>
@@ -159,13 +160,11 @@ watch([status, payment_type, date], applyFilters)
                                             <TableCell class="text-center">{{ bb.payment_type }}</TableCell>
                                         </TableRow>
 
-                                        <!-- ITEM -->
-                                        <TableRow class="bg-gray-50">
+                                        <TableRow class="bg-muted/30">
                                             <TableCell colspan="7">
-                                                <div class="p-4 border rounded bg-white shadow-sm">
-
-                                                    <Table class="w-full">
-                                                        <TableHeader class="border-b-2">
+                                                <div class="p-4 border rounded bg-white">
+                                                    <Table>
+                                                        <TableHeader>
                                                             <TableRow>
                                                                 <TableHead>Gambar</TableHead>
                                                                 <TableHead>Nama</TableHead>
@@ -179,96 +178,77 @@ watch([status, payment_type, date], applyFilters)
                                                         <TableBody>
                                                             <TableRow v-for="it in bb.items" :key="it.id">
                                                                 <TableCell>
-                                                                    <ImageModal
-                                                                        v-if="it.image"
-                                                                        :src="it.image"
-                                                                        trigger
-                                                                    />
+                                                                    <ImageModal v-if="it.image" :src="it.image" trigger />
                                                                 </TableCell>
                                                                 <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
                                                                 <TableCell class="text-right">{{ it.weight }}</TableCell>
                                                                 <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
                                                                 <TableCell class="text-right">{{ formatRupiah(it.subtotal) }}</TableCell>
-
                                                                 <TableCell class="text-center">
                                                                     <span v-if="it.condition" class="px-2 py-1 rounded bg-gray-100">
                                                                         {{ it.condition_label }}
                                                                     </span>
-
                                                                     <Button v-else @click="openQC(it)">Proses QC</Button>
                                                                 </TableCell>
-
                                                             </TableRow>
                                                         </TableBody>
                                                     </Table>
-
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-
                                     </template>
-
                                 </TableBody>
-
                             </Table>
                         </div>
 
                         <PageNav :data="buybacks" />
-
                     </CardContent>
                 </Card>
             </div>
         </div>
     </AppLayout>
 
-    <!-- QC MODAL -->
-    <Dialog :open="qcModal" @update:open="(v) => qcModal = v">
+    <Dialog :open="qcModal" @update:open="v => qcModal = v">
         <DialogContent class="max-w-md">
-
             <DialogHeader>
                 <DialogTitle>Proses QC Item</DialogTitle>
             </DialogHeader>
 
             <div v-if="qcItem">
+                <Label>Nama Item</Label>
+                <Input v-model="qcItem.newName" class="mb-3" />
 
-                <Label class="font-medium">Nama Item</Label>
-                <Input v-model="qcItem.newName" class="w-full border rounded px-3 py-2 mb-3" />
-
-                <Label class="font-medium">Berat Akhir</Label>
+                <Label>Berat Akhir</Label>
                 <Input
                     v-model.number="qcItem.newWeight"
                     type="number"
                     step="0.01"
-                    class="w-full border rounded px-3 py-2 mb-3"
+                    class="mb-3"
                     :disabled="qcItem.newCondition === 'broken'"
                 />
 
-                <Label class="font-medium">Harga Jual</Label>
+                <Label>Harga Jual</Label>
                 <Input
                     v-model.number="qcItem.newSellPrice"
                     type="number"
-                    step="100"
-                    class="w-full border rounded px-3 py-2 mb-3"
+                    class="mb-3"
                     :disabled="qcItem.newCondition === 'broken'"
                 />
 
-                <Label class="font-medium">Kondisi</Label>
+                <Label>Kondisi</Label>
                 <Select v-model="qcItem.newCondition">
-                    <SelectTrigger><SelectValue placeholder="Pilih Kondisi" /></SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="good">Siap Jual</SelectItem>
                         <SelectItem value="broken">Rusak</SelectItem>
                     </SelectContent>
                 </Select>
-
             </div>
 
             <DialogFooter>
                 <Button variant="secondary" @click="qcModal = false">Batal</Button>
                 <Button @click="submitQC">Simpan</Button>
             </DialogFooter>
-
         </DialogContent>
     </Dialog>
-
 </template>

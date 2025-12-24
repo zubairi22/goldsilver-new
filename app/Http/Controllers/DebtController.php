@@ -9,29 +9,28 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 use Throwable;
 
-class GoldDebtController extends Controller
+class DebtController extends Controller
 {
-    /**
-     * List semua piutang (sale dengan remaining_amount > 0)
-     */
-    public function index(): Response
+    public function index(string $category): Response
     {
-        $sales = Sale::where('remaining_amount', '>', 0)
+        $sales = Sale::where('category', $category)
+            ->where('remaining_amount', '>', 0)
             ->with(['customer', 'items.item', 'payments.paymentMethod', 'user'])
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         return inertia('debt/Index', [
+            'category' => $category,
             'sales' => $sales,
             'paymentMethods' => PaymentMethod::active()->get(),
         ]);
     }
 
-    /**
-     * Pembayaran piutang per transaksi Sale
-     */
-    public function settleDebt(Request $request, Sale $sale)
+    public function settle(Request $request, string $category, Sale $sale)
     {
+        abort_if($sale->category !== $category, 404);
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
@@ -56,7 +55,6 @@ class GoldDebtController extends Controller
 
             $this->flashSuccess('Pembayaran piutang berhasil diproses.');
             return back();
-
         } catch (Throwable $e) {
             DB::rollBack();
             $this->flashError('Gagal memproses pembayaran.', $e);
@@ -64,11 +62,10 @@ class GoldDebtController extends Controller
         }
     }
 
-    /**
-     * Atur due date pada Sale
-     */
-    public function setDueDate(Request $request, Sale $sale)
+    public function setDueDate(Request $request, string $category, Sale $sale)
     {
+        abort_if($sale->category !== $category, 404);
+
         $validated = $request->validate([
             'due_date_days' => 'required|numeric|min:1',
         ]);
@@ -80,7 +77,6 @@ class GoldDebtController extends Controller
 
             $this->flashSuccess('Tanggal jatuh tempo berhasil diperbarui.');
             return back();
-
         } catch (Throwable $e) {
             $this->flashError('Gagal mengatur jatuh tempo.', $e);
             return back();

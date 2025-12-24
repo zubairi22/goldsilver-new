@@ -1,202 +1,221 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { computed, ref, watch } from 'vue';
-import { useFormat } from '@/composables/useFormat';
-import { toast } from 'vue-sonner';
-import type { BreadcrumbItem } from '@/types';
-import Multiselect from '@vueform/multiselect';
-import InputError from '@/components/InputError.vue';
-import DeleteButton from '@/components/DeleteButton.vue';
-import CurrencyInput from '@/components/CurrencyInput.vue';
-import { Textarea } from '@/components/ui/textarea';
-import Icon from '@/components/Icon.vue';
-import QrScanner from '@/components/QrScanner.vue';
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, router, useForm } from '@inertiajs/vue3'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+    Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select'
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from '@/components/ui/table'
+import {
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle
+} from '@/components/ui/dialog'
+import { computed, ref, watch } from 'vue'
+import { useFormat } from '@/composables/useFormat'
+import { toast } from 'vue-sonner'
+import type { BreadcrumbItem } from '@/types'
+import Multiselect from '@vueform/multiselect'
+import InputError from '@/components/InputError.vue'
+import DeleteButton from '@/components/DeleteButton.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
+import { Textarea } from '@/components/ui/textarea'
+import Icon from '@/components/Icon.vue'
+import QrScanner from '@/components/QrScanner.vue'
 
-const { formatRupiah } = useFormat();
+/* ================= PROPS ================= */
+const props = defineProps<{
+    category: 'gold' | 'silver'
+    paymentMethods: any[]
+    customers: any[]
+    items: any[]
+    cashiers: any[]
+}>()
 
-const { cashiers } = defineProps(['paymentMethods', 'customers', 'items', 'cashiers']);
+const { formatRupiah } = useFormat()
 
+/* ================= LABEL ================= */
+const categoryLabel = computed(() =>
+    props.category === 'gold' ? 'Emas' : 'Perak'
+)
+
+/* ================= BREADCRUMB ================= */
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Penjualan Emas', href: '/sale/gold' },
+    { title: `Penjualan ${categoryLabel.value}`, href: `/sale/${props.category}` },
     { title: 'Tambah', href: '#' },
-];
+]
 
+/* ================= FORM ================= */
 const form = useForm({
-    category: 'gold',
     sale_type: 'retail',
     mode: 'auto',
     customer_id: '',
-    payment_method_id: 1,
+    payment_method_id: props.paymentMethods?.[0]?.id ?? null,
     paid_amount: 0,
-    cashier_id: cashiers?.[0]?.id ?? null,
+    cashier_id: props.cashiers?.[0]?.id ?? null,
     password: '',
     qr_token: '',
     notes: '',
-    items: <any>[],
-});
+    items: [] as any[],
+})
 
-const verifyModal = ref(false);
-const successModal = ref(false);
-const savedSale = ref<any>(null);
+/* ================= STATE ================= */
+const verifyModal = ref(false)
+const successModal = ref(false)
+const savedSale = ref<any>(null)
 
-const showAddItemModal = ref(false);
-const editIndex = ref<number | null>(null);
+const showAddItemModal = ref(false)
+const editIndex = ref<number | null>(null)
 
 const modalItem = ref<any>({
     id: null,
     manual_name: '',
     weight: 0,
     price: 0,
-});
+})
 
-// ---- Item logic ----
+/* ================= ITEM LOGIC ================= */
 const addItem = () => {
-    modalItem.value = { id: null, manual_name: '', weight: 0, price: 0 };
-    editIndex.value = null;
-    showAddItemModal.value = true;
-};
+    modalItem.value = { id: null, manual_name: '', weight: 0, price: 0 }
+    editIndex.value = null
+    showAddItemModal.value = true
+}
 
 const editItem = (index: number) => {
-    const it = form.items[index];
+    const it = form.items[index]
     modalItem.value = {
         id: it.id ?? null,
         manual_name: it.manual_name ?? '',
         weight: it.weight,
         price: it.price,
-    };
-    editIndex.value = index;
-    showAddItemModal.value = true;
-};
+    }
+    editIndex.value = index
+    showAddItemModal.value = true
+}
 
 const removeItem = (index: number) => {
-    form.items.splice(index, 1);
-};
+    form.items.splice(index, 1)
+}
 
 const modalSubtotal = computed(() => {
-    const w = Number(modalItem.value.weight || 0);
-    const p = Number(modalItem.value.price || 0);
-    return Math.round(w * p);
-});
+    return Math.round(Number(modalItem.value.weight) * Number(modalItem.value.price))
+})
 
 const saveModalItem = () => {
     if (form.mode === 'auto' && !modalItem.value.id) {
-        toast.error('Silakan pilih barang dari stok.');
-        return;
+        toast.error('Silakan pilih barang dari stok.')
+        return
     }
     if (form.mode === 'manual' && !modalItem.value.manual_name) {
-        toast.error('Nama barang harus diisi.');
-        return;
+        toast.error('Nama barang harus diisi.')
+        return
     }
     if (modalSubtotal.value <= 0) {
-        toast.error('Berat dan harga harus valid.');
-        return;
+        toast.error('Berat dan harga harus valid.')
+        return
     }
 
     form.items.push({
         ...modalItem.value,
         mode: form.mode,
         subtotal: modalSubtotal.value,
-    });
+    })
 
-    showAddItemModal.value = false;
-};
+    showAddItemModal.value = false
+}
 
 const updateModalItem = () => {
-    if (editIndex.value === null) return;
+    if (editIndex.value === null) return
     form.items[editIndex.value] = {
         ...modalItem.value,
         mode: form.mode,
         subtotal: modalSubtotal.value,
-    };
-    editIndex.value = null;
-    showAddItemModal.value = false;
-};
+    }
+    editIndex.value = null
+    showAddItemModal.value = false
+}
 
-// ---- Payment & summary ----
-const totalPrice = computed(() => {
-    return Math.round(
-        form.items.reduce((sum: any, i: any) => sum + Number(i.subtotal || 0), 0)
-    );
-});
+/* ================= SUMMARY ================= */
+const totalPrice = computed(() =>
+    Math.round(form.items.reduce((sum, i) => sum + Number(i.subtotal || 0), 0))
+)
 
-const totalWeight = computed(() => {
-    return Number(
-        form.items.reduce((sum: number, i: any) => sum + Number(i.weight || 0), 0).toFixed(2)
-    );
-});
+const totalWeight = computed(() =>
+    Number(form.items.reduce((sum, i) => sum + Number(i.weight || 0), 0).toFixed(2))
+)
 
 const change = computed(() => {
-    const raw = Number(form.paid_amount) - Number(totalPrice.value);
-    return raw < 0 ? 0 : Math.round(raw);
-});
+    const raw = Number(form.paid_amount) - totalPrice.value
+    return raw < 0 ? 0 : Math.round(raw)
+})
 
 const setExactPayment = () => {
-    form.paid_amount = Number(totalPrice.value);
-};
+    form.paid_amount = totalPrice.value
+}
 
-// ---- Verification ----
+/* ================= VERIFY ================= */
 const openVerifyModal = () => {
     if (!form.items.length) {
-        toast.error('Minimal 1 item harus ditambahkan.');
-        return;
+        toast.error('Minimal 1 item harus ditambahkan.')
+        return
     }
-    verifyModal.value = true;
-};
+    verifyModal.value = true
+}
 
 const submitSaleFinal = () => {
-    form.post(route('gold.transactions.sales.store'), {
+    form.post(route('sales.store', { category: props.category }), {
         preserveScroll: true,
         onSuccess: (page) => {
-            savedSale.value = page.props.flash.sale;
-
-            verifyModal.value = false;
-            successModal.value = true;
-
-            form.reset();
+            savedSale.value = page.props.flash.sale
+            verifyModal.value = false
+            successModal.value = true
+            form.reset()
         },
-    });
-};
+    })
+}
 
-// ---- Success handling ----
+/* ================= PRINT ================= */
 const printReceipt = () => {
-    window.open(route('gold.transactions.sales.print', savedSale.value.id), '_blank');
-};
+    window.open(
+        route('sales.print', {
+            category: props.category,
+            sale: savedSale.value.id,
+        }),
+        '_blank'
+    )
+}
 
-const scanModal = ref(false);
+/* ================= QR ================= */
+const scanModal = ref(false)
 
 const onQrScanned = (token: string) => {
-    form.qr_token = token;
-
-    const cashier = cashiers.find((c: any) => c.qr_token === token);
+    form.qr_token = token
+    const cashier = props.cashiers.find((c: any) => c.qr_token === token)
     if (cashier) {
-        form.cashier_id = cashier.id;
-        toast.success('Kasir terverifikasi via QR!');
+        form.cashier_id = cashier.id
+        toast.success('Kasir terverifikasi via QR!')
     } else {
-        toast.error('QR tidak dikenal.');
+        toast.error('QR tidak dikenal.')
     }
-};
+}
 
+/* ================= REDIRECT ================= */
 watch(successModal, (val) => {
     if (!val && savedSale.value) {
-        toast.info('Akan dialihkan ke halaman daftar penjualan.');
+        toast.info('Akan dialihkan ke halaman daftar penjualan.')
         setTimeout(() => {
-            router.visit(route('gold.transactions.sales.index'));
-        }, 1500);
+            router.visit(route('sales.index', { category: props.category }))
+        }, 1500)
     }
-});
+})
 </script>
 
 <template>
-    <Head title="Tambah Penjualan Emas" />
+    <Head :title="`Tambah Penjualan ${categoryLabel}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
 
         <div class="px-4 py-6">

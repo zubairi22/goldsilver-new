@@ -1,35 +1,47 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import Heading from '@/components/Heading.vue';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { computed } from 'vue';
-import { useFormat } from '@/composables/useFormat';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { BreadcrumbItem } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { LoaderCircle } from 'lucide-vue-next';
-import { useTime } from '@/composables/useTime';
-import CameraUploader from '@/components/CameraUploader.vue';
-import InputError from '@/components/InputError.vue';
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, useForm, router } from '@inertiajs/vue3'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import Heading from '@/components/Heading.vue'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { computed } from 'vue'
+import { useFormat } from '@/composables/useFormat'
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from '@/components/ui/table'
+import type { BreadcrumbItem } from '@/types'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { LoaderCircle } from 'lucide-vue-next'
+import { useTime } from '@/composables/useTime'
+import CameraUploader from '@/components/CameraUploader.vue'
+import InputError from '@/components/InputError.vue'
 
-const { sale, customer, items } = defineProps(['sale', 'customer', 'items']);
+const props = defineProps<{
+    category: 'gold' | 'silver'
+    sale: any
+    customer: any
+    items: any[]
+}>()
+
+const categoryLabel = computed(() =>
+    props.category === 'gold' ? 'Emas' : 'Perak'
+)
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Buyback Emas', href: '#' },
+    { title: `Buyback ${categoryLabel.value}`, href: route('buyback.index', { category: props.category }) },
     { title: 'Tambah', href: '#' },
-];
+]
 
-const { formatRupiah, formatDate } = useFormat();
-const { today } = useTime();
+const { formatRupiah, formatDate } = useFormat()
+const { today } = useTime()
 
 const form = useForm({
-    sale_id: sale.id,
-    items: items.map((it: any) => ({
+    sale_id: props.sale.id,
+    customer_id: props.customer?.id ?? null,
+    items: props.items.map((it: any) => ({
         item_id: it.item?.id,
         sale_item_id: it.id,
         name: it.manual_name ?? it.item?.name,
@@ -37,60 +49,80 @@ const form = useForm({
         buyback_weight: it.weight,
         buyback_price: 0,
         selected: false,
-        image: null,
+        image: undefined,
         initial_image: it.item?.image,
         is_buyback: it.item?.status === 'buyback',
     })),
-});
+})
 
 const totalBuyback = computed(() =>
     form.items.reduce(
-        (sum: any, it: any) => (it.selected && !it.is_buyback ? sum + Number(it.buyback_weight) * Number(it.buyback_price) : sum),
+        (sum: number, it: any) =>
+            it.selected && !it.is_buyback
+                ? sum + Number(it.buyback_weight) * Number(it.buyback_price)
+                : sum,
         0
-    ),
-);
+    )
+)
 
 const totalBuybackWeight = computed(() =>
     form.items.reduce(
-        (sum: any, it: any) => (it.selected && !it.is_buyback ? sum + Number(it.buyback_weight || 0) : sum),
+        (sum: number, it: any) =>
+            it.selected && !it.is_buyback
+                ? sum + Number(it.buyback_weight || 0)
+                : sum,
         0
     )
-);
+)
 
 const totalBuybackItems = computed(() =>
     form.items.filter((i: any) => i.selected && !i.is_buyback).length
-);
+)
 
 const submit = () => {
-    const filtered = form.items.filter((i: any) => i.selected && !i.is_buyback);
-    if (filtered.length === 0) return alert('Pilih minimal satu item');
+    const filtered = form.items.filter(
+        (i: any) => i.selected && !i.is_buyback
+    )
 
-    form.transform((data) => ({ ...data, items: filtered }));
+    if (!filtered.length) {
+        alert('Pilih minimal satu item')
+        return
+    }
 
-    form.post(route('gold.buyback.store'), {
+    form.transform((data) => ({
+        ...data,
+        items: filtered,
+    }))
+
+    form.post(route('buyback.store', { category: props.category }), {
         preserveScroll: true,
         onSuccess: () => {
             setTimeout(() => {
-                router.get('gold.buyback.index');
-            }, 700);
+                router.get(route('buyback.index', { category: props.category }))
+            }, 700)
         },
-    });
-};
+    })
+}
 
-const goBack = () => router.get(route('gold.transactions.sales.index', { category: 'gold' }));
+const goBack = () => {
+    router.get(route('sales.index', { category: props.category }))
+}
 </script>
 
 <template>
-    <Head :title="`Buyback Emas - ${sale.invoice_no}`" />
+    <Head :title="`Buyback ${categoryLabel} - ${sale.invoice_no}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
             <div class="flex justify-between items-center mx-4">
-                <Heading title="Buyback Emas" :description="`Invoice ${sale.invoice_no}`" />
+                <Heading
+                    :title="`Buyback ${categoryLabel}`"
+                    :description="`Invoice ${sale.invoice_no}`"
+                />
 
-                <div class="flex gap-3">
-                    <Button variant="outline" @click="goBack">Kembali</Button>
-                </div>
+                <Button variant="outline" @click="goBack">
+                    Kembali
+                </Button>
             </div>
 
             <div class="max-w-8xl mx-auto space-y-8">
@@ -99,12 +131,11 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                 <Card class="md:mx-4 mb-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Informasi Penjualan</p>
-                        <hr>
+                        <hr />
                     </CardHeader>
+
                     <CardContent>
                         <div class="grid gap-6 text-sm md:grid-cols-2">
-
-                            <!-- Kiri -->
                             <div class="space-y-6">
 
                                 <div class="space-y-1">
@@ -147,16 +178,15 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                 </div>
                             </div>
 
-                            <!-- Kanan -->
                             <div class="flex flex-col items-center justify-center p-4">
                                 <img
                                     :src="'/storage/' + sale.qr_path"
                                     class="h-24 w-24 rounded shadow"
-                                    alt="qr"
                                 />
-                                <p class="mt-4 text-md font-semibold">{{ sale.invoice_no }}</p>
+                                <p class="mt-4 text-md font-semibold">
+                                    {{ sale.invoice_no }}
+                                </p>
                             </div>
-
                         </div>
                     </CardContent>
                 </Card>
@@ -165,7 +195,7 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                 <Card class="md:mx-4 mb-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Detail Item Buyback</p>
-                        <hr>
+                        <hr />
                     </CardHeader>
 
                     <CardContent>
@@ -188,13 +218,12 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                     <TableRow>
                                         <TableCell class="text-center">
                                             <Checkbox
-                                                class="w-6 h-6"
                                                 v-model="it.selected"
                                                 :disabled="it.is_buyback"
                                             />
                                         </TableCell>
 
-                                        <TableCell class="min-w-40">
+                                        <TableCell>
                                             <div class="flex flex-col gap-1">
                                                 <span class="font-medium">{{ it.name }}</span>
 
@@ -216,7 +245,6 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                                 step="0.01"
                                                 class="w-24 text-right"
                                                 v-model.number="it.buyback_weight"
-                                                @change="() => (form as any).clearErrors(`items.${i}.buyback_weight`)"
                                                 :disabled="!it.selected || it.is_buyback"
                                             />
                                         </TableCell>
@@ -227,7 +255,6 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                                 step="100"
                                                 class="w-28 text-right"
                                                 v-model.number="it.buyback_price"
-                                                @change="() => (form as any).clearErrors(`items.${i}.buyback_price`)"
                                                 :disabled="!it.selected || it.is_buyback"
                                             />
                                         </TableCell>
@@ -243,13 +270,11 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                             <img
                                                 v-if="it.initial_image"
                                                 :src="it.initial_image"
-                                                alt="initial_image"
                                                 class="mx-auto h-16 w-16 rounded object-cover"
                                             />
                                             <span v-else class="text-gray-400">Tidak ada</span>
                                         </TableCell>
 
-                                        <!-- CAMERA UPLOADER -->
                                         <TableCell class="text-center">
                                             <CameraUploader
                                                 v-model="form.items[i].image"
@@ -258,18 +283,22 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                         </TableCell>
                                     </TableRow>
 
-                                    <TableRow v-if="(form.errors as any)[`items.${i}.buyback_weight`] ||(form.errors as any)[`items.${i}.buyback_price`] ||(form.errors as any)[`items.${i}.image`]" class="bg-red-50">
-                                        <TableCell colspan="8" class="py-2 text-red-600 text-sm">
-                                            <div class="space-y-1">
-                                                <InputError :message="(form.errors as any)[`items.${i}.buyback_weight`]" />
-                                                <InputError :message="(form.errors as any)[`items.${i}.buyback_price`]" />
-                                                <InputError :message="(form.errors as any)[`items.${i}.image`]" />
-                                            </div>
+                                    <TableRow
+                                        v-if="
+                                            (form.errors as any)[`items.${i}.buyback_weight`] ||
+                                            (form.errors as any)[`items.${i}.buyback_price`] ||
+                                            (form.errors as any)[`items.${i}.image`]
+                                        "
+                                        class="bg-red-50"
+                                    >
+                                        <TableCell colspan="8" class="text-sm text-red-600">
+                                            <InputError :message="(form.errors as any)[`items.${i}.buyback_weight`]" />
+                                            <InputError :message="(form.errors as any)[`items.${i}.buyback_price`]" />
+                                            <InputError :message="(form.errors as any)[`items.${i}.image`]" />
                                         </TableCell>
                                     </TableRow>
                                 </template>
                             </TableBody>
-
                         </Table>
                     </CardContent>
                 </Card>
@@ -278,31 +307,25 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                 <Card class="md:mx-4">
                     <CardHeader>
                         <p class="mb-2 font-semibold">Ringkasan Buyback</p>
-                        <hr>
+                        <hr />
                     </CardHeader>
 
                     <CardContent>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                            <div class="rounded-lg border bg-gray-50/50 p-4">
+                            <div class="rounded-lg border p-4">
                                 <p class="text-sm text-gray-500">Total Item Dipilih</p>
-                                <p class="text-2xl font-bold mt-1">
-                                    {{ totalBuybackItems }}
-                                </p>
+                                <p class="text-2xl font-bold">{{ totalBuybackItems }}</p>
                             </div>
 
-                            <div class="rounded-lg border bg-gray-50/50 p-4">
+                            <div class="rounded-lg border p-4">
                                 <p class="text-sm text-gray-500">Total Berat Buyback</p>
-                                <p class="text-2xl font-bold mt-1">
-                                    {{ totalBuybackWeight.toFixed(2) }} gr
-                                </p>
+                                <p class="text-2xl font-bold">{{ totalBuybackWeight.toFixed(2) }} gr</p>
                             </div>
 
-                            <div class="rounded-lg border bg-gray-50/50 p-4">
+                            <div class="rounded-lg border p-4">
                                 <p class="text-sm text-gray-500">Total Harga Buyback</p>
-                                <p class="text-2xl font-bold mt-1">{{ formatRupiah(totalBuyback) }}</p>
+                                <p class="text-2xl font-bold">{{ formatRupiah(totalBuyback) }}</p>
                             </div>
-
                         </div>
 
                         <div class="flex justify-end mt-6">
@@ -311,7 +334,10 @@ const goBack = () => router.get(route('gold.transactions.sales.index', { categor
                                 @click="submit"
                                 class="px-6"
                             >
-                                <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
+                                <LoaderCircle
+                                    v-if="form.processing"
+                                    class="h-4 w-4 mr-2 animate-spin"
+                                />
                                 Proses Transaksi Buyback
                             </Button>
                         </div>

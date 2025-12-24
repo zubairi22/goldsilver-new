@@ -6,29 +6,29 @@ use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class GoldDamagedController extends Controller
+class DamagedController extends Controller
 {
-    public function index()
+    public function index(string $category)
     {
         $filters = [
             'search' => request('search'),
         ];
 
-        return inertia('damaged/gold/Index', [
-            'items' => Item::where('category', 'gold')
+        return inertia('damaged/Index', [
+            'category' => $category,
+            'items' => Item::where('category', $category)
                 ->where('status', 'damaged')
-                ->when($filters['search'], fn($q, $v) =>
+                ->when($filters['search'], fn ($q, $v) =>
                 $q->where('name', 'like', "%{$v}%")
                 )
                 ->orderByDesc('id')
                 ->paginate(20)
                 ->withQueryString(),
-
             'filters' => $filters,
         ]);
     }
 
-    public function restoreToStock(Request $request, Item $item)
+    public function restoreToStock(Request $request, string $category, Item $item)
     {
         $data = $request->validate([
             'name'       => 'required|string|max:255',
@@ -36,9 +36,8 @@ class GoldDamagedController extends Controller
             'price_sell' => 'required|numeric|min:0',
         ]);
 
-        if ($item->status !== 'damaged') {
-            return back()->with('error', 'Item bukan dalam kondisi rusak.');
-        }
+        abort_if($item->category !== $category, 404);
+        abort_if($item->status !== 'damaged', 400);
 
         DB::transaction(function () use ($item, $data) {
             $item->update([

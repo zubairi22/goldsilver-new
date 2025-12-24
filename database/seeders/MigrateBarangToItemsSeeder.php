@@ -16,6 +16,7 @@ class MigrateBarangToItemsSeeder extends Seeder
             ->where('namabarang', '<>', '')
             ->where('status', '<>', 0)
             ->orderBy('idbarang')
+            ->limit(1000)
             ->chunk(1000, function ($chunk) {
 
                 foreach ($chunk as $b) {
