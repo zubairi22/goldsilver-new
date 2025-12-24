@@ -37,7 +37,7 @@ const { toggleSidebar, state } = useSidebar()
                 </SidebarMenuItem>
             </SidebarMenu>
             <SidebarMenu v-if="item.children?.length !== 0">
-                <Collapsible :key="item.title" as-child :default-open="route().current(`${item.url}.*`)" class="group/collapsible">
+                <Collapsible :key="item.title" as-child :default-open="route().current(`${item.url}.*`) || item.param === route().params.category" class="group/collapsible">
                     <SidebarMenuItem>
                         <CollapsibleTrigger as-child>
                             <SidebarMenuButton :tooltip="item.title">
@@ -56,7 +56,7 @@ const { toggleSidebar, state } = useSidebar()
                         <CollapsibleContent>
                             <SidebarMenuSub>
                                 <SidebarMenuSubItem v-for="subItem in item.children" :key="subItem.title">
-                                    <SidebarMenuButton as-child :is-active="route().current(subItem.url) || item.param === subItem.param">
+                                    <SidebarMenuButton as-child :is-active="route().current(subItem.url) && subItem.param === route().params.category">
                                         <Link :href="route(subItem.url , { category: subItem.param })">
                                             <icon :name="subItem.icon" v-if="subItem.icon" />
                                             <span>{{ subItem.title }}</span>
