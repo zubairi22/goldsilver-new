@@ -39,7 +39,6 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('cashier.open')->group(function () {
-        // Grup untuk kategori 'gold'
         Route::prefix('gold')->group(function () {
 
             Route::prefix('debt')
