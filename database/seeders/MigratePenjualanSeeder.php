@@ -36,16 +36,16 @@ class MigratePenjualanSeeder extends Seeder
                     }
 
                     // ========== CATEGORY ==========
-                    $category = match ((int)$row->jenisjual) {
-                        1 => 'gold',
-                        2 => 'silver',
+                    $category = match ((int)$row->kategorijual) {
+                        1 => 'silver',
+                        2 => 'gold',
                         default => 'gold',
                     };
 
                     // ========== SALE TYPE ==========
-                    $saleType = match ((int)$row->kategorijual) {
-                        1 => 'wholesale',
-                        2 => 'retail',
+                    $saleType = match ((int)$row->jenisjual) {
+                        1 => 'retail',
+                        2 => 'wholesale',
                         default => 'retail',
                     };
 

@@ -23,12 +23,18 @@ class MigrateBarangImagesSeeder extends Seeder
 
                     $code = (int)$item->code;
 
+                    if ($item->category === 'silver') {
+                        $baseUrl = 'https://karina-goldsilver.com/siperak/assets/upload/penjualanmanual/';
+                    } else {
+                        $baseUrl = 'https://karina-goldsilver.com/siperak/assets/upload/barang/';
+                    }
+
                     $extensions = ['.jpg', '.jpeg', '.png'];
                     $imageUrl = '';
                     $imageFound = false;
 
                     foreach ($extensions as $ext) {
-                        $url = "https://karina-goldsilver.com/siperak/assets/upload/barang/{$code}{$ext}";
+                        $url = "{$baseUrl}{$code}.{$ext}";
 
                         try {
                             // Mengambil response gambar dari URL
