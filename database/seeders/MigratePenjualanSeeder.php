@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 use App\Models\Sale;
@@ -84,8 +85,34 @@ class MigratePenjualanSeeder extends Seeder
 
         $customerId = $this->resolveCustomer($row->namapembeli);
 
+        // ========== DOWNLOAD QR LAMA ==========
+        $qrUrl = "https://karina-goldsilver.com/siperak/assets/generated/qr/penjualan/{$row->idpenjualan}.png";
+        $qrPath = null;
+
+        try {
+            $resp = Http::timeout(10)->get($qrUrl);
+
+            if ($resp->successful()) {
+
+                $folder = 'qrcodes/sales';
+                if (!Storage::disk('public')->exists($folder)) {
+                    Storage::disk('public')->makeDirectory($folder);
+                }
+
+                $filename = 'oldqr_' . $row->idpenjualan . '_' . Str::random(10) . '.png';
+                Storage::disk('public')->put($folder . '/' . $filename, $resp->body());
+
+                $qrPath = $folder . '/' . $filename;
+            } else {
+                Log::warning("Gagal download QR: ID {$row->idpenjualan}");
+            }
+        } catch (\Exception $e) {
+            Log::warning("Error download QR: ID {$row->idpenjualan}");
+        }
+
         $sale = Sale::createQuietly([
             'invoice_no'        => 'PJ-' . $row->idpenjualan,
+            'qr_path'           => $qrPath,
             'category'          => $category,
             'sale_type'         => $saleType,
             'customer_id'       => $customerId,
