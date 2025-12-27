@@ -94,7 +94,7 @@ class MigratePenjualanSeeder extends Seeder
             'total_price'       => $totalPrice,
             'paid_amount'       => $paidAmount,
             'remaining_amount'  => $remaining,
-            'change_amount'     => $row->kembalibayar,
+            'change_amount'     => $row->kembalibayar ?? 0,
             'payment_method_id' => $paymentMethodId,
             'status'            => $status,
             'notes'             => $row->keterangan,
