@@ -15,6 +15,7 @@ class MigrateBarangToItemsSeeder extends Seeder
             ->whereNotNull('namabarang')
             ->where('namabarang', '<>', '')
             ->where('status', '<>', 0)
+            ->where('is_stok', '<>', 0)
             ->orderBy('idbarang')
             ->chunk(1000, function ($chunk) {
 
@@ -35,7 +36,7 @@ class MigrateBarangToItemsSeeder extends Seeder
                         'code'          => $qr,
                         'name'          => $b->namabarang,
                         'item_type_id'  => $itemTypeId,
-                        'category'      => 'gold',
+                        'category'      => $b->idkategori === 1 ? 'silver' : 'gold',
                         'weight'        => $b->berat ?? 0,
                         'price_buy'     => $b->hargabeli ?? 0,
                         'price_sell'    => $b->hargajual ?? 0,

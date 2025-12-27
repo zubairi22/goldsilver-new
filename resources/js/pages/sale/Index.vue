@@ -167,7 +167,7 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                                             <SelectItem value="all">Semua</SelectItem>
                                             <SelectItem value="unpaid">Belum Lunas</SelectItem>
                                             <SelectItem value="partial">Sebagian</SelectItem>
-                                            <SelectItem value="completed">Lunas</SelectItem>
+                                            <SelectItem value="paid">Lunas</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -402,7 +402,7 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                 </Button>
 
                 <Button
-                    v-if="selectedSale && selectedSale.status === 'completed'"
+                    v-if="selectedSale && selectedSale.status === 'paid'"
                     @click="goToBuyback()"
                 >
                     Proses Buyback

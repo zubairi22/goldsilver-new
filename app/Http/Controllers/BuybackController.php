@@ -159,17 +159,23 @@ class BuybackController extends Controller
             ]);
 
             if (!$buybackItem->item_id) {
-                if ($data['condition'] === 'good') {
-                    Item::create([
-                        'name'       => $data['name'],
-                        'category'   => $category,
-                        'weight'     => $finalWeight,
-                        'price_buy'  => $buybackItem->price,
-                        'price_sell' => $data['price_sell'],
-                        'status'     => 'ready',
-                        'source'     => 'buyback',
-                    ]);
-                }
+                $item = Item::create([
+                    'name'       => $data['name'],
+                    'category'   => $category,
+                    'weight'     => $finalWeight,
+                    'price_buy'  => $buybackItem->price,
+                    'price_sell' => $data['condition'] === 'good'
+                        ? $data['price_sell']
+                        : 0,
+                    'status'     => $data['condition'] === 'good'
+                        ? 'ready'
+                        : 'damaged',
+                    'source'     => 'buyback',
+                ]);
+
+                $buybackItem->update([
+                    'item_id' => $item->id,
+                ]);
                 return;
             }
 
