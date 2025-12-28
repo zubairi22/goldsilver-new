@@ -103,10 +103,10 @@
             <td style="text-align:center;">{{ $index + 1 }}</td>
 
             <td style="text-align:center;">
-                @if ($item->item?->image)
-                    <img src="{{ asset($item->item->image) }}" width="70">
+                @if ($item->manual_image)
+                    <img src="{{ asset($item->manual_image) }}" width="70">
                 @else
-                    -
+                    <img src="{{ asset($item->item->image) }}" width="70">
                 @endif
             </td>
 

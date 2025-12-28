@@ -154,6 +154,13 @@ class SaleController extends Controller
 
         $sale->load(['items.item', 'customer', 'paymentMethod', 'user']);
 
+        $sale->items->each(function ($saleItem) {
+            $saleItem->append('manual_image');
+            if ($saleItem->item) {
+                $saleItem->item->append('image');
+            }
+        });
+
         $store = StoreSetting::current();
         $footer = $store->getFooter($sale->category, $sale->sale_type);
         $color  = $store->getInvoiceColor($sale->category);
