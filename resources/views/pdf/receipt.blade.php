@@ -74,7 +74,7 @@
                 {{ now()->format('H:i:s') }}
             </div>
 
-            <img src="{{ public_path('storage/' . $sale->qrcode) }}"
+            <img src="{{ public_path('storage/' . $sale->qr_path) }}"
                  width="85"
                  style="margin: 5px auto; display:block;">
 
