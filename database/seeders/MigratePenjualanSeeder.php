@@ -141,7 +141,7 @@ class MigratePenjualanSeeder extends Seeder
             $saleItem = SaleItem::create([
                 'sale_id'     => $sale->id,
                 'item_id'     => $item?->id,
-                'manual_name' => $item ? null : "Barang Lama #{$d->idbarang}",
+                'manual_name' => $item ? null : $d->namabarang,
                 'weight'      => $d->berat,
                 'price'       => $d->hargajual,
                 'subtotal'    => $d->subtotalnet,
