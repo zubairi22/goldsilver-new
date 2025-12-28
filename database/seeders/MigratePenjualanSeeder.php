@@ -129,8 +129,13 @@ class MigratePenjualanSeeder extends Seeder
         ]);
 
         $details = DB::connection('old_mysql')
-            ->table('penjualan_detail')
-            ->where('idpenjualan', $row->idpenjualan)
+            ->table('penjualan_detail as pd')
+            ->leftJoin('barang as b', 'b.idbarang', '=', 'pd.idbarang')
+            ->where('pd.idpenjualan', $row->idpenjualan)
+            ->select([
+                'pd.*',
+                'b.namabarang',
+            ])
             ->get();
 
         foreach ($details as $d) {
