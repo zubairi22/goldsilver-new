@@ -45,7 +45,6 @@ class MigratePenjualanSeeder extends Seeder
          */
         DB::connection('old_mysql')
             ->table('penjualan_retur')
-            ->where('status', 2) // hanya retur FINAL
             ->orderBy('idreturjual')
             ->chunk(500, function ($rows) {
                 foreach ($rows as $row) {
@@ -184,15 +183,28 @@ class MigratePenjualanSeeder extends Seeder
         $category   = ((int)$saleOld->kategorijual === 1) ? 'silver' : 'gold';
         $customerId = $this->resolveCustomer($saleOld->namapembeli);
 
+        $buybackStatus = match ((int) $r->status) {
+            1 => 'pending',
+            2 => 'approved',
+        };
+
+        $newSale = Sale::where('invoice_no', 'PJ-' . $detail->idpenjualan)->first();
+
+        if (!$newSale) {
+            Log::error("SALE TIDAK DITEMUKAN. Old ID: {$detail->idpenjualan}");
+            return;
+        }
+
         $buyback = Buyback::createQuietly([
             'buyback_no'   => 'BB-R-' . $r->idreturjual,
+            'sale_id'      => $newSale->id,
             'category'     => $category,
             'customer_id'  => $customerId,
             'user_id'      => 1,
             'total_weight' => $r->beratretur,
             'total_price'  => $r->subtotalretur,
             'payment_type' => 'cash',
-            'status'       => 'approved',
+            'status'       => $buybackStatus,
             'created_at'   => $r->tglretur ?? $r->datecreated,
             'updated_at'   => $r->tglretur ?? $r->datecreated,
         ]);
@@ -256,10 +268,15 @@ class MigratePenjualanSeeder extends Seeder
                 $resp = Http::timeout(10)->get("{$baseUrl}{$oldBarangId}.{$ext}");
                 if (!$resp->successful()) continue;
 
-                $saleItem
+                $media = $saleItem
                     ->addMediaFromString($resp->body())
                     ->usingFileName("manual_{$oldBarangId}_" . Str::random(6) . ".{$ext}")
                     ->toMediaCollection('manual');
+
+                $originalPath = $media->getPath();
+                if (file_exists($originalPath)) {
+                    @unlink($originalPath);
+                }
 
                 return;
             } catch (\Throwable $e) {

@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('buyback_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('buyback_id')->constrained('buybacks')->cascadeOnDelete();
-
             $table->foreignId('item_id')->nullable()->constrained('items')->nullOnDelete();
-
             $table->string('manual_name')->nullable();
             $table->decimal('weight', 10)->nullable();
             $table->double('price');

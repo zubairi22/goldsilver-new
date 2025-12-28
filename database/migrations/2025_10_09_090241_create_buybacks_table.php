@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('buybacks', function (Blueprint $table) {
             $table->id();
             $table->string('buyback_no')->unique();
+            $table->foreignId('sale_id')->constrained('sales')->cascadeOnDelete();
             $table->enum('category', ['gold', 'silver'])->default('gold');
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
