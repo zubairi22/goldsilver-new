@@ -27,6 +27,7 @@ class ItemTypeSeeder extends Seeder
             'Kalung Dewasa',
             'Koyek',
             'Liontin',
+            'Lainnya'
         ];
 
         foreach ($types as $type) {

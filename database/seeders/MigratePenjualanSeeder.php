@@ -244,6 +244,7 @@ class MigratePenjualanSeeder extends Seeder
         } else {
             $newItem = Item::create([
                 'name'       => $buybackItem->manual_name ?? 'Barang Buyback',
+                'item_type_id' => 15,
                 'category'   => $category,
                 'weight'     => $buybackItem->weight,
                 'price_buy'  => $buybackItem->price,
