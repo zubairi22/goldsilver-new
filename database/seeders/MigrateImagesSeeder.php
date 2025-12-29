@@ -39,9 +39,14 @@ class MigrateImagesSeeder extends Seeder
                             $resp = Http::timeout(10)->get("{$baseUrl}{$code}.{$ext}");
                             if (! $resp->successful()) continue;
 
-                            $item->addMediaFromString($resp->body())
+                            $media = $item->addMediaFromString($resp->body())
                                 ->usingFileName("{$code}.{$ext}")
                                 ->toMediaCollection('initial');
+
+                            $originalPath = $media->getPath();
+                            if (file_exists($originalPath)) {
+                                @unlink($originalPath);
+                            }
 
                             Log::info("ITEM IMAGE OK {$item->id}");
                             break;
@@ -79,10 +84,15 @@ class MigrateImagesSeeder extends Seeder
                             $resp = Http::timeout(10)->get("{$baseUrl}{$oldBarangId}.{$ext}");
                             if (! $resp->successful()) continue;
 
-                            $saleItem
+                            $media = $saleItem
                                 ->addMediaFromString($resp->body())
                                 ->usingFileName("manual_{$oldBarangId}_" . Str::random(6) . ".{$ext}")
                                 ->toMediaCollection('manual');
+
+                            $originalPath = $media->getPath();
+                            if (file_exists($originalPath)) {
+                                @unlink($originalPath);
+                            }
 
                             Log::info("MANUAL IMAGE OK SaleItem {$saleItem->id}");
                             break;

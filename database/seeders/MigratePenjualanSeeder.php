@@ -144,7 +144,7 @@ class MigratePenjualanSeeder extends Seeder
             $code = str_pad((string)$d->idbarang, 6, '0', STR_PAD_LEFT);
             $item = Item::where('code', $code)->first();
 
-            $saleItem = SaleItem::create([
+            SaleItem::create([
                 'sale_id'     => $sale->id,
                 'item_id'     => $item?->id,
                 'manual_name' => $item ? null : $d->namabarang,
@@ -172,8 +172,15 @@ class MigratePenjualanSeeder extends Seeder
         }
 
         $detail = DB::connection('old_mysql')
-            ->table('penjualan_detail')
-            ->where('iddetail', $r->iddetailjual)
+            ->table('penjualan_detail as pd')
+            ->leftJoin('barang as b', 'b.idbarang', '=', 'pd.idbarang')
+            ->where('pd.iddetail', $r->iddetailjual)
+            ->select([
+                'pd.*',
+                'b.namabarang',
+                'b.idmerk',
+                'b.idbarang as barang_id',
+            ])
             ->first();
 
         if (!$detail) return;
@@ -185,7 +192,7 @@ class MigratePenjualanSeeder extends Seeder
 
         if (!$saleOld) return;
 
-        $category   = ((int)$saleOld->kategorijual === 1) ? 'silver' : 'gold';
+        $category = ((int)$saleOld->kategorijual === 1) ? 'silver' : 'gold';
         $customerId = $this->resolveCustomer($saleOld->namapembeli);
 
         $buybackStatus = match ((int) $r->status) {
@@ -218,17 +225,13 @@ class MigratePenjualanSeeder extends Seeder
         $qcDone   = (int)$r->transferstok === 1;
         $isBroken = (int)$r->is_rusak === 1;
 
-        $item = null;
-
-        if ((int)$r->is_manual === 0) {
-            $code = str_pad((string)$detail->idbarang, 6, '0', STR_PAD_LEFT);
-            $item = Item::where('code', $code)->first();
-        }
+        $code = str_pad((string)$detail->barang_id, 6, '0', STR_PAD_LEFT);
+        $item = Item::where('code', $code)->first();
 
         $buybackItem = BuybackItem::create([
             'buyback_id'  => $buyback->id,
             'item_id'     => $item?->id,
-            'manual_name' => $r->is_manual ? "Retur Manual #{$r->barangmanual}" : null,
+            'manual_name' => $item ? null : $detail->namabarang,
             'weight'      => $r->beratretur,
             'price'       => $r->hargaretur,
             'subtotal'    => $r->subtotalretur,
@@ -245,14 +248,15 @@ class MigratePenjualanSeeder extends Seeder
             ]);
         } else {
             $newItem = Item::create([
-                'name'       => $buybackItem->manual_name ?? 'Barang Buyback',
-                'item_type_id' => 15,
-                'category'   => $category,
-                'weight'     => $buybackItem->weight,
-                'price_buy'  => $buybackItem->price,
-                'price_sell' => $isBroken ? 0 : $buybackItem->price,
-                'status'     => $isBroken ? 'damaged' : 'ready',
-                'source'     => 'buyback',
+                'code'        => $code,
+                'name'        => $detail->namabarang,
+                'item_type_id'=> $detail->idmerk,
+                'category'    => $category,
+                'weight'      => $buybackItem->weight,
+                'price_buy'   => $buybackItem->price,
+                'price_sell'  => $r->hargajual ?? 0,
+                'status'      => $isBroken ? 'damaged' : 'ready',
+                'source'      => 'buyback',
             ]);
 
             $buybackItem->updateQuietly([
