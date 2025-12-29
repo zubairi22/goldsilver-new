@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             MigrateBarangToItemsSeeder::class,
             MigratePenjualanSeeder::class,
-            MigrateBarangImagesSeeder::class,
+            MigrateImagesSeeder::class,
         ]);
     }
 }

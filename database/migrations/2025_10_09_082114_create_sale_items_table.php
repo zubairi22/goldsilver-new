@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('weight', 10, 2)->nullable();
             $table->decimal('price', 15, 2);
             $table->decimal('subtotal', 15, 2);
+            $table->unsignedInteger('old_barang_id')->nullable()->index();
             $table->timestamps();
         });
     }

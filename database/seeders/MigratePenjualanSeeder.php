@@ -148,16 +148,15 @@ class MigratePenjualanSeeder extends Seeder
                 'item_id'     => $item?->id,
                 'manual_name' => $item ? null : $d->namabarang,
                 'weight'      => $d->berat,
-                'price'       => $d->hargajual,
+                'price'       => $d->harganet,
                 'subtotal'    => $d->subtotalnet,
+                'old_barang_id'  => $item ? null : (int) $d->idbarang,
                 'created_at'  => $d->datecreated,
                 'updated_at'  => $d->datecreated,
             ]);
 
             if ($item) {
                 $item->updateQuietly(['status' => 'sold']);
-            } else {
-                $this->attachManualSaleImage($saleItem, (int)$d->idbarang);
             }
         }
     }
@@ -256,37 +255,6 @@ class MigratePenjualanSeeder extends Seeder
             $buybackItem->updateQuietly([
                 'item_id' => $newItem->id,
             ]);
-        }
-    }
-
-    /* =====================================================
-     * MANUAL SALE IMAGE
-     * ===================================================== */
-    protected function attachManualSaleImage(SaleItem $saleItem, int $oldBarangId): void
-    {
-        if ($saleItem->hasMedia('manual')) return;
-
-        $baseUrl = 'https://karina-goldsilver.com/siperak/assets/upload/penjualanmanual/';
-
-        foreach (['jpg', 'jpeg', 'png'] as $ext) {
-            try {
-                $resp = Http::timeout(10)->get("{$baseUrl}{$oldBarangId}.{$ext}");
-                if (!$resp->successful()) continue;
-
-                $media = $saleItem
-                    ->addMediaFromString($resp->body())
-                    ->usingFileName("manual_{$oldBarangId}_" . Str::random(6) . ".{$ext}")
-                    ->toMediaCollection('manual');
-
-                $originalPath = $media->getPath();
-                if (file_exists($originalPath)) {
-                    @unlink($originalPath);
-                }
-
-                return;
-            } catch (\Throwable $e) {
-                Log::warning("Gagal ambil image manual {$oldBarangId}");
-            }
         }
     }
 

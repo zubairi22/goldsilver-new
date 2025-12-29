@@ -170,7 +170,12 @@ class SaleController extends Controller
             'store' => $store,
             'footer' => $footer,
             'color' => $color,
-        ])->setPaper('A5', 'landscape');
+        ])
+            ->setPaper('A5', 'landscape')
+            ->setOption('margin-top', 5)
+            ->setOption('margin-bottom', 5)
+            ->setOption('margin-left', 5)
+            ->setOption('margin-right', 5);
 
         return $pdf->stream("nota-{$sale->invoice_no}.pdf");
     }
