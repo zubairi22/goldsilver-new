@@ -191,6 +191,7 @@ class MigratePenjualanSeeder extends Seeder
         $buybackStatus = match ((int) $r->status) {
             1 => 'pending',
             2 => 'approved',
+            3 => 'rejected'
         };
 
         $newSale = Sale::where('invoice_no', 'PJ-' . $detail->idpenjualan)->first();
