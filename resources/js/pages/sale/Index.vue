@@ -1,19 +1,13 @@
 <script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import Heading from '@/components/Heading.vue'
 import SearchInput from '@/components/SearchInput.vue'
 import PageNav from '@/components/PageNav.vue'
-import {
-    Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/select'
-import {
-    Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle
-} from '@/components/ui/dialog'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { ref, watch, computed } from 'vue'
@@ -22,8 +16,6 @@ import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import Icon from '@/components/Icon.vue'
 
 /**
  * PROPS
@@ -124,7 +116,6 @@ const applyFilters = () => {
     }
 
     if (search.value) params.search = search.value
-    if (status.value && status.value !== 'all') params.status = status.value
     if (sale_type.value && sale_type.value !== 'all') params.sale_type = sale_type.value
     if (payment_method_id.value && payment_method_id.value !== 'all') {
         params.payment_method_id = payment_method_id.value
@@ -160,18 +151,6 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                         <!-- FILTER -->
                         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                             <div class="flex flex-wrap items-center gap-4">
-                                <div class="w-40">
-                                    <Select v-model="status">
-                                        <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="unpaid">Belum Lunas</SelectItem>
-                                            <SelectItem value="partial">Sebagian</SelectItem>
-                                            <SelectItem value="paid">Lunas</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
                                 <div class="w-40">
                                     <Select v-model="sale_type">
                                         <SelectTrigger><SelectValue placeholder="Jenis" /></SelectTrigger>
@@ -229,12 +208,11 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                                         <TableHead>Tanggal</TableHead>
                                         <TableHead>Invoice</TableHead>
                                         <TableHead>Kasir</TableHead>
-                                        <TableHead>Pelanggan</TableHead>
+                                        <TableHead>Jenis</TableHead>
                                         <TableHead class="text-right">Berat</TableHead>
                                         <TableHead class="text-right">Total</TableHead>
                                         <TableHead class="text-right">Dibayar</TableHead>
                                         <TableHead class="text-right">Sisa</TableHead>
-                                        <TableHead class="text-center">Status</TableHead>
                                         <TableHead class="text-center">Metode</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -249,14 +227,11 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                                         <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
                                         <TableCell>{{ sale.invoice_no }}</TableCell>
                                         <TableCell>{{ sale.user?.name || '-' }}</TableCell>
-                                        <TableCell>{{ sale.customer?.name || '-' }}</TableCell>
+                                        <TableCell>{{ sale.sale_type === 'retail' ? 'Eceran' : 'Grosir' }}</TableCell>
                                         <TableCell class="text-right">{{ sale.total_weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.remaining_amount) }}</TableCell>
-                                        <TableCell class="text-center">
-                                            <Badge>{{ sale.status_label }}</Badge>
-                                        </TableCell>
                                         <TableCell class="text-center">
                                             {{ sale.payment_method?.name || '-' }}
                                         </TableCell>
@@ -312,10 +287,6 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                             <p class="font-semibold">Metode Pembayaran</p>
                             <p>{{ selectedSale.payment_method?.name || '-' }}</p>
                         </div>
-                        <div>
-                            <p class="font-semibold">Status</p>
-                            <p class="capitalize">{{ selectedSale.status_label }}</p>
-                        </div>
                     </div>
 
                     <!-- Kanan (1 kolom): QR Code -->
@@ -348,21 +319,42 @@ watch([status, sale_type, payment_method_id, date], applyFilters)
                         <h3 class="font-semibold mb-2">Item</h3>
 
                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nama</TableHead>
-                                    <TableHead class="text-right">Berat (gr)</TableHead>
-                                    <TableHead class="text-right">Harga</TableHead>
-                                    <TableHead class="text-right">Subtotal</TableHead>
-                                </TableRow>
-                            </TableHeader>
                             <TableBody>
-                                <TableRow v-for="it in selectedSale.items" :key="it.id">
-                                    <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
-                                    <TableCell class="text-right">{{ it.weight }}</TableCell>
-                                    <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
-                                    <TableCell class="text-right">{{ formatRupiah(it.subtotal) }}</TableCell>
-                                </TableRow>
+                                <template
+                                    v-for="it in selectedSale.items"
+                                    :key="it.id"
+                                >
+                                    <!-- NAMA ITEM -->
+                                    <TableRow class="bg-muted/30">
+                                        <TableCell colspan="3" class="font-medium">
+                                            {{ it.manual_name ?? it.item?.name }}
+                                        </TableCell>
+                                    </TableRow>
+
+                                    <!-- DETAIL ITEM -->
+                                    <TableRow>
+                                        <TableCell class="text-xs text-muted-foreground">
+                                            Berat
+                                            <div class="text-sm font-medium text-foreground">
+                                                {{ it.weight }} gr
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell class="text-xs text-muted-foreground text-right">
+                                            Harga
+                                            <div class="text-sm font-medium text-foreground">
+                                                {{ formatRupiah(it.price) }}
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell class="text-xs text-muted-foreground text-right">
+                                            Subtotal
+                                            <div class="text-sm font-semibold text-foreground">
+                                                {{ formatRupiah(it.subtotal) }}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                </template>
                             </TableBody>
                         </Table>
                     </TabsContent>

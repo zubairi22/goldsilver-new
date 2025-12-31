@@ -12,7 +12,7 @@ class EnsureCashierIsOpen
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($request->routeIs('sales.index', 'sales.print')) {
+        if ($request->routeIs('sales.index', 'sales.print', 'buyback.index', 'debt.index')) {
             return $next($request);
         }
 

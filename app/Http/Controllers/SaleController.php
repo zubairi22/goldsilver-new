@@ -19,7 +19,6 @@ class SaleController extends Controller
     {
         $filters = [
             'search'            => request('search'),
-            'status'            => request('status'),
             'sale_type'         => request('sale_type'),
             'payment_method_id' => request('payment_method_id'),
             'start'             => request('start'),
