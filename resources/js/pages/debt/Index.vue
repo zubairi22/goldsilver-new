@@ -182,37 +182,105 @@ const handleDueDate = () => {
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Detail Pembayaran</DialogTitle>
+                <hr />
             </DialogHeader>
 
-            <div v-if="selectedSale">
-                <p><strong>Kode:</strong> {{ selectedSale.invoice_no }}</p>
-                <p><strong>Total:</strong> {{ formatRupiah(selectedSale.total_price) }}</p>
-                <p><strong>Dibayar:</strong> {{ formatRupiah(selectedSale.paid_amount) }}</p>
-                <p><strong>Sisa:</strong> {{ formatRupiah(selectedSale.remaining_amount) }}</p>
+            <div v-if="selectedSale" class="space-y-4 text-sm">
 
-                <Table class="mt-4">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Jumlah</TableHead>
-                            <TableHead>Tanggal</TableHead>
-                            <TableHead>Metode</TableHead>
-                            <TableHead>Catatan</TableHead>
-                        </TableRow>
-                    </TableHeader>
+                <!-- INFO UTAMA -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="font-semibold text-muted-foreground">Invoice</p>
+                        <p class="text-base font-medium">
+                            {{ selectedSale.invoice_no }}
+                        </p>
+                    </div>
 
-                    <TableBody>
-                        <TableRow v-for="pay in selectedSale.payments" :key="pay.id">
-                            <TableCell>{{ formatRupiah(pay.amount) }}</TableCell>
-                            <TableCell>{{ formatDate(pay.created_at) }}</TableCell>
-                            <TableCell>{{ pay.payment_method?.name }}</TableCell>
-                            <TableCell>{{ pay.note }}</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                    <div>
+                        <p class="font-semibold text-muted-foreground">Tanggal</p>
+                        <p>
+                            {{ formatDate(selectedSale.created_at, 'dd MMM yyyy HH:mm') }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="font-semibold text-muted-foreground">Pelanggan</p>
+                        <p>
+                            {{ selectedSale.customer?.name || '-' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- RINGKASAN PEMBAYARAN -->
+                <div class="grid grid-cols-3 gap-4 rounded-lg bg-muted/40 p-4">
+                    <div>
+                        <p class="text-xs text-muted-foreground">Total</p>
+                        <p class="text-base font-semibold">
+                            {{ formatRupiah(selectedSale.total_price) }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-muted-foreground">Dibayar</p>
+                        <p class="text-base font-semibold text-green-600">
+                            {{ formatRupiah(selectedSale.paid_amount) }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-muted-foreground">Sisa</p>
+                        <p
+                            class="text-base font-semibold"
+                            :class="selectedSale.remaining_amount > 0
+                            ? 'text-red-600'
+                            : 'text-foreground'"
+                        >
+                            {{ formatRupiah(selectedSale.remaining_amount) }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- TABEL PEMBAYARAN -->
+                <div>
+                    <h3 class="font-semibold mb-2">Riwayat Pembayaran</h3>
+
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Tanggal</TableHead>
+                                <TableHead>Metode</TableHead>
+                                <TableHead class="text-right">Jumlah</TableHead>
+                                <TableHead>Catatan</TableHead>
+                            </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                            <TableRow
+                                v-for="pay in selectedSale.payments"
+                                :key="pay.id"
+                            >
+                                <TableCell>
+                                    {{ formatDate(pay.created_at, 'dd MMM yyyy HH:mm') }}
+                                </TableCell>
+                                <TableCell>
+                                    {{ pay.payment_method?.name || '-' }}
+                                </TableCell>
+                                <TableCell class="text-right font-medium">
+                                    {{ formatRupiah(pay.amount) }}
+                                </TableCell>
+                                <TableCell>
+                                    {{ pay.note || '-' }}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
 
-            <DialogFooter>
-                <Button @click="detailModal = false">Tutup</Button>
+            <DialogFooter class="mt-4">
+                <Button variant="secondary" @click="detailModal = false">
+                    Tutup
+                </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

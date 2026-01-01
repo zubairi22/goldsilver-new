@@ -62,6 +62,8 @@ class MigratePenjualanSeeder extends Seeder
         };
 
         $paymentMethodId = match ((int)$row->jenisbayar) {
+            4       => 4,
+            3       => 3,
             2       => 2,
             default => 1,
         };
@@ -108,9 +110,31 @@ class MigratePenjualanSeeder extends Seeder
             'payment_method_id' => $paymentMethodId,
             'status'            => $status,
             'notes'             => $row->keterangan,
-            'created_at'        => $row->tglpenjualan ?? $row->datecreated,
-            'updated_at'        => $row->tglpenjualan ?? $row->datecreated,
+            'created_at'        => $row->datecreated,
+            'updated_at'        => $row->datecreated,
         ]);
+
+        if ($paymentMethodId === 4) {
+            if ($row->splittunai > 0) {
+                $sale->addPayment([
+                    'amount' => $row->splittunai,
+                    'payment_method_id' => 1,
+                    'note' => 'Migrasi split tunai',
+                    'user_id' => 1,
+                    'created_at' => $row->datecreated,
+                ]);
+            }
+
+            if ($row->splitnontunai > 0) {
+                $sale->addPayment([
+                    'amount' => $row->splitnontunai,
+                    'payment_method_id' => 2,
+                    'note' => 'Migrasi split non tunai',
+                    'user_id' => 1,
+                    'created_at' => $row->datecreated,
+                ]);
+            }
+        }
 
         $details = DB::connection('old_mysql')
             ->table('penjualan_detail as pd')

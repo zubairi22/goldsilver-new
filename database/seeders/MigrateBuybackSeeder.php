@@ -27,6 +27,7 @@ class MigrateBuybackSeeder extends Seeder
             ->table('penjualan_retur')
             ->where('beratretur', '>', 0)
             ->orderBy('idreturjual')
+            ->limit(10)
             ->chunk(500, function ($rows) {
                 foreach ($rows as $row) {
                     $this->migrateBuybackFromRetur($row);

@@ -27,13 +27,13 @@ class PaymentMethodSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Split',
+                'name' => 'Online Shop',
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Online Shop',
+                'name' => 'Split',
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),

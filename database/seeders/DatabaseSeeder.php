@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
 //            CustomerSeeder::class,
 //            MigrateBarangToItemsSeeder::class,
 //            MigratePenjualanSeeder::class,
-//            MigrateBuybackSeeder::class,
+            MigrateBuybackSeeder::class,
 //            MigrateImagesSeeder::class,
         ]);
     }
