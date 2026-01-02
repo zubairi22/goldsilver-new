@@ -6,28 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('stock_opnames', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->date('opname_date')->default(now());
-            $table->enum('status', ['in_progress', 'completed'])->default('in_progress');
-            $table->integer('total_items_system')->default(0);
-            $table->integer('total_items_scanned')->default(0);
-            $table->integer('missing_items')->default(0);
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->timestamp('opname_at');
+            $table->enum('status', ['draft', 'approved'])->default('draft');
+            $table->unsignedInteger('total_items_system')->default(0);
+            $table->unsignedInteger('total_items_scanned')->default(0);
+            $table->unsignedInteger('missing_items')->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('stock_opnames');

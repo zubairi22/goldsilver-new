@@ -71,6 +71,7 @@ class SaleController extends Controller
             'items.*.manual_name' => 'nullable|string|max:255',
             'items.*.weight' => 'required|numeric|min:0.01',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.image' => 'nullable|image|max:2048',
         ]);
 
         $cashier = User::findOrFail($data['cashier_id']);
@@ -114,14 +115,26 @@ class SaleController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            foreach ($data['items'] as $item) {
-                $sale->items()->create([
+            foreach ($data['items'] as $i => $item) {
+
+                $saleItem = $sale->items()->create([
                     'item_id' => $data['mode'] === 'auto' ? $item['id'] : null,
                     'manual_name' => $data['mode'] === 'manual' ? $item['manual_name'] : null,
                     'weight' => $item['weight'],
                     'price' => $item['price'],
                     'subtotal' => $item['weight'] * $item['price'],
                 ]);
+
+                if (!empty($item['image'])) {
+                    $media = $saleItem
+                        ->addMedia($item['image'])
+                        ->toMediaCollection('manual');
+
+                    $path = $media->getPath();
+                    if (file_exists($path)) {
+                        @unlink($path);
+                    }
+                }
 
                 if ($data['mode'] === 'auto' && $item['id']) {
                     Item::where('id', $item['id'])->update(['status' => 'sold']);
@@ -154,9 +167,9 @@ class SaleController extends Controller
         $sale->load(['items.item', 'customer', 'paymentMethod', 'user']);
 
         $sale->items->each(function ($saleItem) {
-            $saleItem->append('manual_image');
+            $saleItem->append('manual_image_path');
             if ($saleItem->item) {
-                $saleItem->item->append('image');
+                $saleItem->item->append('image_path');
             }
         });
 
@@ -170,7 +183,7 @@ class SaleController extends Controller
             'footer' => $footer,
             'color' => $color,
         ])
-            ->setPaper('A5', 'landscape')
+            ->setPaper('A4')
             ->setOption('margin-top', 5)
             ->setOption('margin-bottom', 5)
             ->setOption('margin-left', 5)

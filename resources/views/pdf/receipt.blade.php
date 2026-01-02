@@ -104,9 +104,9 @@
 
             <td style="text-align:center;">
                 @if ($item->manual_image)
-                    <img src="{{ asset($item->manual_image) }}" width="70">
+                    <img src="{{ $item->manual_image_path }}" width="100">
                 @else
-                    <img src="{{ asset($item->item->image) }}" width="70">
+                    <img src="{{ $item->item->image_path }}" width="100">
                 @endif
             </td>
 

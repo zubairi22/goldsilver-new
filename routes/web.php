@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ItemsController;
 use App\Http\Controllers\ItemTypesController;
+use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\Store\PaymentMethodController;
 use App\Http\Controllers\Store\StoreController;
 use App\Http\Controllers\Master\MenusController;
@@ -36,6 +37,16 @@ Route::middleware('auth')->group(function () {
         Route::resource('item-types', ItemTypesController::class)->except(['show', 'create', 'edit']);
         Route::resource('items', ItemsController::class)->except(['show', 'create', 'edit']);
         Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
+
+        Route::prefix('stock-opnames')->name('stock-opnames.')->group(function () {
+            Route::get('/', [StockOpnameController::class, 'index'])->name('index');
+            Route::get('/create', [StockOpnameController::class, 'create'])->name('create');
+            Route::post('/', [StockOpnameController::class, 'store'])->name('store');
+            Route::get('/{stockOpname}/edit', [StockOpnameController::class, 'edit'])->name('edit');
+            Route::patch('/{stockOpname}', [StockOpnameController::class, 'update'])->name('update');
+            Route::patch('/{stockOpname}/approve', [StockOpnameController::class, 'approve'])->name('approve');
+            Route::delete('/{stockOpname}', [StockOpnameController::class, 'destroy'])->name('destroy');
+        });
     });
 
     Route::middleware('cashier.open')->group(function () {

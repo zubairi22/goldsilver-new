@@ -25,8 +25,8 @@ import CurrencyInput from '@/components/CurrencyInput.vue'
 import { Textarea } from '@/components/ui/textarea'
 import Icon from '@/components/Icon.vue'
 import QrScanner from '@/components/QrScanner.vue'
+import CameraUploader from '@/components/CameraUploader.vue'
 
-/* ================= PROPS ================= */
 const props = defineProps<{
     category: 'gold' | 'silver'
     paymentMethods: any[]
@@ -37,19 +37,16 @@ const props = defineProps<{
 
 const { formatRupiah } = useFormat()
 
-/* ================= LABEL ================= */
 const categoryLabel = computed(() =>
     props.category === 'gold' ? 'Emas' : 'Perak'
 )
 
-/* ================= BREADCRUMB ================= */
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: `Penjualan ${categoryLabel.value}`, href: `/sale/${props.category}` },
     { title: 'Tambah', href: '#' },
 ]
 
-/* ================= FORM ================= */
 const form = useForm({
     sale_type: 'retail',
     mode: 'auto',
@@ -63,7 +60,6 @@ const form = useForm({
     items: [] as any[],
 })
 
-/* ================= STATE ================= */
 const verifyModal = ref(false)
 const successModal = ref(false)
 const savedSale = ref<any>(null)
@@ -76,11 +72,17 @@ const modalItem = ref<any>({
     manual_name: '',
     weight: 0,
     price: 0,
+    image: undefined,
 })
 
-/* ================= ITEM LOGIC ================= */
 const addItem = () => {
-    modalItem.value = { id: null, manual_name: '', weight: 0, price: 0 }
+    modalItem.value = {
+        id: null,
+        manual_name: '',
+        weight: 0,
+        price: 0,
+        image: undefined,
+    }
     editIndex.value = null
     showAddItemModal.value = true
 }
@@ -92,6 +94,7 @@ const editItem = (index: number) => {
         manual_name: it.manual_name ?? '',
         weight: it.weight,
         price: it.price,
+        image: it.image,
     }
     editIndex.value = index
     showAddItemModal.value = true
@@ -101,9 +104,9 @@ const removeItem = (index: number) => {
     form.items.splice(index, 1)
 }
 
-const modalSubtotal = computed(() => {
-    return Math.round(Number(modalItem.value.weight) * Number(modalItem.value.price))
-})
+const modalSubtotal = computed(() =>
+    Math.round(Number(modalItem.value.weight) * Number(modalItem.value.price))
+)
 
 const saveModalItem = () => {
     if (form.mode === 'auto' && !modalItem.value.id) {
@@ -120,9 +123,13 @@ const saveModalItem = () => {
     }
 
     form.items.push({
-        ...modalItem.value,
-        mode: form.mode,
+        id: modalItem.value.id,
+        manual_name: modalItem.value.manual_name,
+        weight: modalItem.value.weight,
+        price: modalItem.value.price,
         subtotal: modalSubtotal.value,
+        image: modalItem.value.image,
+        mode: form.mode,
     })
 
     showAddItemModal.value = false
@@ -130,16 +137,21 @@ const saveModalItem = () => {
 
 const updateModalItem = () => {
     if (editIndex.value === null) return
+
     form.items[editIndex.value] = {
-        ...modalItem.value,
-        mode: form.mode,
+        id: modalItem.value.id,
+        manual_name: modalItem.value.manual_name,
+        weight: modalItem.value.weight,
+        price: modalItem.value.price,
         subtotal: modalSubtotal.value,
+        image: modalItem.value.image,
+        mode: form.mode,
     }
+
     editIndex.value = null
     showAddItemModal.value = false
 }
 
-/* ================= SUMMARY ================= */
 const totalPrice = computed(() =>
     Math.round(form.items.reduce((sum, i) => sum + Number(i.subtotal || 0), 0))
 )
@@ -157,7 +169,6 @@ const setExactPayment = () => {
     form.paid_amount = totalPrice.value
 }
 
-/* ================= VERIFY ================= */
 const openVerifyModal = () => {
     if (!form.items.length) {
         toast.error('Minimal 1 item harus ditambahkan.')
@@ -178,7 +189,6 @@ const submitSaleFinal = () => {
     })
 }
 
-/* ================= PRINT ================= */
 const printReceipt = () => {
     window.open(
         route('sales.print', {
@@ -189,7 +199,6 @@ const printReceipt = () => {
     )
 }
 
-/* ================= QR ================= */
 const scanModal = ref(false)
 
 const onQrScanned = (token: string) => {
@@ -203,10 +212,8 @@ const onQrScanned = (token: string) => {
     }
 }
 
-/* ================= REDIRECT ================= */
 watch(successModal, (val) => {
     if (!val && savedSale.value) {
-        toast.info('Akan dialihkan ke halaman daftar penjualan.')
         setTimeout(() => {
             router.visit(route('sales.index', { category: props.category }))
         }, 1500)
@@ -217,7 +224,6 @@ watch(successModal, (val) => {
 <template>
     <Head :title="`Tambah Penjualan ${categoryLabel}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
-
         <div class="px-4 py-6">
             <div class="max-w-8xl mx-auto space-y-6">
 
@@ -440,6 +446,9 @@ watch(successModal, (val) => {
                     <div v-else>
                         <Label>Nama Barang</Label>
                         <Input v-model="modalItem.manual_name" />
+
+                        <Label class="mt-2">Foto Barang</Label>
+                        <CameraUploader v-model="modalItem.image" />
                     </div>
 
                     <div>

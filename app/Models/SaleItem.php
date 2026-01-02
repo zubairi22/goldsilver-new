@@ -49,4 +49,9 @@ class SaleItem extends Model implements HasMedia
     {
         return $this->getFirstMediaUrl('manual', 'thumb') ?: null;
     }
+
+    public function getManualImagePathAttribute(): ?string
+    {
+        return $this->getFirstMediaPath('manual', 'thumb') ?: null;
+    }
 }

@@ -16,6 +16,7 @@ import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import Icon from '@/components/Icon.vue';
 
 /**
  * PROPS

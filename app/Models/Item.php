@@ -91,6 +91,11 @@ class Item extends Model implements HasMedia
         return $this->getFirstMediaUrl('initial', 'thumb') ?: null;
     }
 
+    public function getImagePathAttribute(): ?string
+    {
+        return $this->getFirstMediaPath('initial', 'thumb') ?: null;
+    }
+
     public function scopeFilters($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($q, $search) {
