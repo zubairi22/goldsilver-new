@@ -39,7 +39,7 @@ class ItemsController extends Controller
 
         $items = Item::with('type')
             ->filters($filters)
-            ->latest()
+            ->orderBy('code', 'desc')
             ->paginate(10)
             ->onEachSide(1)
             ->withQueryString();
