@@ -13,20 +13,21 @@ class ItemTypeSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            'Anting',
-            'Bangle Anak',
             'Cincin Anak',
             'Cincin Dewasa',
-            'Gelang Anak',
             'Gelang Bangle',
-            'Gelang Kaki',
-            'Gelang Keroncong',
             'Gelang Plat',
             'Gelang Rantai',
-            'Kalung Anak',
-            'Kalung Dewasa',
+            'Gelang Kaki',
             'Koyek',
+            'Anting',
+            'Kalung Dewasa',
             'Liontin',
+            'Bangle Anak',
+            'Gelang Keroncong',
+            'Gelang Anak',
+            'Kalung Anak',
+            'Lainnya',
         ];
 
         foreach ($types as $type) {

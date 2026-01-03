@@ -27,7 +27,6 @@ class MigrateBuybackSeeder extends Seeder
             ->table('penjualan_retur')
             ->where('beratretur', '>', 0)
             ->orderBy('idreturjual')
-            ->limit(10)
             ->chunk(500, function ($rows) {
                 foreach ($rows as $row) {
                     $this->migrateBuybackFromRetur($row);
@@ -128,7 +127,7 @@ class MigrateBuybackSeeder extends Seeder
             $newItem = Item::create([
                 'code'        => $code,
                 'name'        => $detail->namabarang,
-                'item_type_id'=> $detail->idmerk,
+                'item_type_id' => (int) $detail->idmerk > 0 ? (int) $detail->idmerk : 16,
                 'category'    => $category,
                 'weight'      => $buybackItem->weight,
                 'price_buy'   => $buybackItem->price,
