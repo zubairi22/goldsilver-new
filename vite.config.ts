@@ -21,6 +21,16 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        watch: {
+            ignored: [
+                '**/storage/**',
+                '**/public/storage/**',
+                '**/node_modules/**',
+                '**/vendor/**',
+            ],
+        },
+    },
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './resources/js'),

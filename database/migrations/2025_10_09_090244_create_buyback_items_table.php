@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('buyback_id')->constrained('buybacks')->cascadeOnDelete();
             $table->foreignId('item_id')->nullable()->constrained('items')->nullOnDelete();
+            $table->unsignedBigInteger('old_barang_id')->nullable()->comment('ID barang manual dari sistem lama');
             $table->string('manual_name')->nullable();
             $table->decimal('weight', 10)->nullable();
             $table->double('price');

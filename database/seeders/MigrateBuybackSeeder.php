@@ -100,12 +100,15 @@ class MigrateBuybackSeeder extends Seeder
         $qcDone   = (int)$r->transferstok === 1;
         $isBroken = (int)$r->is_rusak === 1;
 
+        $isManual = (int) $r->is_manual === 1;
+
         $code = str_pad((string)$detail->barang_id, 6, '0', STR_PAD_LEFT);
         $item = Item::where('code', $code)->first();
 
         $buybackItem = BuybackItem::create([
             'buyback_id'  => $buyback->id,
             'item_id'     => $item?->id,
+            'old_barang_id'=> $isManual ? $r->barangmanual : null,
             'manual_name' => $item ? null : $detail->namabarang,
             'weight'      => $r->beratretur,
             'price'       => $r->hargaretur,

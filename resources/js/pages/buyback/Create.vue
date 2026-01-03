@@ -47,6 +47,7 @@ const form = useForm({
         name: it.manual_name ?? it.item?.name,
         original_weight: it.weight,
         buyback_weight: it.weight,
+        original_price: it.price,
         buyback_price: 0,
         selected: false,
         image: undefined,
@@ -206,7 +207,8 @@ const goBack = () => {
                                     <TableHead>Produk</TableHead>
                                     <TableHead class="text-right">Berat Asli</TableHead>
                                     <TableHead class="text-right">Berat BB</TableHead>
-                                    <TableHead class="text-right">Harga/gr</TableHead>
+                                    <TableHead class="text-right">Harga/gr Asli</TableHead>
+                                    <TableHead class="text-right">Harga/gr BB</TableHead>
                                     <TableHead class="text-right">Subtotal</TableHead>
                                     <TableHead class="text-center">Gambar Pembelian</TableHead>
                                     <TableHead class="text-center">Foto Buyback</TableHead>
@@ -248,6 +250,8 @@ const goBack = () => {
                                                 :disabled="!it.selected || it.is_buyback"
                                             />
                                         </TableCell>
+
+                                        <TableCell class="text-right">{{ formatRupiah(it.original_price) }}</TableCell>
 
                                         <TableCell class="text-right">
                                             <Input

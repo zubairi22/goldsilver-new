@@ -15,6 +15,7 @@ class BuybackItem extends Model implements HasMedia
     protected $fillable = [
         'buyback_id',
         'item_id',
+        'old_barang_id',
         'manual_name',
         'weight',
         'price',
