@@ -28,6 +28,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 11, 'name' => 'manage customers', 'guard_name' => 'web'],
             ['id' => 12, 'name' => 'manage cashier', 'guard_name' => 'web'],
             ['id' => 13, 'name' => 'manage opname', 'guard_name' => 'web'],
+            ['id' => 14, 'name' => 'view reports', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);
@@ -64,7 +65,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 3,  'title' => 'Pengguna', 'url' => 'master.users.index', 'param' => null, 'parent_id' => 2, 'icon' => 'UsersRound', 'sort' => 1],
             ['id' => 4,  'title' => 'Peran', 'url' => 'master.roles.index', 'param' => null, 'parent_id' => 2, 'icon' => 'UserCog', 'sort' => 2],
 
-            ['id' => 5,  'title' => 'Manajemen Toko', 'url' => 'store', 'param' => null, 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 9],
+            ['id' => 5,  'title' => 'Manajemen Toko', 'url' => 'store', 'param' => null, 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 8],
             ['id' => 6,  'title' => 'Pengaturan', 'url' => 'store.settings.index', 'param' => null, 'parent_id' => 5, 'icon' => 'Settings2', 'sort' => 1],
 
             ['id' => 7,  'title' => 'Transaksi Emas', 'url' => 'gold', 'param' => 'gold', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 3],
@@ -90,6 +91,10 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 22, 'title' => 'Daftar Piutang', 'url' => 'debt.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'FileText', 'sort' => 5],
 
             ['id' => 23, 'title' => 'Stok Opname', 'url' => 'store.stock-opnames.index', 'param' => null, 'parent_id' => 5, 'icon' => 'ShoppingBag', 'sort' => 4],
+            ['id' => 24,  'title' => 'Laporan', 'url' => 'reports', 'param' => null, 'parent_id' => null, 'icon' => 'Newspaper', 'sort' => 9],
+            ['id' => 25,  'title' => 'Nota Penjualan', 'url' => 'reports.sales.note', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 1],
+            ['id' => 26,  'title' => 'Penjualan Barang', 'url' => 'reports.sales.item', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 2],
+            ['id' => 27,  'title' => 'Stok', 'url' => 'reports.stock.index', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 3],
         ];
 
         Menu::insert($menus);
@@ -125,6 +130,10 @@ class MenuRolePermissionSeeder extends Seeder
             ['menu_id' => 22, 'permission_id' => 10],
 
             ['menu_id' => 23, 'permission_id' => 13],
+            ['menu_id' => 24, 'permission_id' => 14],
+            ['menu_id' => 25, 'permission_id' => 14],
+            ['menu_id' => 26, 'permission_id' => 14],
+            ['menu_id' => 27, 'permission_id' => 14],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);

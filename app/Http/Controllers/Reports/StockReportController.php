@@ -3,92 +3,69 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use App\Models\Product;
+use App\Models\Item;
+use App\Models\ItemType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use Inertia\Response;
 
 class StockReportController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = [
-            'category_id' => $request->input('category_id'),
-            'mode'        => $request->input('mode', 'daily'),
-            'start'       => $request->input('start'),
-            'end'         => $request->input('end'),
-            'search'      => $request->input('search'),
+            'category'     => $request->category,
+            'item_type_id' => $request->item_type_id,
+            'status'       => $request->status,
         ];
 
-        $start = $filters['start'] ? Carbon::parse($filters['start']) : Carbon::now()->startOfDay();
-        $end   = $filters['end'] ? Carbon::parse($filters['end']) : Carbon::now()->endOfDay();
-
-        $products = Product::with('category')
-            ->filter($filters)
-            ->withCount([
-                'stockMutations as qty_in' => function ($query) use ($start, $end) {
-                    $query->where('type', 'in')
-                        ->whereBetween('created_at', [$start, $end])
-                        ->select(DB::raw('COALESCE(SUM(quantity), 0)'));
-                },
-                'stockMutations as qty_out' => function ($query) use ($start, $end) {
-                    $query->where('type', 'out')
-                        ->whereBetween('created_at', [$start, $end])
-                        ->select(DB::raw('COALESCE(SUM(quantity), 0)'));
-                },
-            ])
-            ->orderBy('stock', 'desc')
-            ->paginate(25)
-            ->onEachSide(2)
-            ->withQueryString()
-            ->through(function ($product) {
-                $product->net_movement = $product->qty_in - $product->qty_out;
-                return $product;
-            });
-
-        return Inertia::render('reports/stock/Index', [
-            'products' => $products,
-            'categories' => Category::pluck('name', 'id'),
-        ]);
-    }
-
-    public function show(Request $request, Product $product)
-    {
-        $start = $request->input('start')
-            ? Carbon::parse($request->input('start'))->startOfDay()
-            : Carbon::now()->startOfDay();
-
-        $end = $request->input('end')
-            ? Carbon::parse($request->input('end'))->endOfDay()
-            : Carbon::now()->endOfDay();
-
-        $query = $product->stockMutations()
-            ->whereBetween('created_at', [$start, $end]);
-
-        $mutations = $query->clone()
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->onEachSide(2)
-            ->withQueryString();
+        $summaryQuery = Item::query()
+            ->where('status', 'ready')
+            ->when($filters['category'], fn ($q) =>
+            $q->where('category', $filters['category'])
+            )
+            ->when($filters['item_type_id'], fn ($q) =>
+            $q->where('item_type_id', $filters['item_type_id'])
+            );
 
         $summary = [
-            'in'  => $query->clone()->where('type', 'in')->sum('quantity'),
-            'out' => $query->clone()->where('type', 'out')->sum('quantity'),
-            'net' => $query->clone()->where('type', 'in')->sum('quantity')
-                - $query->clone()->where('type', 'out')->sum('quantity'),
+            'totalItems'  => (int) $summaryQuery->count(),
+            'totalWeight' => (float) $summaryQuery->sum('weight'),
+            'totalBuy'    => (int) $summaryQuery->sum('price_buy'),
+            'totalSell'   => (int) $summaryQuery->sum('price_sell'),
         ];
 
-        return Inertia::render('reports/stock/Show', [
-            'product' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'category' => $product->category->name ?? '-',
-                'stock' => $product->stock,
-            ],
-            'mutations' => $mutations,
-            'summary' => $summary,
+        $summary['margin'] = $summary['totalSell'] - $summary['totalBuy'];
+
+        $items = Item::with('type')
+            ->when($filters['category'], fn ($q) =>
+            $q->where('category', $filters['category'])
+            )
+            ->when($filters['item_type_id'], fn ($q) =>
+            $q->where('item_type_id', $filters['item_type_id'])
+            )
+            ->when($filters['status'], fn ($q) =>
+            $q->where('status', $filters['status'])
+            )
+            ->orderBy('code', 'desc')
+            ->paginate(100)
+            ->withQueryString()
+            ->through(fn ($item) => [
+                'code'       => $item->code,
+                'name'       => $item->name,
+                'category'   => $item->category === 'gold' ? 'Emas' : 'Perak',
+                'type'       => $item->type?->name,
+                'weight'     => $item->weight,
+                'price_buy'  => $item->price_buy,
+                'price_sell' => $item->price_sell,
+                'status'     => $item->status,
+                'status_label' => $item->status_label,
+            ]);
+
+        return inertia('reports/stock/Index', [
+            'items'     => $items,
+            'itemTypes' => ItemType::pluck('name', 'id'),
+            'summary'   => $summary,
+            'filters'   => $filters,
         ]);
     }
 }

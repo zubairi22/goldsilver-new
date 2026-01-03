@@ -16,7 +16,7 @@ const { items, defaults } = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Stock Opname', href: route('stock-opnames.index') },
+    { title: 'Stock Opname', href: route('store.stock-opnames.index') },
     { title: 'Tambah', href: '#' },
 ]
 
@@ -27,12 +27,12 @@ const form = useForm({
 })
 
 const submit = () => {
-    form.post(route('stock-opnames.store'), {
+    form.post(route('store.stock-opnames.store'), {
         preserveScroll: true,
         onSuccess: (page) => {
             const id = page.props?.opname?.id
             if (id) {
-                router.visit(route('stock-opnames.edit', id))
+                router.visit(route('store.stock-opnames.edit', id))
             }
         },
     })

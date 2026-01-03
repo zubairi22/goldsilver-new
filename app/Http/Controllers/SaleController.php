@@ -10,6 +10,7 @@ use App\Models\StoreSetting;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,12 +18,20 @@ class SaleController extends Controller
 {
     public function index(string $category)
     {
+        $start = request('start')
+            ? Carbon::parse(request('start'))->startOfDay()
+            : now()->startOfDay();
+
+        $end = request('end')
+            ? Carbon::parse(request('end'))->endOfDay()
+            : now()->endOfDay();
+
         $filters = [
             'search'            => request('search'),
             'sale_type'         => request('sale_type'),
             'payment_method_id' => request('payment_method_id'),
-            'start'             => request('start'),
-            'end'               => request('end'),
+            'start'             => $start->toDateString(),
+            'end'               => $end->toDateString(),
             'category'          => $category,
         ];
 

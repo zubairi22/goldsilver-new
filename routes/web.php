@@ -5,6 +5,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ItemsController;
 use App\Http\Controllers\ItemTypesController;
+use App\Http\Controllers\Reports\SalesEmployeeReportController;
+use App\Http\Controllers\Reports\SalesItemReportController;
+use App\Http\Controllers\Reports\SalesNoteReportController;
+use App\Http\Controllers\Reports\StockReportController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\Store\PaymentMethodController;
 use App\Http\Controllers\Store\StoreController;
@@ -84,6 +88,14 @@ Route::middleware('auth')->group(function () {
                     Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
                 });
         });
+    });
+
+    Route::middleware('role:super-admin')->name('reports.')->prefix('reports')->group(function () {
+        Route::get('sales/note', [SalesNoteReportController::class, 'index'])->name('sales.note');
+        Route::get('sales/item', [SalesItemReportController::class, 'index'])->name('sales.item');
+        Route::get('sales/employee', [SalesEmployeeReportController::class, 'index'])->name('sales.employee');
+
+        Route::get('stock', [StockReportController::class, 'index'])->name('stock.index');
     });
 
     Route::middleware('role:super-admin')->prefix('master')->name('master.')->group(function () {

@@ -23,11 +23,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 const { formatDate } = useFormat()
 
 const approve = (id: number) => {
-    router.patch(route('stock-opnames.approve', id))
+    router.patch(route('store.stock-opnames.approve', id))
 }
 
 const destroyOpname = (id: number) => {
-    router.delete(route('stock-opnames.destroy', id))
+    router.delete(route('store.stock-opnames.destroy', id))
 }
 </script>
 
@@ -46,7 +46,7 @@ const destroyOpname = (id: number) => {
                 <Card class="py-4 md:mx-4">
                     <CardContent>
                         <div class="mb-3 flex flex-col md:flex-row justify-between">
-                            <Link :href="route('stock-opnames.create')">
+                            <Link :href="route('store.stock-opnames.create')">
                                 <Button>Tambah Opname</Button>
                             </Link>
                         </div>
@@ -111,7 +111,7 @@ const destroyOpname = (id: number) => {
 
                                         <TableCell class="px-1">
                                             <Link
-                                                :href="route('stock-opnames.edit', op.id)"
+                                                :href="route('store.stock-opnames.edit', op.id)"
                                             >
                                                 <Button size="sm" variant="secondary">
                                                     Detail

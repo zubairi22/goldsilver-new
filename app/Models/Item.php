@@ -40,7 +40,7 @@ class Item extends Model implements HasMedia
         });
 
         static::created(function ($item) {
-            $qrPath = $item->generateQrCode($item->code);
+            $qrPath = $item->generateQrCode($item->code, 'items');
 
             $item->updateQuietly([
                 'qr_path' => $qrPath,

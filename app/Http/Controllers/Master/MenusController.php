@@ -28,15 +28,20 @@ class MenusController extends Controller
 
         $permissionNames = $request->input('permissions', []);
         $permissionIds = [];
+
         foreach ($permissionNames as $permissionName) {
-            $permission = Permission::create(['name' => $permissionName]);
+            $permission = Permission::firstOrCreate([
+                'name' => $permissionName
+            ]);
+
             $permissionIds[] = $permission->id;
         }
+
         $menu->permissions()->sync($permissionIds);
 
-        if (!empty($permissionIds)) {
-            $superAdmin = Role::findByName('super-admin');
-            $superAdmin->givePermissionTo($permissionIds);
+        if ($permissionIds) {
+            Role::findByName('super-admin')
+                ->givePermissionTo($permissionIds);
         }
 
         $this->flashSuccess('Tambah Menu Berhasil.');
@@ -46,18 +51,23 @@ class MenusController extends Controller
     public function update(MenuUpdateRequest $request, Menu $menu): RedirectResponse
     {
         $menu->update($request->validated());
-        $permissionNames = $request->input('permissions', []);
 
+        $permissionNames = $request->input('permissions', []);
         $permissionIds = [];
+
         foreach ($permissionNames as $permissionName) {
-            $permission = Permission::firstOrCreate(['name' => $permissionName]);
+            $permission = Permission::firstOrCreate([
+                'name' => $permissionName
+            ]);
+
             $permissionIds[] = $permission->id;
         }
+
         $menu->permissions()->sync($permissionIds);
 
-        if (!empty($permissionIds)) {
-            $superAdmin = Role::findByName('super-admin');
-            $superAdmin->givePermissionTo($permissionIds);
+        if ($permissionIds) {
+            Role::findByName('super-admin')
+                ->givePermissionTo($permissionIds);
         }
 
         $this->flashSuccess('Update Menu Berhasil.');

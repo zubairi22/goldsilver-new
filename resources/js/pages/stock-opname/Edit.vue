@@ -5,6 +5,7 @@ import Heading from '@/components/Heading.vue'
 import { Card, CardContent } from '@/components/ui/card'
 import OpnameForm from '@/pages/stock-opname/partial/OpnameForm.vue'
 import type { BreadcrumbItem } from '@/types'
+import { Button } from '@/components/ui/button';
 
 const { opname, items } = defineProps<{
     opname: any
@@ -13,7 +14,7 @@ const { opname, items } = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Stock Opname', href: route('stock-opnames.index') },
+    { title: 'Stock Opname', href: route('store.stock-opnames.index') },
     { title: opname.code, href: '#' },
 ]
 
@@ -24,13 +25,13 @@ const form = useForm({
 })
 
 const submit = () => {
-    form.patch(route('stock-opnames.update', opname.id), {
+    form.patch(route('store.stock-opnames.update', opname.id), {
         preserveScroll: true,
     })
 }
 
 const approve = () => {
-    router.patch(route('stock-opnames.approve', opname.id))
+    router.patch(route('store.stock-opnames.approve', opname.id))
 }
 </script>
 

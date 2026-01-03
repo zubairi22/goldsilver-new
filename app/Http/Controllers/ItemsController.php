@@ -49,7 +49,7 @@ class ItemsController extends Controller
         return inertia('item/Index', [
             'items' => $items,
             'itemTypes' => ItemType::pluck('name', 'id'),
-            'totalWeight'    => (float) $totalWeight,
+            'totalWeight'    => $totalWeight,
             'totalItems'     => (int) $totalItems,
             'itemTypeTotals' => $itemTypeTotals,
             'filters' => $filters,

@@ -26,7 +26,7 @@ class MigrateBarangToItemsSeeder extends Seeder
                         continue;
                     }
 
-                    $itemTypeId = $b->idkategori ?? 1;
+                    $itemTypeId = $b->idmerk ?? 1;
 
                     if (!DB::table('item_types')->where('id', $itemTypeId)->exists()) {
                         $itemTypeId = DB::table('item_types')->min('id');

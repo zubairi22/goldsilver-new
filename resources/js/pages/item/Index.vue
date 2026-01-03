@@ -126,7 +126,7 @@ watch([status, item_type_id], applyFilters);
                 <Heading class="md:mr-6 flex-1" title="Barang" description="Kelola data barang emas dan perak" />
 
                 <!-- Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-96">
 
                     <Card class="py-4 gap-1 border-emerald-200 bg-emerald-50">
                         <CardHeader class="flex flex-row items-center justify-between">
@@ -153,14 +153,14 @@ watch([status, item_type_id], applyFilters);
 
             <!-- Card Tipe Barang -->
             <div class="grid gap-4 py-2 px-4 pb-6">
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                    <Card v-for="(total, itemTypeId) in itemTypeTotals" :key="itemTypeId" class="gap-2 bg-blue-50 border-blue-200">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                    <Card v-for="(total, itemTypeId) in itemTypeTotals" :key="itemTypeId" class="gap-1 bg-blue-50 border-blue-200 py-4">
                         <CardHeader class="flex flex-row items-center justify-between">
                             <CardTitle class="text-sm font-medium text-blue-700">{{ itemTypes[itemTypeId] }}</CardTitle>
-                            <Icon name="Folder" class="w-5 h-5 text-blue-600" />
+                            <Icon name="Folder" class="w-4 h-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
-                            <p class="text-lg font-bold text-blue-800">{{ total.total_pieces }} (pcs), {{ total.total_weight.toFixed(2) }} gr</p>
+                            <p class="text-md font-bold text-blue-800">{{ total.total_pieces }} (pcs), {{ total.total_weight.toFixed(2) }} (gr)</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -191,7 +191,7 @@ watch([status, item_type_id], applyFilters);
                                     <Label class="mb-2">Tipe</Label>
                                     <Select v-model="item_type_id">
                                         <SelectTrigger><SelectValue placeholder="Tipe Barang" /></SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent class="max-h-72 overflow-y-auto">
                                             <SelectItem value="all">Semua</SelectItem>
                                             <SelectItem v-for="(name, id) in itemTypes" :key="id" :value="id">
                                                 {{ name }}

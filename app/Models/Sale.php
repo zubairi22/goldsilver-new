@@ -36,7 +36,7 @@ class Sale extends Model
         });
 
         static::created(function ($sale) {
-            $path = $sale->generateQrCode($sale->invoice_no);
+            $path = $sale->generateQrCode($sale->invoice_no, 'sales');
             $sale->updateQuietly(['qr_path' => $path]);
         });
     }
@@ -101,6 +101,11 @@ class Sale extends Model
         $query->when(($filters['start'] ?? null) && ($filters['end'] ?? null), function ($q) use ($filters) {
             $q->whereBetween('created_at', [$filters['start'], $filters['end']]);
         });
+
+        $query->when(($filters['user_id'] ?? null) && $filters['user_id'] !== 'all', function ($q) use ($filters) {
+            $q->where('user_id', $filters['user_id']);
+        });
+
     }
 
     /**
