@@ -27,6 +27,10 @@ class Item extends Model implements HasMedia
         'source'
     ];
 
+    protected $casts = [
+        'weight'     => 'float',
+    ];
+
     protected $appends = ['status_label'];
 
     protected static function booted(): void

@@ -21,7 +21,7 @@ class ItemsController extends Controller
             'item_type_id'  => request('item_type_id'),
         ];
 
-        $totalWeight = Item::where('status', 'ready')->sum('weight');
+        $totalWeight = (float) Item::where('status', 'ready')->sum('weight');
         $totalItems = Item::where('status', 'ready')->count();
 
         $itemTypeTotals = Item::select('item_type_id')
@@ -30,6 +30,11 @@ class ItemsController extends Controller
             ->selectRaw('SUM(weight) as total_weight')
             ->selectRaw('COUNT(id) as total_pieces')
             ->get()
+            ->map(function ($row) {
+                $row->total_weight = (float) $row->total_weight;
+                $row->total_pieces = (int) $row->total_pieces;
+                return $row;
+            })
             ->keyBy('item_type_id');
 
         $items = Item::with('type')
@@ -44,8 +49,8 @@ class ItemsController extends Controller
         return inertia('item/Index', [
             'items' => $items,
             'itemTypes' => ItemType::pluck('name', 'id'),
-            'totalWeight' => $totalWeight,
-            'totalItems' => $totalItems,
+            'totalWeight'    => (float) $totalWeight,
+            'totalItems'     => (int) $totalItems,
             'itemTypeTotals' => $itemTypeTotals,
             'filters' => $filters,
         ]);

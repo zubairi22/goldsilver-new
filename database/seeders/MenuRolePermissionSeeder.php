@@ -27,6 +27,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 10, 'name' => 'manage debts', 'guard_name' => 'web'],
             ['id' => 11, 'name' => 'manage customers', 'guard_name' => 'web'],
             ['id' => 12, 'name' => 'manage cashier', 'guard_name' => 'web'],
+            ['id' => 13, 'name' => 'manage opname', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);
@@ -87,6 +88,8 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 20, 'title' => 'Barang Rusak', 'url' => 'damaged.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'PackageX', 'sort' => 4],
             ['id' => 21, 'title' => 'Penjualan', 'url' => 'sales.create', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 2],
             ['id' => 22, 'title' => 'Daftar Piutang', 'url' => 'debt.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'FileText', 'sort' => 5],
+
+            ['id' => 23, 'title' => 'Stok Opname', 'url' => 'store.stock-opnames.index', 'param' => null, 'parent_id' => 5, 'icon' => 'ShoppingBag', 'sort' => 4],
         ];
 
         Menu::insert($menus);
@@ -120,6 +123,8 @@ class MenuRolePermissionSeeder extends Seeder
             ['menu_id' => 20, 'permission_id' => 9],
             ['menu_id' => 21, 'permission_id' => 5],
             ['menu_id' => 22, 'permission_id' => 10],
+
+            ['menu_id' => 23, 'permission_id' => 13],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);
