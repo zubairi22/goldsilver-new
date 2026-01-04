@@ -15,7 +15,6 @@ class BuybackController extends Controller
     {
         $filters = [
             'search' => request('search'),
-            'status' => request('status'),
             'payment_type' => request('payment_type'),
             'start' => request('start'),
             'end' => request('end'),

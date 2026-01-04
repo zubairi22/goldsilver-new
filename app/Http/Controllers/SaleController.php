@@ -67,7 +67,6 @@ class SaleController extends Controller
     {
         $data = $request->validate([
             'sale_type' => 'required|in:retail,wholesale',
-            'mode' => 'required|in:auto,manual',
             'notes' => 'nullable|string|max:500',
             'customer_id' => 'nullable',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
@@ -81,6 +80,7 @@ class SaleController extends Controller
             'items.*.weight' => 'required|numeric|min:0.01',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.image' => 'nullable|image|max:2048',
+            'items.*.mode' => 'required|in:auto,manual',
         ]);
 
         $cashier = User::findOrFail($data['cashier_id']);
@@ -124,14 +124,15 @@ class SaleController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            foreach ($data['items'] as $i => $item) {
+            foreach ($data['items'] as $item) {
 
                 $saleItem = $sale->items()->create([
-                    'item_id' => $data['mode'] === 'auto' ? $item['id'] : null,
-                    'manual_name' => $data['mode'] === 'manual' ? $item['manual_name'] : null,
-                    'weight' => $item['weight'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['weight'] * $item['price'],
+                    'item_id'     => $item['mode'] === 'auto' ? $item['id'] : null,
+                    'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
+                    'weight'      => $item['weight'],
+                    'price'       => $item['price'],
+                    'subtotal'    => $item['weight'] * $item['price'],
+                    'source'      => $item['mode'] === 'manual' ? 'manual' : 'stock',
                 ]);
 
                 if (!empty($item['image'])) {
@@ -145,7 +146,7 @@ class SaleController extends Controller
                     }
                 }
 
-                if ($data['mode'] === 'auto' && $item['id']) {
+                if ($item['mode'] === 'auto' && $item['id']) {
                     Item::where('id', $item['id'])->update(['status' => 'sold']);
                 }
             }

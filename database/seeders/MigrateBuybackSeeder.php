@@ -6,23 +6,14 @@ use App\Models\Buyback;
 use App\Models\BuybackItem;
 use App\Models\Item;
 use App\Models\Sale;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class MigrateBuybackSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        /**
-         * ===============================
-         * MIGRASI BUYBACK (penjualan_retur)
-         * ===============================
-         */
         DB::connection('old_mysql')
             ->table('penjualan_retur')
             ->where('beratretur', '>', 0)
@@ -33,15 +24,14 @@ class MigrateBuybackSeeder extends Seeder
                 }
             });
 
-        Log::info("=== SELESAI MIGRASI ===");
+        Log::info('=== SELESAI MIGRASI BUYBACK ===');
     }
 
-    /* =====================================================
- * BUYBACK (penjualan_retur)
- * ===================================================== */
     protected function migrateBuybackFromRetur($r): void
     {
-        if (Buyback::where('buyback_no', 'BB-R-' . $r->idreturjual)->exists()) {
+        $buybackNo = 'BB-R-' . $r->idreturjual;
+
+        if (Buyback::where('buyback_no', $buybackNo)->exists()) {
             return;
         }
 
@@ -57,34 +47,30 @@ class MigrateBuybackSeeder extends Seeder
             ])
             ->first();
 
-        if (!$detail) return;
+        if (! $detail) return;
 
         $saleOld = DB::connection('old_mysql')
             ->table('penjualan')
             ->where('idpenjualan', $detail->idpenjualan)
             ->first();
 
-        if (!$saleOld) return;
-
-        $category = ((int)$saleOld->kategorijual === 1) ? 'silver' : 'gold';
-        $customerId = $this->resolveCustomer($saleOld->namapembeli);
+        $category = ((int) ($saleOld->kategorijual ?? 2) === 1) ? 'silver' : 'gold';
+        $customerId = $this->resolveCustomer($saleOld->namapembeli ?? null);
 
         $buybackStatus = match ((int) $r->status) {
             1 => 'pending',
             2 => 'approved',
-            3 => 'rejected'
+            3 => 'rejected',
+            default => 'pending',
         };
 
-        $newSale = Sale::where('invoice_no', 'PJ-' . $detail->idpenjualan)->first();
-
-        if (!$newSale) {
-            Log::error("SALE TIDAK DITEMUKAN. Old ID: {$detail->idpenjualan}");
-            return;
-        }
+        $sale = Sale::where('invoice_no', 'PJ-' . $detail->idpenjualan)->first();
+        $isPureManualBuyback = ! $sale;
 
         $buyback = Buyback::createQuietly([
-            'buyback_no'   => 'BB-R-' . $r->idreturjual,
-            'sale_id'      => $newSale->id,
+            'buyback_no'   => $buybackNo,
+            'sale_id'      => $sale?->id,
+            'source'       => $isPureManualBuyback ? 'manual' : 'sale',
             'category'     => $category,
             'customer_id'  => $customerId,
             'user_id'      => 1,
@@ -96,18 +82,16 @@ class MigrateBuybackSeeder extends Seeder
             'updated_at'   => $r->tglretur ?? $r->datecreated,
         ]);
 
-        $qcDone   = (int)$r->transferstok === 1;
-        $isBroken = (int)$r->is_rusak === 1;
+        $qcDone   = (int) $r->transferstok === 1;
+        $isBroken = (int) $r->is_rusak === 1;
 
-        $isManual = (int) $r->is_manual === 1;
+        $code = str_pad((string) $detail->barang_id, 6, '0', STR_PAD_LEFT);
 
-        $code = str_pad((string)$detail->barang_id, 6, '0', STR_PAD_LEFT);
-        $item = Item::where('code', $code)->first();
+        $item = Item::withTrashed()->where('code', $code)->first();
 
         $buybackItem = BuybackItem::create([
             'buyback_id'  => $buyback->id,
             'item_id'     => $item?->id,
-            'old_barang_id'=> $isManual ? $r->barangmanual : null,
             'manual_name' => $item ? null : $detail->namabarang,
             'weight'      => $r->beratretur,
             'price'       => $r->hargaretur,
@@ -117,37 +101,60 @@ class MigrateBuybackSeeder extends Seeder
             'updated_at'  => $r->datecreated,
         ]);
 
-        if (!$qcDone) return;
+        if (! $qcDone) return;
 
         if ($item) {
-            $item->updateQuietly([
-                'status' => $isBroken ? 'damaged' : 'ready',
-            ]);
-        } else {
-            $newItem = Item::create([
-                'code'        => $code,
-                'name'        => $detail->namabarang,
+            if (! $item->trashed()) {
+                $item->updateQuietly([
+                    'status' => $isBroken ? 'damaged' : 'ready',
+                ]);
+            }
+
+            return;
+        }
+
+        $oldBarang = DB::connection('old_mysql')
+            ->table('barang')
+            ->where('idbarang', $detail->barang_id)
+            ->first();
+
+        if ($oldBarang && (int) $oldBarang->status === 0) {
+            Item::createQuietly([
+                'code'         => $code,
+                'name'         => $detail->namabarang,
                 'item_type_id' => (int) $detail->idmerk > 0 ? (int) $detail->idmerk : 16,
-                'category'    => $category,
-                'weight'      => $buybackItem->weight,
-                'price_buy'   => $buybackItem->price,
+                'category'     => $category,
+                'weight'       => $buybackItem->weight,
+                'price_buy'    => $buybackItem->price,
                 'price_sell'  => $r->hargajual ?? 0,
-                'status'      => $isBroken ? 'damaged' : 'ready',
-                'source'      => 'buyback',
+                'status'       => 'not_ready',
+                'source'       => 'legacy_buyback',
+                'deleted_at'   => now(),
             ]);
 
-            $buybackItem->updateQuietly([
-                'item_id' => $newItem->id,
+            return;
+        }
+
+        if ($isPureManualBuyback) {
+            Item::createQuietly([
+                'code'         => $code,
+                'name'         => $detail->namabarang,
+                'item_type_id' => (int) $detail->idmerk > 0 ? (int) $detail->idmerk : 16,
+                'category'     => $category,
+                'weight'       => $buybackItem->weight,
+                'price_buy'    => $buybackItem->price,
+                'price_sell'  => $r->hargajual ?? 0,
+                'status'       => $isBroken ? 'damaged' : 'ready',
+                'source'       => 'buyback_manual',
             ]);
         }
     }
 
-    /* =====================================================
-     * CUSTOMER
-     * ===================================================== */
     protected function resolveCustomer(?string $name): ?int
     {
-        if (!$name || trim($name) === '') return null;
+        if (! $name || trim($name) === '') {
+            return null;
+        }
 
         $name = trim($name);
 
@@ -158,7 +165,7 @@ class MigrateBuybackSeeder extends Seeder
         return $existing
             ? $existing->id
             : DB::table('customers')->insertGetId([
-                'name' => $name,
+                'name'       => $name,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

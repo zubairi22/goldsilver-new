@@ -69,6 +69,7 @@ const editIndex = ref<number | null>(null)
 
 const modalItem = ref<any>({
     id: null,
+    mode: 'auto',
     manual_name: '',
     weight: 0,
     price: 0,
@@ -78,6 +79,7 @@ const modalItem = ref<any>({
 const addItem = () => {
     modalItem.value = {
         id: null,
+        mode: form.mode,
         manual_name: '',
         weight: 0,
         price: 0,
@@ -91,6 +93,7 @@ const editItem = (index: number) => {
     const it = form.items[index]
     modalItem.value = {
         id: it.id ?? null,
+        mode: it.mode,
         manual_name: it.manual_name ?? '',
         weight: it.weight,
         price: it.price,
@@ -109,11 +112,11 @@ const modalSubtotal = computed(() =>
 )
 
 const saveModalItem = () => {
-    if (form.mode === 'auto' && !modalItem.value.id) {
+    if (modalItem.value.mode === 'auto' && !modalItem.value.id) {
         toast.error('Silakan pilih barang dari stok.')
         return
     }
-    if (form.mode === 'manual' && !modalItem.value.manual_name) {
+    if (modalItem.value.mode === 'manual' && !modalItem.value.manual_name) {
         toast.error('Nama barang harus diisi.')
         return
     }
@@ -129,7 +132,7 @@ const saveModalItem = () => {
         price: modalItem.value.price,
         subtotal: modalSubtotal.value,
         image: modalItem.value.image,
-        mode: form.mode,
+        mode: modalItem.value.mode,
     })
 
     showAddItemModal.value = false
@@ -145,7 +148,7 @@ const updateModalItem = () => {
         price: modalItem.value.price,
         subtotal: modalSubtotal.value,
         image: modalItem.value.image,
-        mode: form.mode,
+        mode: modalItem.value.mode,
     }
 
     editIndex.value = null
@@ -426,7 +429,7 @@ watch(successModal, (val) => {
 
                 <div class="space-y-4">
 
-                    <div v-if="form.mode === 'auto'">
+                    <div v-if="modalItem.mode === 'auto'">
                         <Label>Barang dari Stok</Label>
                         <Multiselect
                             v-model="modalItem.id"

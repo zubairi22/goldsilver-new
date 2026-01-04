@@ -35,7 +35,6 @@ const { search } = useSearch('buyback.index', props.filters.search, ['buybacks']
 
 const { formatRupiah, formatDate } = useFormat()
 
-const status = ref(props.filters.status)
 const payment_type = ref(props.filters.payment_type)
 const date = ref(
     props.filters.start && props.filters.end
@@ -77,7 +76,6 @@ const applyFilters = () => {
     const params: Record<string, any> = { category: props.category }
 
     if (search.value) params.search = search.value
-    if (status.value !== 'all') params.status = status.value
     if (payment_type.value !== 'all') params.payment_type = payment_type.value
     if (date.value?.[0] && date.value?.[1]) {
         params.start = date.value[0]
@@ -90,7 +88,7 @@ const applyFilters = () => {
     })
 }
 
-watch([status, payment_type, date], applyFilters)
+watch([payment_type, date], applyFilters)
 </script>
 
 <template>
@@ -109,18 +107,10 @@ watch([status, payment_type, date], applyFilters)
                     <CardContent>
                         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                             <div class="flex gap-4">
-                                <Select v-model="status">
-                                    <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="approved">Disetujui</SelectItem>
-                                        <SelectItem value="rejected">Ditolak</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
                                 <Select v-model="payment_type">
-                                    <SelectTrigger><SelectValue placeholder="Pembayaran" /></SelectTrigger>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pembayaran" />
+                                    </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Semua</SelectItem>
                                         <SelectItem value="cash">Cash</SelectItem>

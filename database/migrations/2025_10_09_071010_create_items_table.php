@@ -20,10 +20,11 @@ return new class extends Migration
             $table->double('weight');
             $table->double('price_buy');
             $table->double('price_sell');
-            $table->enum('status', ['ready', 'sold', 'damaged', 'buyback'])->default('ready');
+            $table->enum('status', ['ready', 'sold', 'damaged', 'buyback', 'not_ready'])->default('ready');
             $table->string('qr_path')->nullable();
             $table->string('source')->default('stock');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

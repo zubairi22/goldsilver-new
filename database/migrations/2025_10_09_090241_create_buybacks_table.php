@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('buybacks', function (Blueprint $table) {
             $table->id();
             $table->string('buyback_no')->unique();
-            $table->foreignId('sale_id')->constrained('sales')->cascadeOnDelete();
+            $table->foreignId('sale_id')->nullable()->constrained('sales')->cascadeOnDelete();
             $table->enum('category', ['gold', 'silver'])->default('gold');
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('total_weight', 10, 2)->default(0);
             $table->decimal('total_price', 15, 2)->default(0);
             $table->enum('payment_type', ['cash', 'non_cash'])->default('cash');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('source', ['sale', 'manual'])->default('sale');
             $table->timestamps();
         });
     }

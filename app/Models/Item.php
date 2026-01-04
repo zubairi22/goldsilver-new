@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Item extends Model implements HasMedia
 {
-    use InteractsWithMedia, GeneratesQrCode;
+    use InteractsWithMedia, GeneratesQrCode, SoftDeletes;
 
     protected $fillable = [
         'code',

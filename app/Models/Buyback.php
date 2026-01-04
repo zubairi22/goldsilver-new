@@ -15,7 +15,7 @@ class Buyback extends Model
         'total_weight',
         'total_price',
         'payment_type',
-        'status',
+        'source',
     ];
 
     public static function generateBuybackNumber(): string
@@ -64,11 +64,6 @@ class Buyback extends Model
                 ->orWhereHas('customer', function ($sub) use ($search) {
                     $sub->where('name', 'like', "%{$search}%");
                 });
-        });
-
-        // Filter status: pending / approved / rejected
-        $query->when(($filters['status'] ?? 'all') !== 'all', function ($q) use ($filters) {
-            $q->where('status', $filters['status']);
         });
 
         // Filter payment type: cash / non_cash

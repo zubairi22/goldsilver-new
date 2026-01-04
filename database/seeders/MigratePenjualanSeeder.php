@@ -146,6 +146,8 @@ class MigratePenjualanSeeder extends Seeder
             ])
             ->get();
 
+        $saleSource = ((int) $row->is_manual === 1) ? 'manual' : 'stock';
+
         foreach ($details as $d) {
 
             $code = str_pad((string)$d->idbarang, 6, '0', STR_PAD_LEFT);
@@ -159,6 +161,7 @@ class MigratePenjualanSeeder extends Seeder
                 'price'       => $d->harganet,
                 'subtotal'    => $d->subtotalnet,
                 'old_barang_id'  => $item ? null : (int) $d->idbarang,
+                'source'         => $saleSource,
                 'created_at'  => $d->datecreated,
                 'updated_at'  => $d->datecreated,
             ]);
