@@ -41,24 +41,36 @@ const { today } = useTime()
 const form = useForm({
     sale_id: props.sale.id,
     customer_id: props.customer?.id ?? null,
-    items: props.items.map((it: any) => ({
-        item_id: it.item?.id,
-        sale_item_id: it.id,
-        name: it.manual_name ?? it.item?.name,
-        original_weight: it.weight,
-        buyback_weight: it.weight,
-        original_price: it.price,
-        buyback_price: 0,
-        selected: false,
-        image: undefined,
-        initial_image: it.item?.image,
-        is_buyback: it.item?.status === 'buyback',
-    })),
+    items: props.items.map((it: any) => {
+        const bb = it.buyback_item
+
+        return {
+            sale_item_id: it.id,
+            item_id: it.item?.id ?? null,
+
+            name: it.manual_name ?? it.item?.name,
+
+            weight: it.weight,
+            price: it.price,
+            subtotal: it.subtotal,
+
+            buyback_weight: bb ? bb.weight : it.weight,
+            buyback_price: bb ? bb.price : 0,
+            buyback_subtotal: bb ? bb.subtotal : 0,
+
+            selected: false,
+            image: undefined,
+
+            initial_image: it.item?.image ?? null,
+
+            is_buyback: !!bb,
+        }
+    }),
 })
 
 const totalBuyback = computed(() =>
     form.items.reduce(
-        (sum: number, it: any) =>
+        (sum, it) =>
             it.selected && !it.is_buyback
                 ? sum + Number(it.buyback_weight) * Number(it.buyback_price)
                 : sum,
@@ -68,7 +80,7 @@ const totalBuyback = computed(() =>
 
 const totalBuybackWeight = computed(() =>
     form.items.reduce(
-        (sum: number, it: any) =>
+        (sum, it) =>
             it.selected && !it.is_buyback
                 ? sum + Number(it.buyback_weight || 0)
                 : sum,
@@ -77,12 +89,12 @@ const totalBuybackWeight = computed(() =>
 )
 
 const totalBuybackItems = computed(() =>
-    form.items.filter((i: any) => i.selected && !i.is_buyback).length
+    form.items.filter(it => it.selected && !it.is_buyback).length
 )
 
 const submit = () => {
     const filtered = form.items.filter(
-        (i: any) => i.selected && !i.is_buyback
+        it => it.selected && !it.is_buyback
     )
 
     if (!filtered.length) {
@@ -90,7 +102,7 @@ const submit = () => {
         return
     }
 
-    form.transform((data) => ({
+    form.transform(data => ({
         ...data,
         items: filtered,
     }))
@@ -128,7 +140,6 @@ const goBack = () => {
 
             <div class="max-w-8xl mx-auto space-y-8">
 
-                <!-- INFO PENJUALAN -->
                 <Card class="md:mx-4 mb-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Informasi Penjualan</p>
@@ -138,7 +149,6 @@ const goBack = () => {
                     <CardContent>
                         <div class="grid gap-6 text-sm md:grid-cols-2">
                             <div class="space-y-6">
-
                                 <div class="space-y-1">
                                     <div class="flex justify-between">
                                         <span class="text-gray-500">Invoice</span>
@@ -158,7 +168,6 @@ const goBack = () => {
 
                                 <div v-if="customer">
                                     <p class="mb-2 font-semibold">Informasi Pelanggan</p>
-
                                     <div class="space-y-1">
                                         <div class="flex justify-between">
                                             <span class="text-gray-500">Nama</span>
@@ -192,7 +201,6 @@ const goBack = () => {
                     </CardContent>
                 </Card>
 
-                <!-- TABEL ITEM -->
                 <Card class="md:mx-4 mb-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Detail Item Buyback</p>
@@ -205,9 +213,8 @@ const goBack = () => {
                                 <TableRow>
                                     <TableHead class="w-10 text-center" />
                                     <TableHead>Produk</TableHead>
-                                    <TableHead class="text-right">Berat Asli</TableHead>
+                                    <TableHead class="text-right">Harga Jual Net</TableHead>
                                     <TableHead class="text-right">Berat BB</TableHead>
-                                    <TableHead class="text-right">Harga/gr Asli</TableHead>
                                     <TableHead class="text-right">Harga/gr BB</TableHead>
                                     <TableHead class="text-right">Subtotal</TableHead>
                                     <TableHead class="text-center">Gambar Pembelian</TableHead>
@@ -228,7 +235,6 @@ const goBack = () => {
                                         <TableCell>
                                             <div class="flex flex-col gap-1">
                                                 <span class="font-medium">{{ it.name }}</span>
-
                                                 <Badge
                                                     v-if="it.is_buyback"
                                                     variant="destructive"
@@ -239,7 +245,16 @@ const goBack = () => {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell class="text-right">{{ it.original_weight }}</TableCell>
+                                        <TableCell class="text-right">
+                                            <div class="flex flex-col">
+                                                <span class="font-semibold">
+                                                    {{ formatRupiah(it.subtotal) }}
+                                                </span>
+                                                <span class="text-xs text-gray-500">
+                                                    ({{ it.weight }} gr × {{ formatRupiah(it.price) }})
+                                                </span>
+                                            </div>
+                                        </TableCell>
 
                                         <TableCell class="text-right">
                                             <Input
@@ -250,8 +265,6 @@ const goBack = () => {
                                                 :disabled="!it.selected || it.is_buyback"
                                             />
                                         </TableCell>
-
-                                        <TableCell class="text-right">{{ formatRupiah(it.original_price) }}</TableCell>
 
                                         <TableCell class="text-right">
                                             <Input
@@ -264,7 +277,10 @@ const goBack = () => {
                                         </TableCell>
 
                                         <TableCell class="text-right font-semibold">
-                                            <span v-if="it.selected && !it.is_buyback">
+                                            <span v-if="it.is_buyback">
+                                                {{ formatRupiah(it.buyback_subtotal) }}
+                                            </span>
+                                            <span v-else-if="it.selected">
                                                 {{ formatRupiah(it.buyback_weight * it.buyback_price) }}
                                             </span>
                                             <span v-else>-</span>
@@ -307,7 +323,6 @@ const goBack = () => {
                     </CardContent>
                 </Card>
 
-                <!-- SUMMARY -->
                 <Card class="md:mx-4">
                     <CardHeader>
                         <p class="mb-2 font-semibold">Ringkasan Buyback</p>

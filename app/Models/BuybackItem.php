@@ -15,6 +15,7 @@ class BuybackItem extends Model implements HasMedia
     protected $fillable = [
         'buyback_id',
         'item_id',
+        'sale_item_id',
         'old_barang_id',
         'manual_name',
         'weight',
@@ -33,6 +34,11 @@ class BuybackItem extends Model implements HasMedia
     public function item()
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function saleItem()
+    {
+        return $this->belongsTo(SaleItem::class);
     }
 
     public function getConditionLabelAttribute(): string

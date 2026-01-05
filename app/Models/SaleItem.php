@@ -19,11 +19,17 @@ class SaleItem extends Model implements HasMedia
         'weight',
         'price',
         'subtotal',
+        'buybacked_at'
     ];
 
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function buybackItem()
+    {
+        return $this->hasOne(BuybackItem::class);
     }
 
     public function item()

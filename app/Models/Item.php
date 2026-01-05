@@ -70,7 +70,6 @@ class Item extends Model implements HasMedia
             'ready'     => 'Siap Jual',
             'sold'      => 'Terjual',
             'damaged'   => 'Rusak',
-            'buyback'   => 'Buyback',
             'not_ready' => 'Belum Siap',
             default     => ucfirst($this->status),
         };

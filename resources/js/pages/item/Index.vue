@@ -181,7 +181,6 @@ watch([status, item_type_id], applyFilters);
                                             <SelectItem value="ready">Siap Jual</SelectItem>
                                             <SelectItem value="sold">Terjual</SelectItem>
                                             <SelectItem value="damaged">Rusak</SelectItem>
-                                            <SelectItem value="buyback">Buyback</SelectItem>
                                             <SelectItem value="not_ready">Belum Siap</SelectItem>
                                         </SelectContent>
                                     </Select>
