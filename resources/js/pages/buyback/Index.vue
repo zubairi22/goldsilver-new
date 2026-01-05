@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { ref, watch, computed } from 'vue'
-import { useSearch } from '@/composables/useSearch'
 import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -28,10 +27,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: `Buyback ${categoryLabel.value}`, href: '#' },
 ]
-
-const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], {
-    category: props.category,
-})
 
 const { formatRupiah, formatDate } = useFormat()
 
@@ -73,9 +68,8 @@ function submitQC() {
 }
 
 const applyFilters = () => {
-    const params: Record<string, any> = { category: props.category }
+    const params: Record<string, any> = {}
 
-    if (search.value) params.search = search.value
     if (payment_type.value !== 'all') params.payment_type = payment_type.value
     if (date.value?.[0] && date.value?.[1]) {
         params.start = date.value[0]

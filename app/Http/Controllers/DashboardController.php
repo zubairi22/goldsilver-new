@@ -13,33 +13,33 @@ class DashboardController extends Controller
     public function __invoke(Request $request)
     {
         $filters = [
-            'mode'  => $request->input('mode', 'daily'),
+            'mode' => $request->input('mode', 'daily'),
             'start' => $request->input('start'),
-            'end'   => $request->input('end'),
+            'end' => $request->input('end'),
         ];
 
         $today = Carbon::today();
         $start = null;
-        $end   = null;
+        $end = null;
 
-        if (!empty($filters['start']) && !empty($filters['end'])) {
+        if (! empty($filters['start']) && ! empty($filters['end'])) {
             $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
-            $end   = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
+            $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
         } else {
             $mode = $filters['mode'] ?: 'daily';
 
             if ($mode === 'daily') {
                 $start = $today->copy()->startOfDay();
-                $end   = $today->copy()->endOfDay();
+                $end = $today->copy()->endOfDay();
             } elseif ($mode === 'weekly') {
                 $start = $today->copy()->startOfWeek();
-                $end   = $today->copy()->endOfDay();
+                $end = $today->copy()->endOfDay();
             } elseif ($mode === 'monthly') {
                 $start = $today->copy()->startOfMonth();
-                $end   = $today->copy()->endOfDay();
+                $end = $today->copy()->endOfDay();
             } else {
                 $start = $today->copy()->startOfDay();
-                $end   = $today->copy()->endOfDay();
+                $end = $today->copy()->endOfDay();
             }
         }
 
@@ -50,18 +50,17 @@ class DashboardController extends Controller
 
         $totalBuyback = Buyback::query()
             ->whereBetween('created_at', [$start, $end])
-            ->where('status', 'approved')
             ->sum('total_price');
 
-        return Inertia::render('Dashboard', [
+        return inertia('Dashboard', [
             'summary' => [
-                'totalSales'   => $totalSales,
+                'totalSales' => $totalSales,
                 'totalBuyback' => $totalBuyback,
             ],
             'filters' => [
-                'mode'  => $filters['mode'] ?: 'daily',
+                'mode' => $filters['mode'] ?: 'daily',
                 'start' => $start->toDateString(),
-                'end'   => $end->toDateString(),
+                'end' => $end->toDateString(),
             ],
         ]);
     }

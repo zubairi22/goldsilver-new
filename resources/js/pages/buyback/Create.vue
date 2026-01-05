@@ -17,6 +17,7 @@ import { LoaderCircle } from 'lucide-vue-next'
 import { useTime } from '@/composables/useTime'
 import CameraUploader from '@/components/CameraUploader.vue'
 import InputError from '@/components/InputError.vue'
+import ImageModal from '@/components/ImageModal.vue';
 
 const props = defineProps<{
     category: 'gold' | 'silver'
@@ -287,12 +288,13 @@ const goBack = () => {
                                         </TableCell>
 
                                         <TableCell class="text-center">
-                                            <img
+                                            <ImageModal
                                                 v-if="it.initial_image"
                                                 :src="it.initial_image"
-                                                class="mx-auto h-16 w-16 rounded object-cover"
+                                                :filename="`item-${it.name.replace(/\s+/g, '_')}.png`"
+                                                trigger
                                             />
-                                            <span v-else class="text-gray-400">Tidak ada</span>
+                                            <span v-else class="text-sm text-gray-400">Tidak ada</span>
                                         </TableCell>
 
                                         <TableCell class="text-center">
