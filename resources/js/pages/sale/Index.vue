@@ -50,19 +50,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 /**
  * SEARCH & FORMAT
  */
-const { search } = useSearch(
-    'sales.index',
-    props.filters.search,
-    ['sales'],
-    { category: props.category }
-)
+const { search } = useSearch('sales.index', props.filters.search,['sales'],{ category: props.category })
 
 const { formatRupiah, formatDate } = useFormat()
 
 /**
  * FILTER STATE
  */
-const status = ref(props.filters.status)
 const sale_type = ref(props.filters.sale_type)
 const payment_method_id = ref(props.filters.payment_method_id)
 const date = ref(
@@ -112,9 +106,7 @@ const printReceipt = () => {
  * APPLY FILTER
  */
 const applyFilters = () => {
-    const params: Record<string, any> = {
-        category: props.category,
-    }
+    const params: Record<string, any> = {}
 
     if (search.value) params.search = search.value
     if (sale_type.value && sale_type.value !== 'all') params.sale_type = sale_type.value
@@ -132,7 +124,7 @@ const applyFilters = () => {
     })
 }
 
-watch([status, sale_type, payment_method_id, date], applyFilters)
+watch([sale_type, payment_method_id, date], applyFilters)
 </script>
 
 <template>

@@ -29,7 +29,7 @@ const categoryLabel = computed(() => {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: `Produk Rusak (${categoryLabel})`, href: '#' },
+    { title: `Produk Rusak (${categoryLabel.value})`, href: '#' },
 ];
 
 function doSearch() {

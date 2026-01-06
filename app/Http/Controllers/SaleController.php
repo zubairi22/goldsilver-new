@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Item;
-use App\Models\Sale;
 use App\Models\PaymentMethod;
+use App\Models\Sale;
 use App\Models\StoreSetting;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,30 +17,27 @@ class SaleController extends Controller
 {
     public function index(string $category)
     {
-        $start = request('start')
-            ? Carbon::parse(request('start'))->startOfDay()
-            : now()->startOfDay();
-
-        $end = request('end')
-            ? Carbon::parse(request('end'))->endOfDay()
-            : now()->endOfDay();
-
         $filters = [
-            'search'            => request('search'),
-            'sale_type'         => request('sale_type'),
+            'search' => request('search'),
+            'sale_type' => request('sale_type'),
             'payment_method_id' => request('payment_method_id'),
-            'start'             => $start->toDateString(),
-            'end'               => $end->toDateString(),
-            'category'          => $category,
+            'start' => request('start'),
+            'end' => request('end'),
+            'category' => $category,
         ];
 
         return inertia('sale/Index', [
             'category' => $category,
-            'sales' => Sale::with(['items.item', 'payments', 'customer', 'user', 'paymentMethod'])
+            'sales' => Sale::with([
+                'items.item',
+                'payments',
+                'customer',
+                'user',
+                'paymentMethod',
+            ])
                 ->filters($filters)
                 ->latest()
                 ->paginate(20)
-                ->onEachSide(2)
                 ->withQueryString(),
             'paymentMethods' => PaymentMethod::active()->get(),
             'filters' => $filters,
@@ -85,18 +81,19 @@ class SaleController extends Controller
 
         $cashier = User::findOrFail($data['cashier_id']);
 
-        $validByPassword = !empty($data['password'])
+        $validByPassword = ! empty($data['password'])
             && Hash::check($data['password'], $cashier->password);
 
-        $validByQr = !empty($data['qr_token'])
+        $validByQr = ! empty($data['qr_token'])
             && $cashier->qr_token === $data['qr_token'];
 
-        if (!$validByPassword && !$validByQr) {
+        if (! $validByPassword && ! $validByQr) {
             $this->flashError('Password atau QR kasir tidak valid.');
+
             return back();
         }
 
-        if (!empty($data['customer_id']) && !is_numeric($data['customer_id'])) {
+        if (! empty($data['customer_id']) && ! is_numeric($data['customer_id'])) {
             $customer = Customer::create([
                 'name' => $data['customer_id'],
             ]);
@@ -106,7 +103,7 @@ class SaleController extends Controller
         return DB::transaction(function () use ($data, $category, $cashier) {
 
             $totalWeight = collect($data['items'])->sum('weight');
-            $totalPrice  = collect($data['items'])
+            $totalPrice = collect($data['items'])
                 ->sum(fn ($i) => $i['weight'] * $i['price']);
 
             $sale = Sale::create([
@@ -127,15 +124,15 @@ class SaleController extends Controller
             foreach ($data['items'] as $item) {
 
                 $saleItem = $sale->items()->create([
-                    'item_id'     => $item['mode'] === 'auto' ? $item['id'] : null,
+                    'item_id' => $item['mode'] === 'auto' ? $item['id'] : null,
                     'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
-                    'weight'      => $item['weight'],
-                    'price'       => $item['price'],
-                    'subtotal'    => $item['weight'] * $item['price'],
-                    'source'      => $item['mode'] === 'manual' ? 'manual' : 'stock',
+                    'weight' => $item['weight'],
+                    'price' => $item['price'],
+                    'subtotal' => $item['weight'] * $item['price'],
+                    'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
                 ]);
 
-                if (!empty($item['image'])) {
+                if (! empty($item['image'])) {
                     $media = $saleItem
                         ->addMedia($item['image'])
                         ->toMediaCollection('manual');
@@ -151,7 +148,7 @@ class SaleController extends Controller
                 }
             }
 
-            if (!empty($data['paid_amount']) && $data['paid_amount'] > 0) {
+            if (! empty($data['paid_amount']) && $data['paid_amount'] > 0) {
                 $sale->payments()->create([
                     'payment_method_id' => $data['payment_method_id'],
                     'amount' => $data['paid_amount'],
@@ -185,7 +182,7 @@ class SaleController extends Controller
 
         $store = StoreSetting::current();
         $footer = $store->getFooter($sale->category, $sale->sale_type);
-        $color  = $store->getInvoiceColor($sale->category);
+        $color = $store->getInvoiceColor($sale->category);
 
         $pdf = Pdf::loadView('pdf.receipt', [
             'sale' => $sale,
@@ -193,7 +190,7 @@ class SaleController extends Controller
             'footer' => $footer,
             'color' => $color,
         ])
-            ->setPaper('A4')
+            ->setPaper('A4', 'landscape')
             ->setOption('margin-top', 5)
             ->setOption('margin-bottom', 5)
             ->setOption('margin-left', 5)

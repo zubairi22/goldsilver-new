@@ -7,9 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { computed } from 'vue'
 import { useFormat } from '@/composables/useFormat'
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from '@/components/ui/table'
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table'
 import type { BreadcrumbItem } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -287,14 +285,16 @@ const goBack = () => {
                                             <span v-else>-</span>
                                         </TableCell>
 
-                                        <TableCell class="text-center">
-                                            <ImageModal
-                                                v-if="it.initial_image"
-                                                :src="it.initial_image"
-                                                :filename="`item-${it.name.replace(/\s+/g, '_')}.png`"
-                                                trigger
-                                            />
-                                            <span v-else class="text-sm text-gray-400">Tidak ada</span>
+                                        <TableCell>
+                                            <div class="flex items-center justify-center">
+                                                <ImageModal
+                                                    v-if="it.initial_image"
+                                                    :src="it.initial_image"
+                                                    :filename="`item-${it.name.replace(/\s+/g, '_')}.png`"
+                                                    trigger
+                                                />
+                                                <span v-else class="text-sm text-gray-400">Tidak ada</span>
+                                            </div>                  
                                         </TableCell>
 
                                         <TableCell class="text-center">

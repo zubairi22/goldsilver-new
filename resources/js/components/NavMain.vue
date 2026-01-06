@@ -24,7 +24,7 @@ const { toggleSidebar, state } = useSidebar()
 </script>
 
 <template>
-    <SidebarGroup class="space-y-1">
+    <SidebarGroup class="space-y-1 [&::-webkit-scrollbar]:[width:6px] [&::-webkit-scrollbar-thumb]:bg-gray-300 overflow-y-auto [&::-webkit-scrollbar-thumb]:[border-radius:3px]">
         <template v-for="item in items" :key="item.title">
             <SidebarMenu v-if="item.children?.length === 0">
                 <SidebarMenuItem>

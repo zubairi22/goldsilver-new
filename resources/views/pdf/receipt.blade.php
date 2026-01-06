@@ -55,11 +55,13 @@
 
                         <p style="margin:3px 0; line-height:1.4; font-size:12px;">
                             JUAL BELI RUPA-RUPA PERHIASAN EMAS, TERIMA PESANAN <br>
-                            {{ $store->address ?? '' }} <br>
+                            <b>
+                                {{ $store->address ?? '' }} <br>
                             HP/WA: {{ $store->phone }}
                             @if($store->instagram)
                                 — Instagram: {{ $store->instagram }}
                             @endif
+                            </b>
                         </p>
                     </td>
                 </tr>
@@ -67,7 +69,7 @@
         </td>
 
         {{-- RIGHT SIDE --}}
-        <td style="width:30%; text-align:center; vertical-align:top; padding:10px;">
+        <td style="width:30%; text-align:right; vertical-align:top; padding:10px;">
 
             <div style="font-size:12px; margin-bottom:4px;">
                 {{ now()->format('d-m-Y') }} <br>
@@ -86,7 +88,7 @@
 
 {{-- ================= ITEM TABLE ================= --}}
 
-<table style="border: 1px solid #ccc; border-collapse: collapse;">
+<table style="border: 1px solid #ccc; border-collapse: collapse; ">
     <thead>
     <tr>
         <th style="width:30px; text-align:center;">No</th>
@@ -99,27 +101,32 @@
 
     <tbody>
     @foreach ($sale->items as $index => $item)
-        <tr>
-            <td style="text-align:center;">{{ $index + 1 }}</td>
+    <tr>
+        <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
+            {{ $index + 1 }}
+        </td>
 
-            <td style="text-align:center;">
-                @if ($item->manual_image)
-                    <img src="{{ $item->manual_image_path }}" width="100">
-                @else
-                    <img src="{{ $item->item->image_path }}" width="100">
-                @endif
-            </td>
+        <td style="border:1px solid #ccc; text-align:center; padding:6px;">
+            @if ($item->manual_image_path)
+                <img src="{{ $item->manual_image_path }}" width="80">
+            @elseif (optional($item->item)->image_path)
+                <img src="{{ $item->item->image_path }}" width="80">
+            @else
+                <img src="{{ public_path('placeholder.webp') }}" width="80">
+            @endif
+        </td>
+        <td style="border:1px solid #ccc; padding:6px; font-size:12px;">
+            {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
+        </td>
 
-            <td>{{ $item->manual_name ?? $item->item->name }}</td>
+        <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
+            {{ number_format($item->weight, 2, ',', '.') }} g
+        </td>
 
-            <td style="text-align:center;">
-                {{ number_format($item->weight, 2, ',', '.') }} g
-            </td>
-
-            <td style="text-align:center; font-weight:bold;">
-                Rp {{ number_format($item->subtotal, 0, ',', '.') }}
-            </td>
-        </tr>
+        <td style="border:1px solid #ccc; text-align:right; padding:6px; font-weight:bold; font-size:12px;">
+            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+        </td>
+    </tr>
     @endforeach
     </tbody>
 </table>
@@ -141,18 +148,23 @@
 
         {{-- JUMLAH & KETERANGAN --}}
         <td style="width:30%; vertical-align:top; padding:12px; border:1px solid #ccc;">
-            <table style="width:100%; border-collapse: collapse; font-size:12px;">
+            <table style="width:100%; border-collapse: collapse;">
                 <tr>
-                    <td class="bold" style="padding:5px 0;">Jumlah:</td>
-                    <td class="bold" style="text-align:right; padding:5px 0;">
+                    <td class="bold" style="font-size:12px; padding:5px 0;">
+                        Jumlah:
+                    </td>
+                    <td class="bold" style="font-size:12px; text-align:right; padding:5px 0;">
                         Rp {{ number_format($sale->total_price, 0, ',', '.') }}
                     </td>
                 </tr>
-
+                <hr style="margin-top:5px; margin-bottom:5px;">
+                
                 @if ($sale->notes)
                     <tr>
-                        <td class="bold" style="padding-top:8px;">Keterangan:</td>
-                        <td style="text-align:right; padding-top:8px;">
+                        <td class="bold" style="font-size:12px; padding:5px 0;">Keterangan:</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:12px; padding:5px 0;">
                             {{ $sale->notes }}
                         </td>
                     </tr>
