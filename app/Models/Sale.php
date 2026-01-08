@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Sale extends Model
 {
