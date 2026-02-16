@@ -41,7 +41,9 @@ class SaleController extends Controller
                 ->withQueryString(),
             'paymentMethods' => PaymentMethod::active()->get(),
             'filters' => $filters,
-            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
+            'cashiers' => User::role(['super-admin'])
+                ->select('id', 'name', 'qr_token')
+                ->get(),
         ]);
     }
 
@@ -56,9 +58,7 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::role(['super-admin', 'admin'])
-                ->select('id', 'name', 'qr_token')
-                ->get(),
+            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
         ]);
     }
 
@@ -218,8 +218,9 @@ class SaleController extends Controller
 
         $cashier = $this->verifyAuth($data);
 
-        if (!$cashier || !$this->verifyAdminRole($cashier)) {
-            $this->flashError('Hanya admin yang boleh mengubah penjualan.');
+        if (!$cashier) {
+            $this->flashError('Password atau QR admin tidak valid.');
+
             return back();
         }
 
@@ -323,7 +324,11 @@ class SaleController extends Controller
 
     public function print(string $category, Sale $sale)
     {
-        abort_if($sale->category !== $category, 404);
+        if ($sale->category !== $category) {
+            $this->flashError('Penjualan tidak ditemukan.');
+
+            return back();
+        }
 
         $sale->load(['items.item', 'customer', 'paymentMethod', 'user']);
 
