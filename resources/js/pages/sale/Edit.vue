@@ -175,7 +175,7 @@ const openVerifyModal = () => {
 };
 
 const submitSaleFinal = () => {
-    form.put(route('sales.update', { category: props.category, sale: props.sale.id }), {
+    form.patch(route('sales.update', { category: props.category, sale: props.sale.id }), {
         preserveScroll: true,
         onSuccess: (page) => {
             savedSale.value = page.props.flash.sale;

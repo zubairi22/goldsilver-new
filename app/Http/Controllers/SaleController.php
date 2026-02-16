@@ -259,6 +259,17 @@ class SaleController extends Controller
                 }
             }
 
+            $sale->payments()->delete();
+
+            if (!empty($data['paid_amount']) && $data['paid_amount'] > 0) {
+                $sale->payments()->create([
+                    'payment_method_id' => $data['payment_method_id'],
+                    'amount' => $data['paid_amount'],
+                    'note' => 'Pembayaran update',
+                    'user_id' => auth()->id(),
+                ]);
+            }
+
             $sale->refreshPaymentTotals();
 
             $this->flashSuccess("Penjualan {$category} berhasil diperbarui.");
