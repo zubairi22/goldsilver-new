@@ -159,8 +159,8 @@ class MigrateImagesSeeder extends Seeder
     }
 
     /* =====================================================
- * BUYBACK MANUAL IMAGE (PAKAI old_barang_id)
- * ===================================================== */
+    * BUYBACK MANUAL IMAGE (PAKAI old_barang_id)
+    * ===================================================== */
     protected function migrateBuybackManualImages(): void
     {
         BuybackItem::whereNull('item_id')

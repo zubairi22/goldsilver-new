@@ -18,6 +18,7 @@ class BuybackController extends Controller
             'payment_type' => request('payment_type'),
             'start'        => request('start'),
             'end'          => request('end'),
+            'qc_status'    => request('qc_status'),
             'category'     => $category,
         ];
 

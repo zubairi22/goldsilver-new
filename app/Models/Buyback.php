@@ -58,27 +58,35 @@ class Buyback extends Model
 
     public function scopeFilters($query, array $filters)
     {
-        // Search by buyback_no or customer name
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where('buyback_no', 'like', "%{$search}%")
                 ->orWhereHas('customer', function ($sub) use ($search) {
                     $sub->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('items', function ($sub) use ($search) {
+                    $sub->where('manual_name', 'like', "%{$search}%")
+                        ->orWhereHas('item', function ($i) use ($search) {
+                            $i->where('name', 'like', "%{$search}%");
+                        });
                 });
         });
 
-        // Filter payment type: cash / non_cash
         $query->when(($filters['payment_type'] ?? 'all') !== 'all', function ($q) use ($filters) {
             $q->where('payment_type', $filters['payment_type']);
         });
 
-        // Filter category (gold / silver)
         $query->when(($filters['category'] ?? 'all') !== 'all', function ($q) use ($filters) {
             $q->where('category', $filters['category']);
         });
 
-        // Filter date range
         $query->when(($filters['start'] ?? null) && ($filters['end'] ?? null), function ($q) use ($filters) {
             $q->whereBetween('created_at', [$filters['start'], $filters['end']]);
+        });
+
+        $query->when(($filters['qc_status'] ?? 'all') === 'pending', function ($q) {
+            $q->whereHas('items', function ($item) {
+                $item->whereNull('condition');
+            });
         });
     }
 

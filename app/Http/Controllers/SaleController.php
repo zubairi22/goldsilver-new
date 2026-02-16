@@ -41,6 +41,7 @@ class SaleController extends Controller
                 ->withQueryString(),
             'paymentMethods' => PaymentMethod::active()->get(),
             'filters' => $filters,
+            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
         ]);
     }
 
@@ -79,21 +80,15 @@ class SaleController extends Controller
             'items.*.mode' => 'required|in:auto,manual',
         ]);
 
-        $cashier = User::findOrFail($data['cashier_id']);
+        $cashier = $this->verifyAuth($data);
 
-        $validByPassword = ! empty($data['password'])
-            && Hash::check($data['password'], $cashier->password);
-
-        $validByQr = ! empty($data['qr_token'])
-            && $cashier->qr_token === $data['qr_token'];
-
-        if (! $validByPassword && ! $validByQr) {
-            $this->flashError('Password atau QR kasir tidak valid.');
+        if (!$cashier) {
+            $this->flashError('Password atau QR admin tidak valid.');
 
             return back();
         }
 
-        if (! empty($data['customer_id']) && ! is_numeric($data['customer_id'])) {
+        if (!empty($data['customer_id']) && !is_numeric($data['customer_id'])) {
             $customer = Customer::create([
                 'name' => $data['customer_id'],
             ]);
@@ -104,7 +99,7 @@ class SaleController extends Controller
 
             $totalWeight = collect($data['items'])->sum('weight');
             $totalPrice = collect($data['items'])
-                ->sum(fn ($i) => $i['weight'] * $i['price']);
+                ->sum(fn($i) => $i['weight'] * $i['price']);
 
             $sale = Sale::create([
                 'category' => $category,
@@ -132,7 +127,7 @@ class SaleController extends Controller
                     'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
                 ]);
 
-                if (! empty($item['image'])) {
+                if (!empty($item['image'])) {
                     $media = $saleItem
                         ->addMedia($item['image'])
                         ->toMediaCollection('manual');
@@ -148,7 +143,7 @@ class SaleController extends Controller
                 }
             }
 
-            if (! empty($data['paid_amount']) && $data['paid_amount'] > 0) {
+            if (!empty($data['paid_amount']) && $data['paid_amount'] > 0) {
                 $sale->payments()->create([
                     'payment_method_id' => $data['payment_method_id'],
                     'amount' => $data['paid_amount'],
@@ -165,6 +160,160 @@ class SaleController extends Controller
 
             return back();
         });
+    }
+
+    public function edit(string $category, Sale $sale)
+    {
+        if ($sale->category !== $category) {
+            $this->flashError('Penjualan tidak ditemukan.');
+
+            return back();
+        }
+
+        $sale->load(['items.item', 'customer', 'paymentMethod']);
+
+        return inertia('sale/Create', [
+            'category' => $category,
+            'sale' => $sale,
+            'customers' => Customer::pluck('name', 'id'),
+            'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
+            'items' => Item::where('category', $category)
+                ->where(function ($q) use ($sale) {
+                    $q->where('status', 'ready')
+                        ->orWhereIn('id', $sale->items->pluck('item_id')->filter());
+                })
+                ->select('id', 'code', 'name', 'price_sell', 'weight')
+                ->orderBy('name')
+                ->get(),
+            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
+        ]);
+    }
+
+    public function update(Request $request, string $category, Sale $sale)
+    {
+        if ($sale->category !== $category) {
+            $this->flashError('Penjualan tidak ditemukan.');
+
+            return back();
+        }
+
+        $data = $request->validate([
+            'sale_type' => 'required|in:retail,wholesale',
+            'notes' => 'nullable|string|max:500',
+            'customer_id' => 'nullable',
+            'payment_method_id' => 'nullable|exists:payment_methods,id',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'cashier_id' => 'required|exists:users,id',
+            'password' => 'nullable|string',
+            'qr_token' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'nullable|exists:items,id',
+            'items.*.manual_name' => 'nullable|string|max:255',
+            'items.*.weight' => 'required|numeric|min:0.01',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.mode' => 'required|in:auto,manual',
+        ]);
+
+        $cashier = $this->verifyAuth($data);
+
+        if (!$cashier || !$this->verifyAdminRole($cashier)) {
+            $this->flashError('Hanya admin yang boleh mengubah penjualan.');
+            return back();
+        }
+
+        return DB::transaction(function () use ($data, $category, $sale, $cashier) {
+            $oldItemIds = $sale->items()->whereNotNull('item_id')->pluck('item_id');
+            Item::whereIn('id', $oldItemIds)->update(['status' => 'ready']);
+
+            $sale->items()->delete();
+
+            $totalWeight = collect($data['items'])->sum('weight');
+            $totalPrice = collect($data['items'])
+                ->sum(fn($i) => $i['weight'] * $i['price']);
+
+            $sale->update([
+                'sale_type' => $data['sale_type'],
+                'customer_id' => $data['customer_id'],
+                'payment_method_id' => $data['payment_method_id'],
+                'total_weight' => $totalWeight,
+                'total_price' => $totalPrice,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            foreach ($data['items'] as $item) {
+                $sale->items()->create([
+                    'item_id' => $item['mode'] === 'auto' ? $item['id'] : null,
+                    'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
+                    'weight' => $item['weight'],
+                    'price' => $item['price'],
+                    'subtotal' => $item['weight'] * $item['price'],
+                    'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
+                ]);
+
+                if ($item['mode'] === 'auto' && $item['id']) {
+                    Item::where('id', $item['id'])->update(['status' => 'sold']);
+                }
+            }
+
+            $sale->refreshPaymentTotals();
+
+            $this->flashSuccess("Penjualan {$category} berhasil diperbarui.");
+
+            return to_route('sales.index', $category);
+        });
+    }
+
+    public function destroy(Request $request, string $category, Sale $sale)
+    {
+        if ($sale->category !== $category) {
+            $this->flashError('Penjualan tidak ditemukan.');
+
+            return back();
+        }
+
+        $data = $request->validate([
+            'cashier_id' => 'required|exists:users,id',
+            'password' => 'nullable|string',
+            'qr_token' => 'nullable|string',
+        ]);
+
+        $user = $this->verifyAuth($data);
+
+        if (!$user || !$this->verifyAdminRole($user)) {
+            $this->flashError('Hanya admin yang boleh menghapus penjualan.');
+            return back();
+        }
+
+        return DB::transaction(function () use ($sale, $category) {
+            $itemIds = $sale->items()->whereNotNull('item_id')->pluck('item_id');
+            Item::whereIn('id', $itemIds)->update(['status' => 'ready']);
+
+            $sale->delete();
+
+            $this->flashSuccess("Penjualan {$category} berhasil dihapus.");
+        });
+    }
+
+    private function verifyAuth(array $data)
+    {
+        $user = User::findOrFail($data['cashier_id']);
+
+        $validByPassword = !empty($data['password'])
+            && Hash::check($data['password'], $user->password);
+
+        $validByQr = !empty($data['qr_token'])
+            && $user->qr_token === $data['qr_token'];
+
+        if (!$validByPassword && !$validByQr) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    private function verifyAdminRole(User $user)
+    {
+        return $user->hasRole(['super-admin', 'admin']);
     }
 
     public function print(string $category, Sale $sale)

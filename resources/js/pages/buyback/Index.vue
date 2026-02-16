@@ -5,12 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent } from '@/components/ui/card'
 import Heading from '@/components/Heading.vue'
 import PageNav from '@/components/PageNav.vue'
+import SearchInput from '@/components/SearchInput.vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { ref, watch, computed } from 'vue'
 import { useFormat } from '@/composables/useFormat'
+import { useSearch } from '@/composables/useSearch'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -30,13 +32,18 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { formatRupiah, formatDate } = useFormat()
 
+// Search
+const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], { category: props.category })
+
 const payment_type = ref(props.filters.payment_type)
 const date = ref(
     props.filters.start && props.filters.end
         ? [props.filters.start, props.filters.end]
         : []
 )
+const qc_status = ref(props.filters.qc_status ?? 'all')
 
+// QC Modal
 const qcModal = ref(false)
 const qcItem = ref<any>(null)
 
@@ -70,7 +77,9 @@ function submitQC() {
 const applyFilters = () => {
     const params: Record<string, any> = {}
 
-    if (payment_type.value !== 'all') params.payment_type = payment_type.value
+    if (search.value) params.search = search.value
+    if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value
+    if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value
     if (date.value?.[0] && date.value?.[1]) {
         params.start = date.value[0]
         params.end = date.value[1]
@@ -82,7 +91,7 @@ const applyFilters = () => {
     })
 }
 
-watch([payment_type, date], applyFilters)
+watch([payment_type, date, qc_status], applyFilters)
 </script>
 
 <template>
@@ -93,31 +102,53 @@ watch([payment_type, date], applyFilters)
             <Heading
                 class="mx-4"
                 :title="`Buyback ${categoryLabel}`"
-                :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()}`"
+                :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()} (Pencarian pakai No Bukti atau Nama Barang)`"
             />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
+                        <!-- FILTERS -->
                         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                            <div class="flex gap-4">
-                                <Select v-model="payment_type">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pembayaran" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="cash">Cash</SelectItem>
-                                        <SelectItem value="non_cash">Non Cash</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            <div class="flex flex-wrap items-center gap-4">
+                                <div class="w-40">
+                                    <Select v-model="payment_type">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pembayaran" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="non_cash">Non Cash</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div class="w-40">
+                                    <Select v-model="qc_status">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Status QC" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="pending">Belum QC</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             <div class="w-full sm:w-auto lg:w-80">
-                                <VueDatePicker v-model="date" range model-type="yyyy-MM-dd" />
+                                <VueDatePicker v-model="date" range model-type="yyyy-MM-dd" placeholder="Rentang tanggal" />
                             </div>
                         </div>
 
+                        <!-- SEARCH -->
+                        <div class="flex justify-end w-full mb-3">
+                            <div class="w-full lg:w-80">
+                                <SearchInput v-model:search="search" placeholder="Cari No. Buyback / Nama Item..." />
+                            </div>
+                        </div>
+
+                        <!-- TABLE -->
                         <div class="overflow-x-auto">
                             <Table class="w-full">
                                 <TableHeader>
@@ -135,7 +166,7 @@ watch([payment_type, date], applyFilters)
                                 <TableBody>
                                     <template v-for="bb in buybacks.data" :key="bb.id">
                                         <TableRow>
-                                            <TableCell>{{ formatDate(bb.created_at) }}</TableCell>
+                                            <TableCell>{{ formatDate(bb.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
                                             <TableCell>{{ bb.buyback_no }}</TableCell>
                                             <TableCell>{{ bb.customer?.name || '-' }}</TableCell>
                                             <TableCell>{{ bb.user?.name || '-' }}</TableCell>
@@ -181,6 +212,12 @@ watch([payment_type, date], applyFilters)
                                             </TableCell>
                                         </TableRow>
                                     </template>
+
+                                    <TableRow v-if="!buybacks.total">
+                                        <TableCell colspan="7" class="text-center py-4">
+                                            Tidak ada data buyback ditemukan.
+                                        </TableCell>
+                                    </TableRow>
                                 </TableBody>
                             </Table>
                         </div>
@@ -192,6 +229,7 @@ watch([payment_type, date], applyFilters)
         </div>
     </AppLayout>
 
+    <!-- QC MODAL -->
     <Dialog :open="qcModal" @update:open="v => qcModal = v">
         <DialogContent class="max-w-md">
             <DialogHeader>

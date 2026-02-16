@@ -52,7 +52,17 @@ class BuybackItem extends Model implements HasMedia
 
     public function getImageAttribute(): ?string
     {
-        return $this->getFirstMediaUrl('buyback_images', 'thumb') ?: null;
+        $buybackImage = $this->getFirstMediaUrl('buyback_images', 'thumb');
+
+        if ($buybackImage) {
+            return $buybackImage;
+        }
+
+        if ($this->relationLoaded('item') || $this->item) {
+            return $this->item?->image;
+        }
+
+        return null;
     }
 
     public function registerMediaCollections(): void

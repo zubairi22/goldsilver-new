@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Buyback;
+use App\Models\Item;
 use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -52,11 +53,52 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$start, $end])
             ->sum('total_price');
 
+        $totalReceivables = Sale::query()
+            ->whereBetween('created_at', [$start, $end])
+            ->whereIn('status', ['partial', 'unpaid'])
+            ->sum('remaining_amount');
+
+        $totalReadyStock = Item::query()
+            ->where('status', 'ready')
+            ->count();
+
+        $latestSales = Sale::query()
+            ->with('customer')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn($sale) => [
+                'id' => $sale->id,
+                'invoice_no' => $sale->invoice_no,
+                'customer_name' => $sale->customer->name ?? 'Umum',
+                'total_price' => $sale->total_price,
+                'status' => $sale->status,
+                'status_label' => $sale->status_label,
+                'date' => $sale->created_at->format('d/m/Y H:i'),
+            ]);
+
+        $latestBuybacks = Buyback::query()
+            ->with('customer')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn($buyback) => [
+                'id' => $buyback->id,
+                'buyback_no' => $buyback->buyback_no,
+                'customer_name' => $buyback->customer->name ?? 'Umum',
+                'total_price' => $buyback->total_price,
+                'date' => $buyback->created_at->format('d/m/Y H:i'),
+            ]);
+
         return inertia('Dashboard', [
             'summary' => [
                 'totalSales' => $totalSales,
                 'totalBuyback' => $totalBuyback,
+                'totalReceivables' => $totalReceivables,
+                'totalReadyStock' => $totalReadyStock,
             ],
+            'latestSales' => $latestSales,
+            'latestBuybacks' => $latestBuybacks,
             'filters' => [
                 'mode' => $filters['mode'] ?: 'daily',
                 'start' => $start->toDateString(),

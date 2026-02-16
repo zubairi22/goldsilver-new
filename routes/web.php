@@ -86,6 +86,9 @@ Route::middleware('auth')->group(function () {
                     Route::get('/create', [SaleController::class, 'create'])->name('create');
                     Route::post('/', [SaleController::class, 'store'])->name('store');
                     Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
+                    Route::get('/{sale}/edit', [SaleController::class, 'edit'])->name('edit');
+                    Route::patch('/{sale}', [SaleController::class, 'update'])->name('update');
+                    Route::delete('/{sale}', [SaleController::class, 'destroy'])->name('destroy');
                 });
         });
     });

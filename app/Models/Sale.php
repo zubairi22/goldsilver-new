@@ -4,11 +4,12 @@ namespace App\Models;
 
 use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class Sale extends Model
 {
-    use GeneratesQrCode;
+    use GeneratesQrCode, SoftDeletes;
 
     protected $fillable = [
         'invoice_no',
@@ -82,36 +83,40 @@ class Sale extends Model
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($qq) use ($search) {
                 $qq->where('invoice_no', 'like', "%{$search}%")
-                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$search}%")
+                    ->orWhereHas(
+                        'customer',
+                        fn($c) => $c->where('name', 'like', "%{$search}%")
                     )
-                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")
+                    ->orWhereHas(
+                        'user',
+                        fn($u) => $u->where('name', 'like', "%{$search}%")
                     );
             });
         });
 
         $query->when(
             isset($filters['status']) && $filters['status'] !== 'all',
-            fn ($q) => $q->where('status', $filters['status'])
+            fn($q) => $q->where('status', $filters['status'])
         );
 
         $query->when(
             isset($filters['category']) && $filters['category'] !== 'all',
-            fn ($q) => $q->where('category', $filters['category'])
+            fn($q) => $q->where('category', $filters['category'])
         );
 
         $query->when(
             isset($filters['sale_type']) && $filters['sale_type'] !== 'all',
-            fn ($q) => $q->where('sale_type', $filters['sale_type'])
+            fn($q) => $q->where('sale_type', $filters['sale_type'])
         );
 
         $query->when(
             isset($filters['payment_method_id']) && $filters['payment_method_id'] !== 'all',
-            fn ($q) => $q->where('payment_method_id', $filters['payment_method_id'])
+            fn($q) => $q->where('payment_method_id', $filters['payment_method_id'])
         );
 
         $query->when(
-            ! empty($filters['start']) && ! empty($filters['end']),
-            fn ($q) => $q->whereBetween('created_at', [
+            !empty($filters['start']) && !empty($filters['end']),
+            fn($q) => $q->whereBetween('created_at', [
                 Carbon::parse($filters['start'])->startOfDay(),
                 Carbon::parse($filters['end'])->endOfDay(),
             ])
@@ -119,7 +124,7 @@ class Sale extends Model
 
         $query->when(
             isset($filters['user_id']) && $filters['user_id'] !== 'all',
-            fn ($q) => $q->where('user_id', $filters['user_id'])
+            fn($q) => $q->where('user_id', $filters['user_id'])
         );
     }
 
@@ -128,18 +133,18 @@ class Sale extends Model
      */
     public static function generateInvoiceNo(): string
     {
-        $prefix = 'INV-'.now()->format('Ymd').'-';
-        $last = self::where('invoice_no', 'like', $prefix.'%')
+        $prefix = 'INV-' . now()->format('Ymd') . '-';
+        $last = self::where('invoice_no', 'like', $prefix . '%')
             ->orderByDesc('invoice_no')
             ->first();
 
-        if (! $last) {
-            return $prefix.'001';
+        if (!$last) {
+            return $prefix . '001';
         }
 
         $lastNumber = (int) substr($last->invoice_no, -3);
 
-        return $prefix.str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
     }
 
     /**
