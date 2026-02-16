@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import DeleteButton from '@/components/DeleteButton.vue';
 import EditButton from '@/components/EditButton.vue';
 import Heading from '@/components/Heading.vue';
 import Icon from '@/components/Icon.vue';
@@ -21,6 +20,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import { Trash } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -267,7 +267,9 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                             <EditButton @click.stop="editSale(sale)" />
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <DeleteButton @confirm.stop="deleteSale(sale)" />
+                                            <Button class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
+                                                <Trash />
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
 

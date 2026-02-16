@@ -56,7 +56,9 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
+            'cashiers' => User::role(['super-admin', 'admin'])
+                ->select('id', 'name', 'qr_token')
+                ->get(),
         ]);
     }
 
@@ -172,7 +174,7 @@ class SaleController extends Controller
 
         $sale->load(['items.item', 'customer', 'paymentMethod']);
 
-        return inertia('sale/Create', [
+        return inertia('sale/Edit', [
             'category' => $category,
             'sale' => $sale,
             'customers' => Customer::pluck('name', 'id'),
@@ -237,6 +239,7 @@ class SaleController extends Controller
                 'payment_method_id' => $data['payment_method_id'],
                 'total_weight' => $totalWeight,
                 'total_price' => $totalPrice,
+                'paid_amount' => $data['paid_amount'] ?? 0,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -259,7 +262,9 @@ class SaleController extends Controller
 
             $this->flashSuccess("Penjualan {$category} berhasil diperbarui.");
 
-            return to_route('sales.index', $category);
+            session()?->flash('sale', $sale);
+
+            return back();
         });
     }
 
