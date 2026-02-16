@@ -37,6 +37,7 @@ class CashierSession extends Model
     public static function current(): ?self
     {
         return self::where('status', 'open')
+            ->with('openedBy', 'closedBy')
             ->whereDate('opened_at', now()->toDateString())
             ->latest()
             ->first();
@@ -51,10 +52,10 @@ class CashierSession extends Model
         }
 
         return self::create([
-            'opened_by'     => $adminId,
-            'initial_cash'  => $initialCash,
-            'status'        => 'open',
-            'opened_at'     => now(),
+            'opened_by' => $adminId,
+            'initial_cash' => $initialCash,
+            'status' => 'open',
+            'opened_at' => now(),
         ]);
     }
 
@@ -67,11 +68,11 @@ class CashierSession extends Model
         }
 
         $session->update([
-            'closed_by'    => $adminId,
+            'closed_by' => $adminId,
             'closing_cash' => $closingCash ?? 0,
-            'status'       => 'closed',
-            'closed_at'    => now(),
-            'auto_closed'  => false,
+            'status' => 'closed',
+            'closed_at' => now(),
+            'auto_closed' => false,
         ]);
     }
 
@@ -80,10 +81,10 @@ class CashierSession extends Model
         self::where('status', 'open')
             ->whereDate('opened_at', '<', now()->toDateString())
             ->update([
-                'status'      => 'closed',
-                'closed_at'   => now(),
+                'status' => 'closed',
+                'closed_at' => now(),
                 'auto_closed' => true,
-                'closed_by'   => null,
+                'closed_by' => null,
             ]);
     }
 }
