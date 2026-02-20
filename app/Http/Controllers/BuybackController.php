@@ -6,6 +6,7 @@ use App\Models\Buyback;
 use App\Models\BuybackItem;
 use App\Models\Item;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,12 +15,12 @@ class BuybackController extends Controller
     public function index(string $category)
     {
         $filters = [
-            'search'       => request('search'),
+            'search' => request('search'),
             'payment_type' => request('payment_type'),
-            'start'        => request('start'),
-            'end'          => request('end'),
-            'qc_status'    => request('qc_status'),
-            'category'     => $category,
+            'start' => request('start'),
+            'end' => request('end'),
+            'qc_status' => request('qc_status'),
+            'category' => $category,
         ];
 
         return inertia('buyback/Index', [
@@ -55,75 +56,72 @@ class BuybackController extends Controller
 
         return inertia('buyback/Create', [
             'category' => $category,
-            'sale'     => $sale,
+            'sale' => $sale,
             'customer' => $sale->customer,
-            'items'    => $sale->items,
+            'items' => $sale->items,
         ]);
     }
 
     public function store(Request $request, string $category)
     {
         $validated = $request->validate([
-            'sale_id'                => 'required|exists:sales,id',
-            'customer_id'            => 'nullable|exists:customers,id',
-            'items'                  => 'required|array|min:1',
-            'items.*.sale_item_id'   => 'required|exists:sale_items,id',
-            'items.*.item_id'        => 'required|exists:items,id',
+            'sale_id' => 'required|exists:sales,id',
+            'customer_id' => 'nullable|exists:customers,id',
+            'items' => 'required|array|min:1',
+            'items.*.sale_item_id' => 'required|exists:sale_items,id',
+            'items.*.item_id' => 'nullable|exists:items,id',
             'items.*.buyback_weight' => 'required|numeric|min:0.01',
-            'items.*.buyback_price'  => 'required|numeric|min:0',
-            'items.*.manual_name'    => 'nullable|string|max:255',
-            'items.*.image'          => 'nullable|image|max:2048',
+            'items.*.buyback_price' => 'required|numeric|min:0',
+            'items.*.buyback_subtotal' => 'required|numeric|min:0',
+            'items.*.manual_name' => 'nullable|string|max:255',
+            'items.*.image' => 'nullable|image|max:2048',
         ]);
 
         try {
             DB::transaction(function () use ($validated, $category) {
 
                 foreach ($validated['items'] as $d) {
-                    $saleItem = DB::table('sale_items')->where('id', $d['sale_item_id'])->first();
+                    $saleItem = SaleItem::where('id', $d['sale_item_id'])->first();
 
-                    if (! $saleItem || $saleItem->buybacked_at) {
+                    if (!$saleItem || $saleItem->buybacked_at) {
                         throw new \Exception('Item sudah pernah di-buyback.');
                     }
                 }
 
                 $totalWeight = collect($validated['items'])->sum('buyback_weight');
-                $totalPrice  = collect($validated['items'])->sum(
-                    fn ($i) => $i['buyback_weight'] * $i['buyback_price']
-                );
+                $totalPrice = collect($validated['items'])->sum('buyback_subtotal');
 
                 $buyback = Buyback::create([
-                    'buyback_no'   => Buyback::generateBuybackNumber(),
-                    'sale_id'      => $validated['sale_id'],
-                    'customer_id'  => $validated['customer_id'] ?? null,
-                    'user_id'      => auth()->id(),
-                    'category'     => $category,
+                    'buyback_no' => Buyback::generateBuybackNumber(),
+                    'sale_id' => $validated['sale_id'],
+                    'customer_id' => $validated['customer_id'] ?? null,
+                    'user_id' => auth()->id(),
+                    'category' => $category,
                     'payment_type' => 'cash',
                     'total_weight' => $totalWeight,
-                    'total_price'  => $totalPrice,
+                    'total_price' => $totalPrice,
                 ]);
 
                 foreach ($validated['items'] as $d) {
 
                     $buybackItem = BuybackItem::create([
                         'buyback_id' => $buyback->id,
-                        'item_id'    => $d['item_id'],
-                        'manual_name'=> $d['manual_name'] ?? null,
-                        'weight'     => $d['buyback_weight'],
-                        'price'      => $d['buyback_price'],
-                        'subtotal'   => $d['buyback_weight'] * $d['buyback_price'],
+                        'item_id' => $d['item_id'],
+                        'manual_name' => $d['manual_name'] ?? null,
+                        'weight' => $d['buyback_weight'],
+                        'price' => $d['buyback_price'],
+                        'subtotal' => $d['buyback_subtotal'],
                     ]);
 
-                    DB::table('sale_items')
-                        ->where('id', $d['sale_item_id'])
-                        ->update([
-                            'buybacked_at' => now(),
-                        ]);
+                    SaleItem::where('id', $d['sale_item_id'])
+                        ->update(['buybacked_at' => now()]);
 
-                    Item::where('id', $d['item_id'])->update([
-                        'status' => 'sold',
-                    ]);
+                    if (!empty($d['item_id'])) {
+                        Item::where('id', $d['item_id'])
+                            ->update(['status' => 'sold']);
+                    }
 
-                    if (! empty($d['image'])) {
+                    if (!empty($d['image'])) {
                         $media = $buybackItem
                             ->addMedia($d['image'])
                             ->toMediaCollection('buyback_images');
@@ -145,10 +143,11 @@ class BuybackController extends Controller
     public function processQC(Request $request, string $category, BuybackItem $buybackItem)
     {
         $data = $request->validate([
-            'condition'  => 'required|in:good,broken',
-            'name'       => 'required|string|max:255',
-            'weight'     => 'nullable|numeric|min:0',
+            'condition' => 'required|in:good,broken',
+            'name' => 'nullable|string|max:255',
+            'weight' => 'nullable|numeric|min:0',
             'price_sell' => 'nullable|numeric|min:0',
+            'subtotal' => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($buybackItem, $data, $category) {
@@ -158,25 +157,29 @@ class BuybackController extends Controller
                 : $buybackItem->weight;
 
             $buybackItem->update([
-                'condition'   => $data['condition'],
-                'manual_name' => $data['name'],
-                'weight'      => $finalWeight,
-                'subtotal'    => $buybackItem->price * $finalWeight,
+                'condition' => $data['condition'],
+                'manual_name' => $data['name'] ?? '',
+                'weight' => $finalWeight,
+                'subtotal' => $data['subtotal'] ?? $buybackItem->price * $finalWeight,
             ]);
 
-            $item = Item::findOrFail($buybackItem->item_id);
+            $item = $buybackItem->item_id
+                ? Item::find($buybackItem->item_id)
+                : null;
 
-            if ($data['condition'] === 'good') {
-                $item->update([
-                    'status'     => 'ready',
-                    'name'       => $data['name'],
-                    'weight'     => $finalWeight,
-                    'price_sell' => $data['price_sell'],
-                ]);
-            } else {
-                $item->update([
-                    'status' => 'damaged',
-                ]);
+            if ($item) {
+                if ($data['condition'] === 'good') {
+                    $item->update([
+                        'status' => 'ready',
+                        'name' => $data['name'],
+                        'weight' => $finalWeight,
+                        'price_sell' => $data['price_sell'],
+                    ]);
+                } else {
+                    $item->update([
+                        'status' => 'damaged',
+                    ]);
+                }
             }
         });
 

@@ -1,51 +1,46 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, router } from '@inertiajs/vue3'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Card, CardContent } from '@/components/ui/card'
-import Heading from '@/components/Heading.vue'
-import PageNav from '@/components/PageNav.vue'
-import SearchInput from '@/components/SearchInput.vue'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import VueDatePicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import { ref, watch, computed } from 'vue'
-import { useFormat } from '@/composables/useFormat'
-import { useSearch } from '@/composables/useSearch'
-import type { BreadcrumbItem } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import ImageModal from '@/components/ImageModal.vue'
+import Heading from '@/components/Heading.vue';
+import ImageModal from '@/components/ImageModal.vue';
+import PageNav from '@/components/PageNav.vue';
+import SearchInput from '@/components/SearchInput.vue';
+import Badge from '@/components/ui/badge/Badge.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useFormat } from '@/composables/useFormat';
+import { useSearch } from '@/composables/useSearch';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/vue3';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { computed, ref, watch } from 'vue';
 
-const props = defineProps(['buybacks', 'filters', 'category'])
+const props = defineProps(['buybacks', 'filters', 'category']);
 
-const categoryLabel = computed(() =>
-    props.category === 'gold' ? 'Emas' : 'Perak'
-)
+const categoryLabel = computed(() => (props.category === 'gold' ? 'Emas' : 'Perak'));
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: `Buyback ${categoryLabel.value}`, href: '#' },
-]
+];
 
-const { formatRupiah, formatDate } = useFormat()
+const { formatRupiah, formatDate } = useFormat();
 
 // Search
-const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], { category: props.category })
+const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], { category: props.category });
 
-const payment_type = ref(props.filters.payment_type)
-const date = ref(
-    props.filters.start && props.filters.end
-        ? [props.filters.start, props.filters.end]
-        : []
-)
-const qc_status = ref(props.filters.qc_status ?? 'all')
+const payment_type = ref(props.filters.payment_type);
+const date = ref(props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : []);
+const qc_status = ref(props.filters.qc_status ?? 'all');
 
 // QC Modal
-const qcModal = ref(false)
-const qcItem = ref<any>(null)
+const qcModal = ref(false);
+const qcItem = ref<any>(null);
 
 function openQC(item: any) {
     qcItem.value = {
@@ -54,8 +49,8 @@ function openQC(item: any) {
         newName: item.manual_name ?? item.item?.name,
         newWeight: item.weight,
         newSellPrice: item.item?.price_sell ?? 0,
-    }
-    qcModal.value = true
+    };
+    qcModal.value = true;
 }
 
 function submitQC() {
@@ -70,28 +65,28 @@ function submitQC() {
             price_sell: qcItem.value.newSellPrice,
             condition: qcItem.value.newCondition,
         },
-        { onSuccess: () => (qcModal.value = false) }
-    )
+        { onSuccess: () => (qcModal.value = false) },
+    );
 }
 
 const applyFilters = () => {
-    const params: Record<string, any> = {}
+    const params: Record<string, any> = {};
 
-    if (search.value) params.search = search.value
-    if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value
-    if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value
+    if (search.value) params.search = search.value;
+    if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value;
+    if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value;
     if (date.value?.[0] && date.value?.[1]) {
-        params.start = date.value[0]
-        params.end = date.value[1]
+        params.start = date.value[0];
+        params.end = date.value[1];
     }
 
     router.get(route('buyback.index', { category: props.category }), params, {
         preserveState: true,
         preserveScroll: true,
-    })
-}
+    });
+};
 
-watch([payment_type, date, qc_status], applyFilters)
+watch([payment_type, date, qc_status], applyFilters);
 </script>
 
 <template>
@@ -109,7 +104,7 @@ watch([payment_type, date, qc_status], applyFilters)
                 <Card class="py-4 md:mx-4">
                     <CardContent>
                         <!-- FILTERS -->
-                        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
                             <div class="flex flex-wrap items-center gap-4">
                                 <div class="w-40">
                                     <Select v-model="payment_type">
@@ -142,7 +137,7 @@ watch([payment_type, date, qc_status], applyFilters)
                         </div>
 
                         <!-- SEARCH -->
-                        <div class="flex justify-end w-full mb-3">
+                        <div class="mb-3 flex w-full justify-end">
                             <div class="w-full lg:w-80">
                                 <SearchInput v-model:search="search" placeholder="Cari No. Buyback / Nama Item..." />
                             </div>
@@ -153,7 +148,6 @@ watch([payment_type, date, qc_status], applyFilters)
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Tanggal</TableHead>
                                         <TableHead>No Buyback</TableHead>
                                         <TableHead>Pelanggan</TableHead>
                                         <TableHead>Kasir</TableHead>
@@ -166,25 +160,32 @@ watch([payment_type, date, qc_status], applyFilters)
                                 <TableBody>
                                     <template v-for="bb in buybacks.data" :key="bb.id">
                                         <TableRow>
-                                            <TableCell>{{ formatDate(bb.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
-                                            <TableCell>{{ bb.buyback_no }}</TableCell>
+                                            <TableCell>
+                                                <div class="font-semibold">
+                                                    {{ bb.buyback_no }}
+                                                </div>
+                                                <div class="text-xs text-muted-foreground">
+                                                    {{ formatDate(bb.created_at, 'dd MMM yyyy HH:mm') }}
+                                                </div>
+                                            </TableCell>
                                             <TableCell>{{ bb.customer?.name || '-' }}</TableCell>
                                             <TableCell>{{ bb.user?.name || '-' }}</TableCell>
                                             <TableCell class="text-right">{{ bb.total_weight }}</TableCell>
                                             <TableCell class="text-right">{{ formatRupiah(bb.total_price) }}</TableCell>
-                                            <TableCell class="text-center">{{ bb.payment_type }}</TableCell>
+                                            <TableCell class="text-center capitalize">
+                                                <Badge> {{ bb.payment_type }} </Badge>
+                                            </TableCell>
                                         </TableRow>
 
                                         <TableRow class="bg-muted/30">
                                             <TableCell colspan="7">
-                                                <div class="p-4 border rounded bg-white">
+                                                <div class="rounded border bg-white p-4">
                                                     <Table>
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead>Gambar</TableHead>
+                                                                <TableHead>QR</TableHead>
                                                                 <TableHead>Nama</TableHead>
-                                                                <TableHead class="text-right">Berat</TableHead>
-                                                                <TableHead class="text-right">Harga</TableHead>
                                                                 <TableHead class="text-right">Subtotal</TableHead>
                                                                 <TableHead class="text-center">QC</TableHead>
                                                             </TableRow>
@@ -195,15 +196,30 @@ watch([payment_type, date, qc_status], applyFilters)
                                                                 <TableCell>
                                                                     <ImageModal v-if="it.image" :src="it.image" trigger />
                                                                 </TableCell>
+                                                                <TableCell>
+                                                                    <ImageModal
+                                                                        v-if="it.item?.qr_path"
+                                                                        :src="'/storage/' + it.item.qr_path"
+                                                                        trigger
+                                                                    />
+                                                                </TableCell>
                                                                 <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
-                                                                <TableCell class="text-right">{{ it.weight }}</TableCell>
-                                                                <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
-                                                                <TableCell class="text-right">{{ formatRupiah(it.subtotal) }}</TableCell>
+                                                                <TableCell class="text-right">
+                                                                    <div class="font-semibold">
+                                                                        {{ formatRupiah(it.subtotal) }}
+                                                                    </div>
+                                                                    <div class="text-xs text-muted-foreground">
+                                                                        {{ it.weight }} × {{ formatRupiah(it.price) }}
+                                                                    </div>
+                                                                </TableCell>
                                                                 <TableCell class="text-center">
-                                                                    <span v-if="it.condition" class="px-2 py-1 rounded bg-gray-100">
-                                                                        {{ it.condition_label }}
-                                                                    </span>
-                                                                    <Button v-else @click="openQC(it)">Proses QC</Button>
+                                                                    <Badge v-if="category === 'silver'"> Selesai </Badge>
+                                                                    <template v-else>
+                                                                        <Badge v-if="it.condition">
+                                                                            {{ it.condition_label }}
+                                                                        </Badge>
+                                                                        <Button v-else @click="openQC(it)"> Proses QC </Button>
+                                                                    </template>
                                                                 </TableCell>
                                                             </TableRow>
                                                         </TableBody>
@@ -214,9 +230,7 @@ watch([payment_type, date, qc_status], applyFilters)
                                     </template>
 
                                     <TableRow v-if="!buybacks.total">
-                                        <TableCell colspan="7" class="text-center py-4">
-                                            Tidak ada data buyback ditemukan.
-                                        </TableCell>
+                                        <TableCell colspan="7" class="py-4 text-center"> Tidak ada data buyback ditemukan. </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -230,7 +244,7 @@ watch([payment_type, date, qc_status], applyFilters)
     </AppLayout>
 
     <!-- QC MODAL -->
-    <Dialog :open="qcModal" @update:open="v => qcModal = v">
+    <Dialog :open="qcModal" @update:open="(v) => (qcModal = v)">
         <DialogContent class="max-w-md">
             <DialogHeader>
                 <DialogTitle>Proses QC Item</DialogTitle>
@@ -241,21 +255,10 @@ watch([payment_type, date, qc_status], applyFilters)
                 <Input v-model="qcItem.newName" class="mb-3" />
 
                 <Label>Berat Akhir</Label>
-                <Input
-                    v-model.number="qcItem.newWeight"
-                    type="number"
-                    step="0.01"
-                    class="mb-3"
-                    :disabled="qcItem.newCondition === 'broken'"
-                />
+                <Input v-model.number="qcItem.newWeight" type="number" step="0.01" class="mb-3" :disabled="qcItem.newCondition === 'broken'" />
 
                 <Label>Harga Jual</Label>
-                <Input
-                    v-model.number="qcItem.newSellPrice"
-                    type="number"
-                    class="mb-3"
-                    :disabled="qcItem.newCondition === 'broken'"
-                />
+                <Input v-model.number="qcItem.newSellPrice" type="number" class="mb-3" :disabled="qcItem.newCondition === 'broken'" />
 
                 <Label>Kondisi</Label>
                 <Select v-model="qcItem.newCondition">
@@ -269,7 +272,7 @@ watch([payment_type, date, qc_status], applyFilters)
 
             <DialogFooter>
                 <Button variant="secondary" @click="qcModal = false">Batal</Button>
-                <Button @click="submitQC">Simpan</Button>
+                <Button @click="submitQC"> Simpan </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

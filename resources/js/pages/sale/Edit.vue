@@ -73,6 +73,7 @@ const modalItem = ref<any>({
     manual_name: '',
     weight: 0,
     price: 0,
+    subtotal: 0,
     image: undefined,
 });
 
@@ -83,6 +84,7 @@ const addItem = () => {
         manual_name: '',
         weight: 0,
         price: 0,
+        subtotal: 0,
         image: undefined,
     };
     editIndex.value = null;
@@ -97,6 +99,7 @@ const editItem = (index: number) => {
         manual_name: it.manual_name ?? '',
         weight: it.weight,
         price: it.price,
+        subtotal: it.subtotal,
         image: it.image,
     };
     editIndex.value = index;
@@ -107,7 +110,12 @@ const removeItem = (index: number) => {
     form.items.splice(index, 1);
 };
 
-const modalSubtotal = computed(() => Math.round(Number(modalItem.value.weight) * Number(modalItem.value.price)));
+watch(
+    () => [modalItem.value.weight, modalItem.value.price],
+    ([w, p]) => {
+        modalItem.value.subtotal = Math.round(Number(w) * Number(p));
+    },
+);
 
 const saveModalItem = () => {
     if (modalItem.value.mode === 'auto' && !modalItem.value.id) {
@@ -118,8 +126,8 @@ const saveModalItem = () => {
         toast.error('Nama barang harus diisi.');
         return;
     }
-    if (modalSubtotal.value <= 0) {
-        toast.error('Berat dan harga harus valid.');
+    if (modalItem.value.subtotal <= 0) {
+        toast.error('Subtotal harus valid.');
         return;
     }
 
@@ -128,7 +136,7 @@ const saveModalItem = () => {
         manual_name: modalItem.value.manual_name,
         weight: modalItem.value.weight,
         price: modalItem.value.price,
-        subtotal: modalSubtotal.value,
+        subtotal: modalItem.value.subtotal,
         image: modalItem.value.image,
         mode: modalItem.value.mode,
     });
@@ -144,7 +152,7 @@ const updateModalItem = () => {
         manual_name: modalItem.value.manual_name,
         weight: modalItem.value.weight,
         price: modalItem.value.price,
-        subtotal: modalSubtotal.value,
+        subtotal: modalItem.value.subtotal,
         image: modalItem.value.image,
         mode: modalItem.value.mode,
     };
@@ -426,9 +434,10 @@ watch(successModal, (val) => {
                         <Input type="number" v-model.number="modalItem.price" />
                     </div>
 
-                    <div class="flex justify-between">
-                        <span>Subtotal</span>
-                        <span class="font-semibold">{{ formatRupiah(Number(modalSubtotal)) }}</span>
+                    <div>
+                        <Label>Subtotal</Label>
+                        <Input type="number" v-model.number="modalItem.subtotal" />
+                        <p class="mt-1 text-xs text-muted-foreground">Otomatis terjumlah (Berat * Harga), silakan ubah jika perlu pembulatan.</p>
                     </div>
                 </div>
 

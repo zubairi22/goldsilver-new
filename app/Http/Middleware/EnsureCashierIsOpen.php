@@ -16,6 +16,26 @@ class EnsureCashierIsOpen
             return $next($request);
         }
 
+        $transactionRoutes = [
+            'sales.*',
+            'buyback.*',
+            'debt.*',
+            'damaged.*',
+        ];
+
+        foreach ($transactionRoutes as $pattern) {
+            if ($request->routeIs($pattern)) {
+
+                $category = $request->route('category');
+
+                if ($category === 'silver') {
+                    return $next($request);
+                }
+
+                break;
+            }
+        }
+
         if (!CashierSession::current()) {
             $message = 'Kasir belum dibuka. Silakan buka kasir terlebih dahulu.';
 

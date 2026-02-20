@@ -1,47 +1,45 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import Heading from '@/components/Heading.vue'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { computed } from 'vue'
-import { useFormat } from '@/composables/useFormat'
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table'
-import type { BreadcrumbItem } from '@/types'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { LoaderCircle } from 'lucide-vue-next'
-import { useTime } from '@/composables/useTime'
-import CameraUploader from '@/components/CameraUploader.vue'
-import InputError from '@/components/InputError.vue'
+import CameraUploader from '@/components/CameraUploader.vue';
+import Heading from '@/components/Heading.vue';
 import ImageModal from '@/components/ImageModal.vue';
+import InputError from '@/components/InputError.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useFormat } from '@/composables/useFormat';
+import { useTime } from '@/composables/useTime';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { BreadcrumbItem } from '@/types';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
+import { computed, watch } from 'vue';
 
 const props = defineProps<{
-    category: 'gold' | 'silver'
-    sale: any
-    customer: any
-    items: any[]
-}>()
+    category: 'gold' | 'silver';
+    sale: any;
+    customer: any;
+    items: any[];
+}>();
 
-const categoryLabel = computed(() =>
-    props.category === 'gold' ? 'Emas' : 'Perak'
-)
+const categoryLabel = computed(() => (props.category === 'gold' ? 'Emas' : 'Perak'));
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: `Buyback ${categoryLabel.value}`, href: route('buyback.index', { category: props.category }) },
     { title: 'Tambah', href: '#' },
-]
+];
 
-const { formatRupiah, formatDate } = useFormat()
-const { today } = useTime()
+const { formatRupiah, formatDate } = useFormat();
+const { today } = useTime();
 
 const form = useForm({
     sale_id: props.sale.id,
     customer_id: props.customer?.id ?? null,
     items: props.items.map((it: any) => {
-        const bb = it.buyback_item
+        const bb = it.buyback_item;
 
         return {
             sale_item_id: it.id,
@@ -63,62 +61,57 @@ const form = useForm({
             initial_image: it.item?.image ?? null,
 
             is_buyback: !!bb,
-        }
+        };
     }),
-})
+});
 
 const totalBuyback = computed(() =>
-    form.items.reduce(
-        (sum, it) =>
-            it.selected && !it.is_buyback
-                ? sum + Number(it.buyback_weight) * Number(it.buyback_price)
-                : sum,
-        0
-    )
-)
+    form.items.reduce((sum, it) => (it.selected && !it.is_buyback ? sum + Number(it.buyback_subtotal || 0) : sum), 0),
+);
 
 const totalBuybackWeight = computed(() =>
-    form.items.reduce(
-        (sum, it) =>
-            it.selected && !it.is_buyback
-                ? sum + Number(it.buyback_weight || 0)
-                : sum,
-        0
-    )
-)
+    form.items.reduce((sum, it) => (it.selected && !it.is_buyback ? sum + Number(it.buyback_weight || 0) : sum), 0),
+);
 
-const totalBuybackItems = computed(() =>
-    form.items.filter(it => it.selected && !it.is_buyback).length
-)
+const totalBuybackItems = computed(() => form.items.filter((it) => it.selected && !it.is_buyback).length);
 
 const submit = () => {
-    const filtered = form.items.filter(
-        it => it.selected && !it.is_buyback
-    )
+    const filtered = form.items.filter((it) => it.selected && !it.is_buyback);
 
     if (!filtered.length) {
-        alert('Pilih minimal satu item')
-        return
+        alert('Pilih minimal satu item');
+        return;
     }
 
-    form.transform(data => ({
+    form.transform((data) => ({
         ...data,
         items: filtered,
-    }))
+    }));
 
     form.post(route('buyback.store', { category: props.category }), {
         preserveScroll: true,
         onSuccess: () => {
             setTimeout(() => {
-                router.get(route('buyback.index', { category: props.category }))
-            }, 700)
+                router.get(route('buyback.index', { category: props.category }));
+            }, 700);
         },
-    })
-}
+    });
+};
 
 const goBack = () => {
-    router.get(route('sales.index', { category: props.category }))
-}
+    router.get(route('sales.index', { category: props.category }));
+};
+
+watch(
+    () => form.items.map((it) => [it.buyback_weight, it.buyback_price, it.selected]),
+    () => {
+        form.items.forEach((it) => {
+            if (it.selected && !it.is_buyback) {
+                it.buyback_subtotal = Math.round(Number(it.buyback_weight) * Number(it.buyback_price));
+            }
+        });
+    },
+);
 </script>
 
 <template>
@@ -126,20 +119,14 @@ const goBack = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <div class="flex justify-between items-center mx-4">
-                <Heading
-                    :title="`Buyback ${categoryLabel}`"
-                    :description="`Invoice ${sale.invoice_no}`"
-                />
+            <div class="mx-4 flex items-center justify-between">
+                <Heading :title="`Buyback ${categoryLabel}`" :description="`Invoice ${sale.invoice_no}`" />
 
-                <Button variant="outline" @click="goBack">
-                    Kembali
-                </Button>
+                <Button variant="outline" @click="goBack"> Kembali </Button>
             </div>
 
             <div class="max-w-8xl mx-auto space-y-8">
-
-                <Card class="md:mx-4 mb-4">
+                <Card class="mb-4 md:mx-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Informasi Penjualan</p>
                         <hr />
@@ -188,11 +175,8 @@ const goBack = () => {
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4">
-                                <img
-                                    :src="'/storage/' + sale.qr_path"
-                                    class="h-24 w-24 rounded shadow"
-                                />
-                                <p class="mt-4 text-md font-semibold">
+                                <img :src="'/storage/' + sale.qr_path" class="h-24 w-24 rounded shadow" />
+                                <p class="text-md mt-4 font-semibold">
                                     {{ sale.invoice_no }}
                                 </p>
                             </div>
@@ -200,7 +184,7 @@ const goBack = () => {
                     </CardContent>
                 </Card>
 
-                <Card class="md:mx-4 mb-4">
+                <Card class="mb-4 md:mx-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Detail Item Buyback</p>
                         <hr />
@@ -225,22 +209,13 @@ const goBack = () => {
                                 <template v-for="(it, i) in form.items" :key="i">
                                     <TableRow>
                                         <TableCell class="text-center">
-                                            <Checkbox
-                                                v-model="it.selected"
-                                                :disabled="it.is_buyback"
-                                            />
+                                            <Checkbox v-model="it.selected" :disabled="it.is_buyback" />
                                         </TableCell>
 
                                         <TableCell>
                                             <div class="flex flex-col gap-1">
                                                 <span class="font-medium">{{ it.name }}</span>
-                                                <Badge
-                                                    v-if="it.is_buyback"
-                                                    variant="destructive"
-                                                    class="w-28"
-                                                >
-                                                    Sudah Buyback
-                                                </Badge>
+                                                <Badge v-if="it.is_buyback" variant="destructive" class="w-28"> Sudah Buyback </Badge>
                                             </div>
                                         </TableCell>
 
@@ -249,9 +224,7 @@ const goBack = () => {
                                                 <span class="font-semibold">
                                                     {{ formatRupiah(it.subtotal) }}
                                                 </span>
-                                                <span class="text-xs text-gray-500">
-                                                    ({{ it.weight }} gr × {{ formatRupiah(it.price) }})
-                                                </span>
+                                                <span class="text-xs text-gray-500"> ({{ it.weight }} gr × {{ formatRupiah(it.price) }}) </span>
                                             </div>
                                         </TableCell>
 
@@ -279,9 +252,13 @@ const goBack = () => {
                                             <span v-if="it.is_buyback">
                                                 {{ formatRupiah(it.buyback_subtotal) }}
                                             </span>
-                                            <span v-else-if="it.selected">
-                                                {{ formatRupiah(it.buyback_weight * it.buyback_price) }}
-                                            </span>
+                                            <Input
+                                                v-else-if="it.selected"
+                                                type="number"
+                                                class="w-32 text-right"
+                                                v-model.number="it.buyback_subtotal"
+                                                :disabled="!it.selected || it.is_buyback"
+                                            />
                                             <span v-else>-</span>
                                         </TableCell>
 
@@ -294,14 +271,11 @@ const goBack = () => {
                                                     trigger
                                                 />
                                                 <span v-else class="text-sm text-gray-400">Tidak ada</span>
-                                            </div>                  
+                                            </div>
                                         </TableCell>
 
                                         <TableCell class="text-center">
-                                            <CameraUploader
-                                                v-model="form.items[i].image"
-                                                :disabled="!it.selected || it.is_buyback"
-                                            />
+                                            <CameraUploader v-model="form.items[i].image" :disabled="!it.selected || it.is_buyback" />
                                         </TableCell>
                                     </TableRow>
 
@@ -332,7 +306,7 @@ const goBack = () => {
                     </CardHeader>
 
                     <CardContent>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div class="rounded-lg border p-4">
                                 <p class="text-sm text-gray-500">Total Item Dipilih</p>
                                 <p class="text-2xl font-bold">{{ totalBuybackItems }}</p>
@@ -349,22 +323,14 @@ const goBack = () => {
                             </div>
                         </div>
 
-                        <div class="flex justify-end mt-6">
-                            <Button
-                                :disabled="form.processing || !totalBuybackItems"
-                                @click="submit"
-                                class="px-6"
-                            >
-                                <LoaderCircle
-                                    v-if="form.processing"
-                                    class="h-4 w-4 mr-2 animate-spin"
-                                />
+                        <div class="mt-6 flex justify-end">
+                            <Button :disabled="form.processing || !totalBuybackItems" @click="submit" class="px-6">
+                                <LoaderCircle v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                                 Proses Transaksi Buyback
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
-
             </div>
         </div>
     </AppLayout>

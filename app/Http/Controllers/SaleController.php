@@ -78,6 +78,7 @@ class SaleController extends Controller
             'items.*.manual_name' => 'nullable|string|max:255',
             'items.*.weight' => 'required|numeric|min:0.01',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.subtotal' => 'required|numeric|min:0',
             'items.*.image' => 'nullable|image|max:2048',
             'items.*.mode' => 'required|in:auto,manual',
         ]);
@@ -100,8 +101,7 @@ class SaleController extends Controller
         return DB::transaction(function () use ($data, $category, $cashier) {
 
             $totalWeight = collect($data['items'])->sum('weight');
-            $totalPrice = collect($data['items'])
-                ->sum(fn($i) => $i['weight'] * $i['price']);
+            $totalPrice = collect($data['items'])->sum('subtotal');
 
             $sale = Sale::create([
                 'category' => $category,
@@ -125,7 +125,7 @@ class SaleController extends Controller
                     'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
                     'weight' => $item['weight'],
                     'price' => $item['price'],
-                    'subtotal' => $item['weight'] * $item['price'],
+                    'subtotal' => $item['subtotal'],
                     'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
                 ]);
 
@@ -213,6 +213,7 @@ class SaleController extends Controller
             'items.*.manual_name' => 'nullable|string|max:255',
             'items.*.weight' => 'required|numeric|min:0.01',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.subtotal' => 'required|numeric|min:0',
             'items.*.mode' => 'required|in:auto,manual',
         ]);
 
@@ -231,8 +232,7 @@ class SaleController extends Controller
             $sale->items()->delete();
 
             $totalWeight = collect($data['items'])->sum('weight');
-            $totalPrice = collect($data['items'])
-                ->sum(fn($i) => $i['weight'] * $i['price']);
+            $totalPrice = collect($data['items'])->sum('subtotal');
 
             $sale->update([
                 'sale_type' => $data['sale_type'],
@@ -250,7 +250,7 @@ class SaleController extends Controller
                     'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
                     'weight' => $item['weight'],
                     'price' => $item['price'],
-                    'subtotal' => $item['weight'] * $item['price'],
+                    'subtotal' => $item['subtotal'],
                     'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
                 ]);
 
