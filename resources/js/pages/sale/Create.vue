@@ -23,6 +23,7 @@ import { toast } from 'vue-sonner';
 
 const props = defineProps<{
     category: 'gold' | 'silver';
+    saleType: 'retail' | 'wholesale';
     paymentMethods: any[];
     customers: any[];
     items: any[];
@@ -40,7 +41,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    sale_type: 'retail',
+    sale_type: props.saleType,
     mode: 'auto',
     customer_id: '',
     payment_method_id: props.paymentMethods?.[0]?.id ?? null,
@@ -51,6 +52,8 @@ const form = useForm({
     notes: '',
     items: [] as any[],
 });
+
+const saleTypeLabel = computed(() => (props.saleType === 'retail' ? 'Eceran' : 'Partai'));
 
 const verifyModal = ref(false);
 const successModal = ref(false);
@@ -175,7 +178,7 @@ const openVerifyModal = () => {
 };
 
 const submitSaleFinal = () => {
-    form.post(route('sales.store', { category: props.category }), {
+    form.post(route(props.saleType === 'retail' ? 'sales.store.retail' : 'sales.store.wholesale', { category: props.category }), {
         preserveScroll: true,
         onSuccess: (page) => {
             savedSale.value = page.props.flash.sale;
@@ -219,7 +222,7 @@ watch(successModal, (val) => {
 </script>
 
 <template>
-    <Head :title="`Tambah Penjualan ${categoryLabel}`" />
+    <Head :title="`Tambah Penjualan ${categoryLabel} - ${saleTypeLabel}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="px-4 py-6">
             <div class="max-w-8xl mx-auto space-y-6">
@@ -233,7 +236,7 @@ watch(successModal, (val) => {
                     <CardContent class="grid gap-4 md:grid-cols-2">
                         <div>
                             <Label>Tipe Penjualan</Label>
-                            <Select v-model="form.sale_type">
+                            <Select disabled v-model="form.sale_type">
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="retail">Eceran</SelectItem>

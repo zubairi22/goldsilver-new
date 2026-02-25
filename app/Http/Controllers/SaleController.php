@@ -47,10 +47,11 @@ class SaleController extends Controller
         ]);
     }
 
-    public function create(string $category)
+    private function createPage(string $category, string $saleType)
     {
         return inertia('sale/Create', [
             'category' => $category,
+            'saleType' => $saleType,
             'customers' => Customer::pluck('name', 'id'),
             'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
             'items' => Item::where('category', $category)
@@ -60,6 +61,16 @@ class SaleController extends Controller
                 ->get(),
             'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
         ]);
+    }
+
+    public function createRetail(string $category)
+    {
+        return $this->createPage($category, 'retail');
+    }
+
+    public function createWholesale(string $category)
+    {
+        return $this->createPage($category, 'wholesale');
     }
 
     public function store(Request $request, string $category)

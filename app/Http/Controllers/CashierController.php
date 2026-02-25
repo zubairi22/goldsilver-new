@@ -25,12 +25,14 @@ class CashierController extends Controller
     public function open(Request $request)
     {
         $data = $request->validate([
-            'initial_cash' => 'required|numeric|min:0',
+            'gold_initial_cash' => 'required|numeric|min:0',
+            'silver_initial_cash' => 'required|numeric|min:0',
         ]);
 
         try {
             CashierSession::open(
-                initialCash: $data['initial_cash'],
+                goldInitial: $data['gold_initial_cash'],
+                silverInitial: $data['silver_initial_cash'],
                 adminId: auth()->id()
             );
 
@@ -48,13 +50,15 @@ class CashierController extends Controller
     public function close(Request $request)
     {
         $data = $request->validate([
-            'closing_cash' => 'required|numeric|min:0',
+            'gold_closing_cash' => 'required|numeric|min:0',
+            'silver_closing_cash' => 'required|numeric|min:0',
         ]);
 
         try {
             CashierSession::close(
+                goldClosingCash: $data['gold_closing_cash'] ?? 0,
+                silverClosingCash: $data['silver_closing_cash'] ?? 0,
                 adminId: auth()->id(),
-                closingCash: $data['closing_cash'] ?? 0
             );
 
             $this->flashSuccess('Kasir berhasil ditutup.');

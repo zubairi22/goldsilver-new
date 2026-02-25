@@ -23,13 +23,20 @@ class DebtController extends Controller
         return inertia('debt/Index', [
             'category' => $category,
             'sales' => $sales,
-            'paymentMethods' => PaymentMethod::active()->get(),
+            'paymentMethods' => PaymentMethod::active()
+                ->whereIn('name', ['Tunai', 'Non Tunai'])
+                ->orderBy('id')
+                ->get(),
         ]);
     }
 
     public function settle(Request $request, string $category, Sale $sale)
     {
-        abort_if($sale->category !== $category, 404);
+        if ($sale->category !== $category) {
+            $this->flashError('Penjualan tidak ditemukan.');
+
+            return back();
+        }
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
@@ -64,7 +71,11 @@ class DebtController extends Controller
 
     public function setDueDate(Request $request, string $category, Sale $sale)
     {
-        abort_if($sale->category !== $category, 404);
+        if ($sale->category !== $category) {
+            $this->flashError('Penjualan tidak ditemukan.');
+
+            return back();
+        }
 
         $validated = $request->validate([
             'due_date_days' => 'required|numeric|min:1',

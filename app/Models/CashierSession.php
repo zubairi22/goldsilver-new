@@ -9,8 +9,10 @@ class CashierSession extends Model
     protected $fillable = [
         'opened_by',
         'closed_by',
-        'initial_cash',
-        'closing_cash',
+        'gold_initial_cash',
+        'silver_initial_cash',
+        'gold_closing_cash',
+        'silver_closing_cash',
         'auto_closed',
         'status',
         'opened_at',
@@ -43,7 +45,7 @@ class CashierSession extends Model
             ->first();
     }
 
-    public static function open(float $initialCash, int $adminId): self
+    public static function open(float $goldInitial, float $silverInitial, int $adminId): self
     {
         self::autoCloseOldSessions();
 
@@ -53,13 +55,14 @@ class CashierSession extends Model
 
         return self::create([
             'opened_by' => $adminId,
-            'initial_cash' => $initialCash,
+            'gold_initial_cash' => $goldInitial,
+            'silver_initial_cash' => $silverInitial,
             'status' => 'open',
             'opened_at' => now(),
         ]);
     }
 
-    public static function close(int $adminId, ?float $closingCash = null): void
+    public static function close(int $adminId, ?float $goldClosingCash = null, ?float $silverClosingCash = null): void
     {
         $session = self::current();
 
@@ -69,7 +72,8 @@ class CashierSession extends Model
 
         $session->update([
             'closed_by' => $adminId,
-            'closing_cash' => $closingCash ?? 0,
+            'gold_closing_cash' => $goldClosingCash ?? 0,
+            'silver_closing_cash' => $silverClosingCash ?? 0,
             'status' => 'closed',
             'closed_at' => now(),
             'auto_closed' => false,

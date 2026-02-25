@@ -7,6 +7,7 @@ use App\Models\BuybackItem;
 use App\Models\Item;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,8 +18,7 @@ class BuybackController extends Controller
         $filters = [
             'search' => request('search'),
             'payment_type' => request('payment_type'),
-            'start' => request('start'),
-            'end' => request('end'),
+            'date' => request('date'),
             'qc_status' => request('qc_status'),
             'category' => $category,
         ];
@@ -43,7 +43,8 @@ class BuybackController extends Controller
         }
 
         if ($sale->category !== $category) {
-            abort(404);
+            $this->flashError('Transaksi tidak sesuai dengan kategori buyback.');
+            return back();
         }
 
         $sale->load(['items.item', 'items.buybackItem', 'customer', 'user']);
@@ -64,11 +65,19 @@ class BuybackController extends Controller
 
     public function store(Request $request, string $category)
     {
+        $isManual = $request->input('source') === 'manual';
+
+        if ($isManual && $category !== 'silver') {
+            $this->flashError('Buyback manual hanya untuk kategori silver.');
+            return back();
+        }
+
         $validated = $request->validate([
-            'sale_id' => 'required|exists:sales,id',
+            'source' => 'required|in:sale,manual',
+            'sale_id' => $isManual ? 'nullable' : 'required|exists:sales,id',
             'customer_id' => 'nullable|exists:customers,id',
             'items' => 'required|array|min:1',
-            'items.*.sale_item_id' => 'required|exists:sale_items,id',
+            'items.*.sale_item_id' => $isManual ? 'nullable' : 'required|exists:sale_items,id',
             'items.*.item_id' => 'nullable|exists:items,id',
             'items.*.buyback_weight' => 'required|numeric|min:0.01',
             'items.*.buyback_price' => 'required|numeric|min:0',
@@ -78,13 +87,15 @@ class BuybackController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($validated, $category) {
+            DB::transaction(function () use ($validated, $category, $isManual) {
 
-                foreach ($validated['items'] as $d) {
-                    $saleItem = SaleItem::where('id', $d['sale_item_id'])->first();
+                if (!$isManual) {
+                    foreach ($validated['items'] as $d) {
+                        $saleItem = SaleItem::where('id', $d['sale_item_id'])->first();
 
-                    if (!$saleItem || $saleItem->buybacked_at) {
-                        throw new \Exception('Item sudah pernah di-buyback.');
+                        if (!$saleItem || $saleItem->buybacked_at) {
+                            throw new \Exception('Item sudah pernah di-buyback.');
+                        }
                     }
                 }
 
@@ -93,28 +104,32 @@ class BuybackController extends Controller
 
                 $buyback = Buyback::create([
                     'buyback_no' => Buyback::generateBuybackNumber(),
-                    'sale_id' => $validated['sale_id'],
+                    'sale_id' => $isManual ? null : $validated['sale_id'],
                     'customer_id' => $validated['customer_id'] ?? null,
                     'user_id' => auth()->id(),
                     'category' => $category,
                     'payment_type' => 'cash',
                     'total_weight' => $totalWeight,
                     'total_price' => $totalPrice,
+                    'source' => $validated['source'],
                 ]);
 
                 foreach ($validated['items'] as $d) {
 
                     $buybackItem = BuybackItem::create([
                         'buyback_id' => $buyback->id,
-                        'item_id' => $d['item_id'],
+                        'item_id' => $d['item_id'] ?? null,
+                        'sale_item_id' => $isManual ? null : $d['sale_item_id'],
                         'manual_name' => $d['manual_name'] ?? null,
                         'weight' => $d['buyback_weight'],
                         'price' => $d['buyback_price'],
                         'subtotal' => $d['buyback_subtotal'],
                     ]);
 
-                    SaleItem::where('id', $d['sale_item_id'])
-                        ->update(['buybacked_at' => now()]);
+                    if (!$isManual) {
+                        SaleItem::where('id', $d['sale_item_id'])
+                            ->update(['buybacked_at' => now()]);
+                    }
 
                     if (!empty($d['item_id'])) {
                         Item::where('id', $d['item_id'])
@@ -185,5 +200,40 @@ class BuybackController extends Controller
 
         $this->flashSuccess('QC berhasil diproses.');
         return back();
+    }
+
+    public function createManual(string $category)
+    {
+        if ($category !== 'silver') {
+            $this->flashError('Buyback manual hanya untuk kategori silver.');
+            return back();
+        }
+
+        return inertia('buyback/CreateManual', [
+            'category' => $category,
+        ]);
+    }
+
+    public function printLabel($category, BuybackItem $buybackItem)
+    {
+        $buybackItem->load('item');
+
+        $qrBase64 = null;
+
+        if ($buybackItem->item?->qr_path) {
+
+            $qrFullPath = storage_path('app/public/' . $buybackItem->item->qr_path);
+
+            if (file_exists($qrFullPath)) {
+                $qrBase64 = base64_encode(file_get_contents($qrFullPath));
+            }
+        }
+
+        $pdf = Pdf::loadView('pdf.buyback-print-label', [
+            'item' => $buybackItem,
+            'qr' => $qrBase64
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('label-' . $buybackItem->id . '.pdf');
     }
 }

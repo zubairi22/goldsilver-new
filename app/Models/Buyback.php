@@ -31,7 +31,7 @@ class Buyback extends Model
         }
 
         $lastNumber = (int) substr($lastBuyback->buyback_no, -3);
-        $newNumber  = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
 
         return $prefix . $newNumber;
     }
@@ -59,16 +59,18 @@ class Buyback extends Model
     public function scopeFilters($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($q, $search) {
-            $q->where('buyback_no', 'like', "%{$search}%")
-                ->orWhereHas('customer', function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('items', function ($sub) use ($search) {
-                    $sub->where('manual_name', 'like', "%{$search}%")
-                        ->orWhereHas('item', function ($i) use ($search) {
-                            $i->where('name', 'like', "%{$search}%");
-                        });
-                });
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('buyback_no', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($sub) use ($search) {
+                        $sub->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items', function ($sub) use ($search) {
+                        $sub->where('manual_name', 'like', "%{$search}%")
+                            ->orWhereHas('item', function ($i) use ($search) {
+                                $i->where('name', 'like', "%{$search}%");
+                            });
+                    });
+            });
         });
 
         $query->when(($filters['payment_type'] ?? 'all') !== 'all', function ($q) use ($filters) {
@@ -79,8 +81,8 @@ class Buyback extends Model
             $q->where('category', $filters['category']);
         });
 
-        $query->when(($filters['start'] ?? null) && ($filters['end'] ?? null), function ($q) use ($filters) {
-            $q->whereBetween('created_at', [$filters['start'], $filters['end']]);
+        $query->when(($filters['date'] ?? null), function ($q) use ($filters) {
+            $q->whereDate('created_at', $filters['date']);
         });
 
         $query->when(($filters['qc_status'] ?? 'all') === 'pending', function ($q) {

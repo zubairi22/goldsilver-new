@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 import Heading from '@/components/Heading.vue';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/Icon.vue';
 import InputError from '@/components/InputError.vue';
-import CurrencyInput from '@/components/CurrencyInput.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, useForm } from '@inertiajs/vue3';
 
 const { session } = defineProps<{
     session: any | null;
@@ -21,11 +21,13 @@ const breadcrumbs = [
 ];
 
 const openForm = useForm({
-    initial_cash: 0,
+    gold_initial_cash: 0,
+    silver_initial_cash: 0,
 });
 
 const closeForm = useForm({
-    closing_cash: 0,
+    gold_closing_cash: 0,
+    silver_closing_cash: 0,
 });
 
 const scanForm = useForm({
@@ -43,7 +45,6 @@ const submitClose = () => {
 const submitScan = () => {
     scanForm.post(route('cashier.scan'), { preserveScroll: true });
 };
-
 </script>
 
 <template>
@@ -51,34 +52,34 @@ const submitScan = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-
             <Heading class="mx-4" title="Kasir" description="Kelola sesi kasir dan scan transaksi" />
 
             <div class="max-w-8xl mx-auto">
-
                 <!-- CARD UTAMA -->
                 <Card class="py-6 md:mx-4">
                     <CardContent class="space-y-8">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
                             <div class="space-y-6">
-
                                 <p class="text-lg font-semibold">Status Kasir</p>
 
-                                <Badge
-                                    :variant="session ? 'default' : 'secondary'"
-                                    class="px-4 py-1 text-base"
-                                >
+                                <Badge :variant="session ? 'default' : 'secondary'" class="px-4 py-1 text-base">
                                     {{ session ? 'Sedang Dibuka' : 'Tertutup' }}
                                 </Badge>
 
                                 <!-- Detail session -->
-                                <div
-                                    v-if="session"
-                                    class="grid grid-cols-2 gap-4 bg-gray-50 border p-4 rounded-lg text-sm"
-                                >
+                                <div v-if="session" class="grid grid-cols-2 gap-4 rounded-lg border bg-gray-50 p-4 text-sm">
                                     <div>
-                                        <p class="text-gray-600">Modal Awal</p>
-                                        <p class="font-semibold">{{ session.initial_cash }}</p>
+                                        <p class="text-gray-600">Modal Awal Emas</p>
+                                        <p class="font-semibold">
+                                            {{ session.gold_initial_cash }}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-gray-600">Modal Awal Perak</p>
+                                        <p class="font-semibold">
+                                            {{ session.silver_initial_cash }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -93,25 +94,26 @@ const submitScan = () => {
                                 </div>
 
                                 <!-- Input Closing Cash -->
-                                <div v-if="session" class="space-y-2 mt-2">
-                                    <Label for="closing_cash">Kas Akhir</Label>
+                                <div v-if="session" class="mt-2 space-y-2">
+                                    <div class="space-y-2">
+                                        <Label for="gold_closing_cash">Kas Akhir Emas</Label>
 
-                                    <CurrencyInput
-                                        id="closing_cash"
-                                        v-model="closeForm.closing_cash"
-                                        class="w-full lg:w-80"
-                                    />
+                                        <CurrencyInput id="gold_closing_cash" v-model="closeForm.gold_closing_cash" class="w-full lg:w-80" />
 
-                                    <InputError :message="closeForm.errors.closing_cash" />
+                                        <InputError :message="closeForm.errors.gold_closing_cash" />
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <Label for="silver_closing_cash">Kas Akhir Perak</Label>
+
+                                        <CurrencyInput id="silver_closing_cash" v-model="closeForm.silver_closing_cash" class="w-full lg:w-80" />
+
+                                        <InputError :message="closeForm.errors.silver_closing_cash" />
+                                    </div>
                                 </div>
 
                                 <!-- Tombol Tutup Kasir -->
-                                <Button
-                                    v-if="session"
-                                    :disabled="closeForm.processing"
-                                    @click="submitClose"
-                                    class="bg-red-600 hover:bg-red-700 mt-3"
-                                >
+                                <Button v-if="session" :disabled="closeForm.processing" @click="submitClose" class="mt-3 bg-red-600 hover:bg-red-700">
                                     <Icon name="door" class="mr-2" />
                                     Tutup Kasir
                                 </Button>
@@ -125,26 +127,25 @@ const submitScan = () => {
 
                             <!-- FORM BUKA KASIR (HANYA JIKA BELUM ADA SESSION) -->
                             <div v-if="!session" class="space-y-6">
-
                                 <p class="text-lg font-semibold">Buka Kasir</p>
 
                                 <div class="space-y-2">
-                                    <Label for="initial_cash">Modal Awal</Label>
+                                    <Label for="gold_initial_cash">Modal Awal Emas</Label>
 
-                                    <CurrencyInput
-                                        id="initial_cash"
-                                        v-model="openForm.initial_cash"
-                                        class="w-full lg:w-80"
-                                    />
+                                    <CurrencyInput id="gold_initial_cash" v-model="openForm.gold_initial_cash" class="w-full lg:w-80" />
 
-                                    <InputError :message="openForm.errors.initial_cash" />
+                                    <InputError :message="openForm.errors.gold_initial_cash" />
                                 </div>
 
-                                <Button
-                                    :disabled="openForm.processing"
-                                    @click="submitOpen"
-                                    class="bg-green-600 hover:bg-green-700"
-                                >
+                                <div class="space-y-2">
+                                    <Label for="silver_initial_cash">Modal Awal Perak</Label>
+
+                                    <CurrencyInput id="silver_initial_cash" v-model="openForm.silver_initial_cash" class="w-full lg:w-80" />
+
+                                    <InputError :message="openForm.errors.silver_initial_cash" />
+                                </div>
+
+                                <Button :disabled="openForm.processing" @click="submitOpen" class="bg-green-600 hover:bg-green-700">
                                     <Icon name="check" class="mr-2" />
                                     Buka Kasir
                                 </Button>
@@ -152,19 +153,15 @@ const submitScan = () => {
 
                             <!-- PANEL RINGKASAN (TAMPIL SAAT SESSION AKTIF) -->
                             <div v-else class="space-y-6">
-
                                 <p class="text-lg font-semibold">Ringkasan Hari Ini</p>
 
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2 text-sm">
+                                <div class="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
                                     <p class="text-gray-600">Status operasional kasir:</p>
                                     <p class="font-semibold text-blue-800">Kasir aktif & siap digunakan</p>
                                 </div>
 
-                                <p class="text-xs text-gray-500">
-                                    *Panel ini bisa diisi total transaksi, total penjualan, pembelian, dll.
-                                </p>
+                                <p class="text-xs text-gray-500">*Panel ini bisa diisi total transaksi, total penjualan, pembelian, dll.</p>
                             </div>
-
                         </div>
 
                         <hr />
@@ -175,8 +172,7 @@ const submitScan = () => {
                         <div class="space-y-4">
                             <p class="text-lg font-semibold">Scan / Masukkan Kode Transaksi</p>
 
-                            <div class="flex flex-col sm:flex-row gap-3 w-full">
-
+                            <div class="flex w-full flex-col gap-3 sm:flex-row">
                                 <Input
                                     v-model="scanForm.code"
                                     type="text"
@@ -185,11 +181,7 @@ const submitScan = () => {
                                     @keyup.enter="submitScan"
                                 />
 
-                                <Button
-                                    :disabled="scanForm.processing"
-                                    @click="submitScan"
-                                    class="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-                                >
+                                <Button :disabled="scanForm.processing" @click="submitScan" class="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
                                     <Icon name="search" class="mr-2" />
                                     Cari
                                 </Button>
@@ -203,7 +195,6 @@ const submitScan = () => {
                         </div>
                     </CardContent>
                 </Card>
-
             </div>
         </div>
     </AppLayout>

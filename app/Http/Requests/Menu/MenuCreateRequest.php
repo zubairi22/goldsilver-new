@@ -11,11 +11,10 @@ class MenuCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:50', Rule::unique('menus')],
+            'title' => ['required', 'string', 'max:50'],
             'url' => [
                 'required',
                 'max:50',
-                Rule::unique('menus'),
                 function ($attribute, $value, $fail) {
                     if ($this->input('parent_id') !== null) {
                         (new ValidRoute())->validate($attribute, $value, $fail);

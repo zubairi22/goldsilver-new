@@ -31,18 +31,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { formatRupiah, formatDate } = useFormat();
 
-// Search
 const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], { category: props.category });
 
 const payment_type = ref(props.filters.payment_type);
-const date = ref(props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : []);
+const date = ref(props.filters.date ?? null);
 const qc_status = ref(props.filters.qc_status ?? 'all');
 
-// QC Modal
 const qcModal = ref(false);
 const qcItem = ref<any>(null);
 
-function openQC(item: any) {
+const openQC = (item: any) => {
     qcItem.value = {
         ...item,
         newCondition: item.condition ?? null,
@@ -51,9 +49,9 @@ function openQC(item: any) {
         newSellPrice: item.item?.price_sell ?? 0,
     };
     qcModal.value = true;
-}
+};
 
-function submitQC() {
+const submitQC = () => {
     router.patch(
         route('buyback.item.qc', {
             category: props.category,
@@ -67,7 +65,17 @@ function submitQC() {
         },
         { onSuccess: () => (qcModal.value = false) },
     );
-}
+};
+
+const printLabel = (item: any) => {
+    window.open(
+        route('buyback.item.print-label', {
+            category: props.category,
+            buybackItem: item.id,
+        }),
+        '_blank',
+    );
+};
 
 const applyFilters = () => {
     const params: Record<string, any> = {};
@@ -75,10 +83,7 @@ const applyFilters = () => {
     if (search.value) params.search = search.value;
     if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value;
     if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value;
-    if (date.value?.[0] && date.value?.[1]) {
-        params.start = date.value[0];
-        params.end = date.value[1];
-    }
+    if (date.value) params.date = date.value;
 
     router.get(route('buyback.index', { category: props.category }), params, {
         preserveState: true,
@@ -94,11 +99,16 @@ watch([payment_type, date, qc_status], applyFilters);
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading
-                class="mx-4"
-                :title="`Buyback ${categoryLabel}`"
-                :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()} (Pencarian pakai No Bukti atau Nama Barang)`"
-            />
+            <div class="mx-4 flex items-center justify-between">
+                <Heading
+                    :title="`Buyback ${categoryLabel}`"
+                    :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()} (Pencarian pakai No Bukti atau Nama Barang)`"
+                />
+
+                <Button v-if="category === 'silver'" variant="secondary" @click="router.get(route('buyback.create.manual', { category }))">
+                    + Buyback Manual
+                </Button>
+            </div>
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
@@ -132,7 +142,13 @@ watch([payment_type, date, qc_status], applyFilters);
                             </div>
 
                             <div class="w-full sm:w-auto lg:w-80">
-                                <VueDatePicker v-model="date" range model-type="yyyy-MM-dd" placeholder="Rentang tanggal" />
+                                <VueDatePicker
+                                    v-model="date"
+                                    model-type="yyyy-MM-dd"
+                                    :enable-time-picker="false"
+                                    auto-apply
+                                    placeholder="Pilih tanggal"
+                                />
                             </div>
                         </div>
 
@@ -184,10 +200,9 @@ watch([payment_type, date, qc_status], applyFilters);
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead>Gambar</TableHead>
-                                                                <TableHead>QR</TableHead>
                                                                 <TableHead>Nama</TableHead>
                                                                 <TableHead class="text-right">Subtotal</TableHead>
-                                                                <TableHead class="text-center">QC</TableHead>
+                                                                <TableHead class="text-center">Aksi</TableHead>
                                                             </TableRow>
                                                         </TableHeader>
 
@@ -195,13 +210,6 @@ watch([payment_type, date, qc_status], applyFilters);
                                                             <TableRow v-for="it in bb.items" :key="it.id">
                                                                 <TableCell>
                                                                     <ImageModal v-if="it.image" :src="it.image" trigger />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <ImageModal
-                                                                        v-if="it.item?.qr_path"
-                                                                        :src="'/storage/' + it.item.qr_path"
-                                                                        trigger
-                                                                    />
                                                                 </TableCell>
                                                                 <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
                                                                 <TableCell class="text-right">
@@ -214,10 +222,19 @@ watch([payment_type, date, qc_status], applyFilters);
                                                                 </TableCell>
                                                                 <TableCell class="text-center">
                                                                     <Badge v-if="category === 'silver'"> Selesai </Badge>
+
                                                                     <template v-else>
-                                                                        <Badge v-if="it.condition">
-                                                                            {{ it.condition_label }}
-                                                                        </Badge>
+                                                                        <Button
+                                                                            variant="secondary"
+                                                                            v-if="it.condition === 'good'"
+                                                                            size="sm"
+                                                                            @click="printLabel(it)"
+                                                                        >
+                                                                            Cetak Label
+                                                                        </Button>
+
+                                                                        <Badge v-else-if="it.condition === 'broken'"> Rusak </Badge>
+
                                                                         <Button v-else @click="openQC(it)"> Proses QC </Button>
                                                                     </template>
                                                                 </TableCell>

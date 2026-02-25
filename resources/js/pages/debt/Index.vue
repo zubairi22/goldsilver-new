@@ -1,83 +1,82 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, useForm } from '@inertiajs/vue3'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import Heading from '@/components/Heading.vue'
-import { useFormat } from '@/composables/useFormat'
-import type { BreadcrumbItem } from '@/types'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { ref } from 'vue'
-import { LoaderCircle } from 'lucide-vue-next'
-import InputError from '@/components/InputError.vue'
-import CurrencyInput from '@/components/CurrencyInput.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue';
+import Heading from '@/components/Heading.vue';
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Select from '@/components/ui/select/Select.vue';
+import SelectContent from '@/components/ui/select/SelectContent.vue';
+import SelectItem from '@/components/ui/select/SelectItem.vue';
+import SelectTrigger from '@/components/ui/select/SelectTrigger.vue';
+import SelectValue from '@/components/ui/select/SelectValue.vue';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useFormat } from '@/composables/useFormat';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { BreadcrumbItem } from '@/types';
+import { Head, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
+import { ref } from 'vue';
 
-const { sales, paymentMethods, category } = defineProps(['sales', 'paymentMethods', 'category'])
+const { sales, paymentMethods, category } = defineProps(['sales', 'paymentMethods', 'category']);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: `Piutang (${category.toUpperCase()})`, href: '#' },
-]
+];
 
-const { formatRupiah, formatDate } = useFormat()
+const { formatRupiah, formatDate } = useFormat();
 
-const settlementModal = ref(false)
-const dueDateModal = ref(false)
-const detailModal = ref(false)
-const selectedSale = ref<any>(null)
+const settlementModal = ref(false);
+const dueDateModal = ref(false);
+const detailModal = ref(false);
+const selectedSale = ref<any>(null);
 
 const settleForm = useForm({
     amount: 0,
     payment_method_id: '',
-})
+});
 
 const dueDateForm = useForm({
     due_date_days: 1,
-})
+});
 
 const openSettlement = (sale: any) => {
-    selectedSale.value = sale
-    settlementModal.value = true
-}
+    selectedSale.value = sale;
+    settlementModal.value = true;
+};
 
 const openDueDate = (sale: any) => {
-    selectedSale.value = sale
-    dueDateModal.value = true
-}
+    selectedSale.value = sale;
+    dueDateModal.value = true;
+};
 
 const openDetail = (sale: any) => {
-    selectedSale.value = sale
-    detailModal.value = true
-}
+    selectedSale.value = sale;
+    detailModal.value = true;
+};
 
 const handleSettlement = () => {
-    settleForm.post(
-        route('debt.settle', { category, sale: selectedSale.value.id }),
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                settlementModal.value = false
-                settleForm.reset()
-            },
-        }
-    )
-}
+    settleForm.post(route('debt.settle', { category, sale: selectedSale.value.id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            settlementModal.value = false;
+            settleForm.reset();
+        },
+    });
+};
 
 const handleDueDate = () => {
-    dueDateForm.post(
-        route('debt.dueDate', { category, sale: selectedSale.value.id }),
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                dueDateModal.value = false
-                dueDateForm.reset()
-            },
-        }
-    )
-}
+    dueDateForm.post(route('debt.dueDate', { category, sale: selectedSale.value.id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            dueDateModal.value = false;
+            dueDateForm.reset();
+        },
+    });
+};
 </script>
 
 <template>
@@ -85,11 +84,7 @@ const handleDueDate = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading
-                class="mx-4"
-                title="Piutang"
-                :description="`Daftar transaksi ${category} yang masih memiliki piutang`"
-            />
+            <Heading class="mx-4" title="Piutang" :description="`Daftar transaksi ${category} yang masih memiliki piutang`" />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
@@ -117,24 +112,20 @@ const handleDueDate = () => {
                                         <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
-                                        <TableCell class="text-right text-red-600 font-semibold">
+                                        <TableCell class="text-right font-semibold text-red-600">
                                             {{ formatRupiah(sale.remaining_amount) }}
                                         </TableCell>
                                         <TableCell>
                                             <div class="flex gap-2">
                                                 <Button size="sm" @click="openDetail(sale)">Detail</Button>
                                                 <Button size="sm" @click="openSettlement(sale)">Bayar</Button>
-                                                <Button size="sm" variant="secondary" @click="openDueDate(sale)">
-                                                    Jatuh Tempo
-                                                </Button>
+                                                <Button size="sm" variant="secondary" @click="openDueDate(sale)"> Jatuh Tempo </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="sales.total === 0">
-                                        <TableCell colspan="8" class="text-center py-6">
-                                            Tidak ada piutang
-                                        </TableCell>
+                                        <TableCell colspan="8" class="py-6 text-center"> Tidak ada piutang </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -145,7 +136,7 @@ const handleDueDate = () => {
         </div>
     </AppLayout>
 
-    <Dialog :open="settlementModal" @update:open="v => settlementModal = v">
+    <Dialog :open="settlementModal" @update:open="(v) => (settlementModal = v)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Pembayaran Piutang</DialogTitle>
@@ -159,12 +150,14 @@ const handleDueDate = () => {
 
             <div class="mt-3">
                 <Label>Metode Pembayaran</Label>
-                <select v-model="settleForm.payment_method_id" class="w-full border rounded p-2">
-                    <option value="">Pilih...</option>
-                    <option v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
-                        {{ pm.name }}
-                    </option>
-                </select>
+                <Select v-model="settleForm.payment_method_id">
+                    <SelectTrigger><SelectValue placeholder="Pilih Metode Pembayaran" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem v-for="pm in paymentMethods" :key="pm.id" :value="pm.id">
+                            {{ pm.name }}
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
                 <InputError :message="settleForm.errors.payment_method_id" />
             </div>
 
@@ -178,7 +171,7 @@ const handleDueDate = () => {
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="detailModal" @update:open="v => detailModal = v">
+    <Dialog :open="detailModal" @update:open="(v) => (detailModal = v)">
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Detail Pembayaran</DialogTitle>
@@ -186,7 +179,6 @@ const handleDueDate = () => {
             </DialogHeader>
 
             <div v-if="selectedSale" class="space-y-4 text-sm">
-
                 <!-- INFO UTAMA -->
                 <div class="grid grid-cols-3 gap-4">
                     <div>
@@ -229,12 +221,7 @@ const handleDueDate = () => {
 
                     <div>
                         <p class="text-xs text-muted-foreground">Sisa</p>
-                        <p
-                            class="text-base font-semibold"
-                            :class="selectedSale.remaining_amount > 0
-                            ? 'text-red-600'
-                            : 'text-foreground'"
-                        >
+                        <p class="text-base font-semibold" :class="selectedSale.remaining_amount > 0 ? 'text-red-600' : 'text-foreground'">
                             {{ formatRupiah(selectedSale.remaining_amount) }}
                         </p>
                     </div>
@@ -242,7 +229,7 @@ const handleDueDate = () => {
 
                 <!-- TABEL PEMBAYARAN -->
                 <div>
-                    <h3 class="font-semibold mb-2">Riwayat Pembayaran</h3>
+                    <h3 class="mb-2 font-semibold">Riwayat Pembayaran</h3>
 
                     <Table>
                         <TableHeader>
@@ -255,10 +242,7 @@ const handleDueDate = () => {
                         </TableHeader>
 
                         <TableBody>
-                            <TableRow
-                                v-for="pay in selectedSale.payments"
-                                :key="pay.id"
-                            >
+                            <TableRow v-for="pay in selectedSale.payments" :key="pay.id">
                                 <TableCell>
                                     {{ formatDate(pay.created_at, 'dd MMM yyyy HH:mm') }}
                                 </TableCell>
@@ -278,14 +262,12 @@ const handleDueDate = () => {
             </div>
 
             <DialogFooter class="mt-4">
-                <Button variant="secondary" @click="detailModal = false">
-                    Tutup
-                </Button>
+                <Button variant="secondary" @click="detailModal = false"> Tutup </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
 
-    <Dialog :open="dueDateModal" @update:open="v => dueDateModal = v">
+    <Dialog :open="dueDateModal" @update:open="(v) => (dueDateModal = v)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Atur Jatuh Tempo</DialogTitle>

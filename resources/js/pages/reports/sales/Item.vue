@@ -1,79 +1,64 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head, router } from '@inertiajs/vue3'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Heading from '@/components/Heading.vue'
-import SearchInput from '@/components/SearchInput.vue'
-import PageNav from '@/components/PageNav.vue'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import VueDatePicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import { ref, watch } from 'vue'
-import { useSearch } from '@/composables/useSearch'
-import { useFormat } from '@/composables/useFormat'
-import type { BreadcrumbItem } from '@/types'
-import { Button } from '@/components/ui/button'
-import * as XLSX from 'xlsx'
+import Heading from '@/components/Heading.vue';
+import PageNav from '@/components/PageNav.vue';
+import SearchInput from '@/components/SearchInput.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useFormat } from '@/composables/useFormat';
+import { useSearch } from '@/composables/useSearch';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/vue3';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { ref, watch } from 'vue';
+import * as XLSX from 'xlsx';
 
-const {
-    items,
-    filters,
-    totalWeight,
-    totalAmount,
-} = defineProps<{
-    items: any
-    filters: any
-    totalWeight: number
-    totalAmount: number
-}>()
+const { items, filters, totalWeight, totalAmount, isSegmented } = defineProps<{
+    items: any;
+    filters: any;
+    totalWeight: number;
+    totalAmount: number;
+    isSegmented?: boolean;
+}>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Laporan Penjualan Item', href: '#' },
-]
+];
 
-const { search } = useSearch(
-    'reports.sales.item',
-    filters.search,
-    ['items']
-)
+const { search } = useSearch('reports.sales.item', filters.search, ['items']);
 
-const { formatRupiah } = useFormat()
+const { formatRupiah } = useFormat();
 
-const sale_type = ref(filters.sale_type ?? 'all')
-const category = ref(filters.category ?? 'all')
+const category = ref(filters.category ?? 'all');
 
-const date = ref(
-    filters.start && filters.end
-        ? [filters.start, filters.end]
-        : []
-)
+const date = ref(filters.start && filters.end ? [filters.start, filters.end] : []);
 
 const applyFilters = () => {
-    const params: Record<string, any> = {}
+    const params: Record<string, any> = {};
 
-    if (sale_type.value !== 'all') params.sale_type = sale_type.value
-    if (category.value !== 'all') params.category = category.value
-
-    if (date.value?.[0] && date.value?.[1]) {
-        params.start = date.value[0]
-        params.end = date.value[1]
+    if (!isSegmented && category.value !== 'all') {
+        params.category = category.value;
     }
 
-    if (search.value) params.search = search.value
+    if (date.value?.[0] && date.value?.[1]) {
+        params.start = date.value[0];
+        params.end = date.value[1];
+    }
+
+    if (search.value) params.search = search.value;
 
     router.get(route('reports.sales.item'), params, {
         preserveScroll: true,
         preserveState: true,
-    })
-}
+    });
+};
 
-watch([sale_type, category, date], applyFilters)
+watch([category, date], applyFilters);
 
-/* ===============================
-   EXPORT EXCEL (ITEM)
-   =============================== */
 const exportExcel = () => {
     const rows = items.data.map((row: any) => ({
         Nota: row.invoice,
@@ -83,58 +68,46 @@ const exportExcel = () => {
         Item: row.item,
         'Berat (gr)': row.weight,
         Subtotal: row.subtotal,
-    }))
+    }));
 
-    rows.push({})
+    rows.push({});
     rows.push({
         Nota: 'TOTAL',
         'Berat (gr)': totalWeight,
         Subtotal: totalAmount,
-    })
+    });
 
-    const worksheet = XLSX.utils.json_to_sheet(rows)
-    const workbook = XLSX.utils.book_new()
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Item')
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Item');
 
-    const filename = `laporan-penjualan-item-${filters.start}-sd-${filters.end}.xlsx`
-    XLSX.writeFile(workbook, filename)
-}
+    const filename = `laporan-penjualan-item-${filters.start}-sd-${filters.end}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+};
 </script>
 
 <template>
-    <Head title="Laporan Penjualan Item" />
+    <Head title="Laporan Penjualan Barang" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
+            <div class="mx-4 items-center space-y-4 md:flex md:justify-between md:space-y-0">
+                <Heading class="flex-1 md:mr-6" title="Laporan Penjualan Barang" description="Daftar seluruh barang yang terjual" />
 
-            <!-- HEADER -->
-            <div class="mx-4 space-y-4 md:flex items-center md:justify-between md:space-y-0">
-                <Heading
-                    class="md:mr-6 flex-1"
-                    title="Laporan Penjualan Item"
-                    description="Daftar seluruh item yang terjual"
-                />
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-96">
-                    <Card class="py-4 gap-1 border-yellow-200 bg-yellow-50">
+                <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:w-[500px]">
+                    <Card class="gap-1 border-yellow-200 bg-yellow-50 py-4">
                         <CardHeader>
-                            <CardTitle class="text-sm text-yellow-700">
-                                Total Berat
-                            </CardTitle>
+                            <CardTitle class="text-sm text-yellow-700"> Total Berat </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p class="text-xl font-bold text-yellow-800">
-                                {{ totalWeight.toFixed(2) }} gr
-                            </p>
+                            <p class="text-xl font-bold text-yellow-800">{{ totalWeight.toFixed(2) }} gr</p>
                         </CardContent>
                     </Card>
 
-                    <Card class="py-4 gap-1 border-emerald-200 bg-emerald-50">
+                    <Card class="gap-1 border-emerald-200 bg-emerald-50 py-4">
                         <CardHeader>
-                            <CardTitle class="text-sm text-emerald-700">
-                                Total Penjualan
-                            </CardTitle>
+                            <CardTitle class="text-sm text-emerald-700"> Total Penjualan </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p class="text-xl font-bold text-emerald-800">
@@ -149,22 +122,10 @@ const exportExcel = () => {
             <div class="max-w-8xl mx-auto mt-6">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-
                         <!-- FILTER -->
-                        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
                             <div class="flex flex-wrap items-center gap-4">
-                                <div class="w-40">
-                                    <Select v-model="sale_type">
-                                        <SelectTrigger><SelectValue placeholder="Jenis" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="retail">Eceran</SelectItem>
-                                            <SelectItem value="wholesale">Grosir</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div class="w-40">
+                                <div v-if="!isSegmented" class="w-40">
                                     <Select v-model="category">
                                         <SelectTrigger><SelectValue placeholder="Kategori" /></SelectTrigger>
                                         <SelectContent>
@@ -177,31 +138,23 @@ const exportExcel = () => {
                             </div>
 
                             <div class="w-full sm:w-auto lg:w-80">
-                                <VueDatePicker
-                                    v-model="date"
-                                    range
-                                    :enable-time-picker="false"
-                                    model-type="yyyy-MM-dd"
-                                    locale="id"
-                                />
+                                <VueDatePicker v-model="date" range :enable-time-picker="false" model-type="yyyy-MM-dd" locale="id" />
                             </div>
                         </div>
 
                         <!-- SEARCH + EXPORT -->
-                        <div class="flex flex-wrap items-center justify-between mb-3 gap-3">
+                        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                             <div class="w-full lg:w-80">
                                 <SearchInput v-model:search="search" />
                             </div>
 
-                            <Button variant="secondary" @click="exportExcel">
-                                Export Excel
-                            </Button>
+                            <Button variant="secondary" @click="exportExcel"> Export Excel </Button>
                         </div>
 
                         <!-- TABLE -->
-                        <div class="overflow-x-auto max-h-[70vh] overflow-y-auto">
+                        <div class="max-h-[70vh] overflow-x-auto overflow-y-auto">
                             <Table>
-                                <TableHeader class="sticky top-0 bg-background z-10">
+                                <TableHeader class="sticky top-0 z-10 bg-background">
                                     <TableRow>
                                         <TableHead>Nota</TableHead>
                                         <TableHead>Tanggal</TableHead>
@@ -214,10 +167,7 @@ const exportExcel = () => {
                                 </TableHeader>
 
                                 <TableBody>
-                                    <TableRow
-                                        v-for="row in items.data"
-                                        :key="row.invoice + row.item"
-                                    >
+                                    <TableRow v-for="row in items.data" :key="row.invoice + row.item">
                                         <TableCell>{{ row.invoice }}</TableCell>
                                         <TableCell>{{ row.date }}</TableCell>
                                         <TableCell>{{ row.sale_type }}</TableCell>
@@ -230,9 +180,7 @@ const exportExcel = () => {
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="7" class="text-center py-4">
-                                            Tidak ada data item terjual.
-                                        </TableCell>
+                                        <TableCell colspan="7" class="py-4 text-center"> Tidak ada data item terjual. </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

@@ -67,9 +67,11 @@ Route::middleware('auth')->group(function () {
                 ->name('buyback.')
                 ->group(function () {
                     Route::get('/', [BuybackController::class, 'index'])->name('index');
-                    Route::get('/{sale}', [BuybackController::class, 'create'])->name('create');
+                    Route::get('/manual', [BuybackController::class, 'createManual'])->name('create.manual');
+                    Route::get('/{sale}', [BuybackController::class, 'create'])->whereNumber('sale')->name('create');
                     Route::post('/', [BuybackController::class, 'store'])->name('store');
                     Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
+                    Route::get('/item/{buybackItem}/print-label', [BuybackController::class, 'printLabel'])->name('item.print-label');
                 });
 
             Route::prefix('damaged')
@@ -83,7 +85,11 @@ Route::middleware('auth')->group(function () {
                 ->name('sales.')
                 ->group(function () {
                     Route::get('/', [SaleController::class, 'index'])->name('index');
-                    Route::get('/create', [SaleController::class, 'create'])->name('create');
+                    Route::get('/retail/create', [SaleController::class, 'createRetail'])
+                        ->name('create.retail');
+
+                    Route::get('/wholesale/create', [SaleController::class, 'createWholesale'])
+                        ->name('create.wholesale');
                     Route::post('/', [SaleController::class, 'store'])->name('store');
                     Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
                     Route::get('/{sale}/edit', [SaleController::class, 'edit'])->name('edit');
@@ -96,6 +102,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:super-admin')->name('reports.')->prefix('reports')->group(function () {
         Route::get('sales/note', [SalesNoteReportController::class, 'index'])->name('sales.note');
         Route::get('sales/item', [SalesItemReportController::class, 'index'])->name('sales.item');
+        Route::get('sales/item/gold/retail', [SalesItemReportController::class, 'retail'])->name('sales.item.gold.retail');
+        Route::get('sales/item/gold/wholesale', [SalesItemReportController::class, 'wholesale'])->name('sales.item.gold.wholesale');
+        Route::get('sales/item/silver/retail', [SalesItemReportController::class, 'retail'])->name('sales.item.silver.retail');
+        Route::get('sales/item/silver/wholesale', [SalesItemReportController::class, 'wholesale'])->name('sales.item.silver.wholesale');
         Route::get('sales/employee', [SalesEmployeeReportController::class, 'index'])->name('sales.employee');
 
         Route::get('stock', [StockReportController::class, 'index'])->name('stock.index');

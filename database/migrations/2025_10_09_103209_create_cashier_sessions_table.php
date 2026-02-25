@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,8 +14,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('opened_by')->constrained('users')->cascadeOnDelete();
             $table->foreignId('closed_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->integer('initial_cash')->default(0);
-            $table->integer('closing_cash')->nullable();
+            $table->integer('gold_initial_cash')->default(0);
+            $table->integer('silver_initial_cash')->default(0);
+            $table->integer('gold_closing_cash')->nullable();
+            $table->integer('silver_closing_cash')->nullable();
             $table->boolean('auto_closed')->default(false);
             $table->enum('status', ['open', 'closed'])->default('open');
             $table->timestamp('opened_at')->nullable();
