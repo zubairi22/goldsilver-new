@@ -7,6 +7,7 @@ import Badge from '@/components/ui/badge/Badge.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import DialogDescription from '@/components/ui/dialog/DialogDescription.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,7 +34,7 @@ const { formatRupiah, formatDate } = useFormat();
 
 const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], { category: props.category });
 
-const payment_type = ref(props.filters.payment_type);
+const payment_type = ref(props.filters.payment_type ?? 'all');
 const date = ref(props.filters.date ?? null);
 const qc_status = ref(props.filters.qc_status ?? 'all');
 
@@ -77,6 +78,30 @@ const printLabel = (item: any) => {
     );
 };
 
+const labelModal = ref(false);
+const labelDateRange = ref<string[] | null>(null);
+
+const openPrintModal = () => {
+    labelModal.value = true;
+};
+
+const printBulkLabel = () => {
+    if (!labelDateRange.value) return;
+
+    const [start, end] = labelDateRange.value;
+
+    window.open(
+        route('buyback.bulk.print-label', {
+            category: props.category,
+            start_date: start,
+            end_date: end,
+        }),
+        '_blank',
+    );
+
+    labelModal.value = false;
+};
+
 const applyFilters = () => {
     const params: Record<string, any> = {};
 
@@ -105,9 +130,12 @@ watch([payment_type, date, qc_status], applyFilters);
                     :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()} (Pencarian pakai No Bukti atau Nama Barang)`"
                 />
 
-                <Button v-if="category === 'silver'" variant="secondary" @click="router.get(route('buyback.create.manual', { category }))">
-                    + Buyback Manual
-                </Button>
+                <div>
+                    <Button variant="secondary" @click="openPrintModal"> Cetak Label </Button>
+                    <Button v-if="category === 'silver'" variant="secondary" @click="router.get(route('buyback.create.manual', { category }))">
+                        + Buyback Manual
+                    </Button>
+                </div>
             </div>
 
             <div class="max-w-8xl mx-auto">
@@ -291,6 +319,32 @@ watch([payment_type, date, qc_status], applyFilters);
                 <Button variant="secondary" @click="qcModal = false">Batal</Button>
                 <Button @click="submitQC"> Simpan </Button>
             </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="labelModal" @update:open="(v) => (labelModal = v)">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Cetak Label Buyback</DialogTitle>
+                <DialogDescription> Pilih rentang tanggal buyback yang sudah QC selesai. </DialogDescription>
+            </DialogHeader>
+
+            <div class="mt-4 min-h-72">
+                <VueDatePicker
+                    v-model="labelDateRange"
+                    range
+                    model-type="yyyy-MM-dd"
+                    :enable-time-picker="false"
+                    auto-apply
+                    placeholder="Pilih range tanggal"
+                />
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <Button variant="outline" @click="labelModal = false"> Batal </Button>
+
+                <Button :disabled="!labelDateRange" @click="printBulkLabel"> Tampilkan & Cetak </Button>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

@@ -58,6 +58,13 @@ class Buyback extends Model
 
     public function scopeFilters($query, array $filters)
     {
+        $query->whereHas('items', function ($item) {
+            $item->where(function ($q) {
+                $q->whereNull('label_printed_at')
+                    ->orWhereNull('condition');
+            });
+        });
+
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($subQuery) use ($search) {
                 $subQuery->where('buyback_no', 'like', "%{$search}%")

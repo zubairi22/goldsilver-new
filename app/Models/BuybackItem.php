@@ -22,6 +22,7 @@ class BuybackItem extends Model implements HasMedia
         'price',
         'subtotal',
         'condition',
+        'label_printed_at'
     ];
 
     protected $appends = ['image', 'condition_label'];
@@ -43,10 +44,10 @@ class BuybackItem extends Model implements HasMedia
 
     public function getConditionLabelAttribute(): string
     {
-        return match($this->condition) {
-            'good'     => 'Siap Jual',
-            'broken'   => 'Rusak',
-            default    => ucfirst($this->condition),
+        return match ($this->condition) {
+            'good' => 'Siap Jual',
+            'broken' => 'Rusak',
+            default => ucfirst($this->condition),
         };
     }
 

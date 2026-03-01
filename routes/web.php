@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
                     Route::post('/', [BuybackController::class, 'store'])->name('store');
                     Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
                     Route::get('/item/{buybackItem}/print-label', [BuybackController::class, 'printLabel'])->name('item.print-label');
+                    Route::get('bulk/print-label', [BuybackController::class, 'printBulkLabel'])->name('bulk.print-label');
                 });
 
             Route::prefix('damaged')
@@ -107,7 +108,6 @@ Route::middleware('auth')->group(function () {
         Route::get('sales/item/silver/retail', [SalesItemReportController::class, 'retail'])->name('sales.item.silver.retail');
         Route::get('sales/item/silver/wholesale', [SalesItemReportController::class, 'wholesale'])->name('sales.item.silver.wholesale');
         Route::get('sales/employee', [SalesEmployeeReportController::class, 'index'])->name('sales.employee');
-
         Route::get('stock', [StockReportController::class, 'index'])->name('stock.index');
     });
 

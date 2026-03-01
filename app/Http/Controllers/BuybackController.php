@@ -229,11 +229,77 @@ class BuybackController extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('pdf.buyback-print-label', [
-            'item' => $buybackItem,
-            'qr' => $qrBase64
-        ])->setPaper('a4', 'landscape');
+        try {
 
-        return $pdf->stream('label-' . $buybackItem->id . '.pdf');
+            $pdf = Pdf::loadView('pdf.buyback-print-label', [
+                'item' => $buybackItem,
+                'qr' => $qrBase64
+            ])->setPaper('a4', 'landscape');
+
+            if (!$buybackItem->label_printed_at) {
+                $buybackItem->update([
+                    'label_printed_at' => now()
+                ]);
+            }
+
+            return $pdf->stream('label-' . $buybackItem->id . '.pdf');
+
+        } catch (\Throwable $e) {
+
+            $this->flashError('Gagal membuat PDF.', $e);
+            return back();
+        }
+    }
+
+    public function printBulkLabel(Request $request, string $category)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $items = BuybackItem::with('item')
+            ->whereHas('buyback', function ($q) use ($request, $category) {
+                $q->where('category', $category)
+                    ->whereBetween('created_at', [
+                        $request->start_date . ' 00:00:00',
+                        $request->end_date . ' 23:59:59',
+                    ]);
+            })
+            ->where('condition', 'good')
+            ->whereNull('label_printed_at')
+            ->get();
+
+        if ($items->isEmpty()) {
+            $this->flashError('Tidak ada item yang bisa dicetak.');
+            return back();
+        }
+
+        foreach ($items as $item) {
+            if ($item->item?->qr_path) {
+                $path = storage_path('app/public/' . $item->item->qr_path);
+                $item->qr_base64 = is_file($path)
+                    ? base64_encode(file_get_contents($path))
+                    : null;
+            }
+        }
+
+        try {
+            $pdf = Pdf::loadView('pdf.buyback-print-bulk-label', [
+                'items' => $items
+            ])->setPaper('a4', 'landscape');
+
+            BuybackItem::whereIn('id', $items->pluck('id'))
+                ->update([
+                    'label_printed_at' => now()
+                ]);
+
+            return $pdf->stream('bulk-label.pdf');
+
+        } catch (\Throwable $e) {
+
+            $this->flashError('Gagal membuat PDF.', $e);
+            return back();
+        }
     }
 }

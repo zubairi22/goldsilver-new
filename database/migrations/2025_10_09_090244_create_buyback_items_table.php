@@ -22,6 +22,7 @@ return new class extends Migration
             $table->double('price');
             $table->double('subtotal');
             $table->enum('condition', ['good','broken'])->nullable();
+            $table->timestamp('label_printed_at')->nullable();
 
             $table->timestamps();
         });
