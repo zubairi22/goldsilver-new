@@ -270,11 +270,6 @@ class BuybackController extends Controller
             ->whereNull('label_printed_at')
             ->get();
 
-        if ($items->isEmpty()) {
-            $this->flashError('Tidak ada item yang bisa dicetak.');
-            return back();
-        }
-
         foreach ($items as $item) {
             if ($item->item?->qr_path) {
                 $path = storage_path('app/public/' . $item->item->qr_path);
