@@ -178,7 +178,7 @@ const openVerifyModal = () => {
 };
 
 const submitSaleFinal = () => {
-    form.post(route(props.saleType === 'retail' ? 'sales.store.retail' : 'sales.store.wholesale', { category: props.category }), {
+    form.post(route('sales.store', { category: props.category }), {
         preserveScroll: true,
         onSuccess: (page) => {
             savedSale.value = page.props.flash.sale;
