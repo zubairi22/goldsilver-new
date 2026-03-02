@@ -83,7 +83,8 @@ class CashierController extends Controller
         $sale = Sale::where('invoice_no', $code)->first();
 
         if ($sale) {
-            return redirect()->route('gold.sales.index', [
+            return redirect()->route('sales.index', [
+                'category' => 'gold',
                 'search' => $code,
             ]);
         }
@@ -92,7 +93,8 @@ class CashierController extends Controller
         $buyback = Buyback::where('buyback_no', $code)->first();
 
         if ($buyback) {
-            return redirect()->route('gold.buyback.index', [
+            return redirect()->route('buyback.index', [
+                'category' => 'gold',
                 'search' => $code,
             ]);
         }
