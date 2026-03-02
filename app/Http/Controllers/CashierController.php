@@ -83,7 +83,7 @@ class CashierController extends Controller
         $sale = Sale::where('invoice_no', $code)->first();
 
         if ($sale) {
-            return redirect()->route('gold.transactions.sales.index', [
+            return redirect()->route('gold.sales.index', [
                 'search' => $code,
             ]);
         }
