@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{stockOpname}/edit', [StockOpnameController::class, 'edit'])->name('edit');
             Route::patch('/{stockOpname}', [StockOpnameController::class, 'update'])->name('update');
             Route::patch('/{stockOpname}/approve', [StockOpnameController::class, 'approve'])->name('approve');
+            Route::get('/{stockOpname}/compare', [StockOpnameController::class, 'compare'])->name('compare');
             Route::delete('/{stockOpname}', [StockOpnameController::class, 'destroy'])->name('destroy');
         });
     });

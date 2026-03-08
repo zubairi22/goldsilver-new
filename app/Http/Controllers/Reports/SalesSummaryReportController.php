@@ -16,21 +16,19 @@ class SalesSummaryReportController extends Controller
     {
         $date = $request->input('date', now()->toDateString());
 
-        // 1. Rekap Berat Laku (Retail & Wholesale)
         $sales = Sale::where('category', $category)
             ->whereDate('created_at', $date)
-            ->where('status', '!=', 'unpaid') // Only count paid/partial
+            ->where('status', '!=', 'unpaid')
             ->get();
 
         $retailWeight = $sales->where('sale_type', 'retail')->sum('total_weight');
         $wholesaleWeight = $sales->where('sale_type', 'wholesale')->sum('total_weight');
 
-        // 2. Rekap Penerimaan Pembayaran (Grosir & Retail Grouped by Payment Method)
         $retailPayments = [];
         $wholesalePayments = [];
-        
+
         $paymentMethods = PaymentMethod::all();
-        
+
         $payments = SalePayment::with(['paymentMethod', 'sale'])
             ->whereHas('sale', function ($query) use ($category, $date) {
                 $query->where('category', $category)
@@ -42,7 +40,7 @@ class SalesSummaryReportController extends Controller
             $retailTotal = $payments->filter(function ($p) use ($pm) {
                 return ($p->sale?->sale_type === 'retail') && ($p->payment_method_id === $pm->id);
             })->sum('amount');
-            
+
             $wholesaleTotal = $payments->filter(function ($p) use ($pm) {
                 return ($p->sale?->sale_type === 'wholesale') && ($p->payment_method_id === $pm->id);
             })->sum('amount');

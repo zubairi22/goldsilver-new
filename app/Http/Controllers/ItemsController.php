@@ -16,16 +16,17 @@ class ItemsController extends Controller
     public function index(): Response
     {
         $filters = [
-            'search'        => request('search'),
-            'status'        => request('status'),
-            'item_type_id'  => request('item_type_id'),
+            'search' => request('search'),
+            'status' => request('status'),
+            'item_type_id' => request('item_type_id'),
         ];
 
-        $totalWeight = (float) Item::where('status', 'ready')->sum('weight');
-        $totalItems = Item::where('status', 'ready')->count();
+        $totalWeight = (float) Item::where('category', 'gold')->filters($filters)->sum('weight');
+        $totalItems = Item::where('category', 'gold')->filters($filters)->count();
 
         $itemTypeTotals = Item::select('item_type_id')
-            ->where('status', 'ready')
+            ->where('category', 'gold')
+            ->filters($filters)
             ->groupBy('item_type_id')
             ->selectRaw('SUM(weight) as total_weight')
             ->selectRaw('COUNT(id) as total_pieces')
@@ -38,19 +39,20 @@ class ItemsController extends Controller
             ->keyBy('item_type_id');
 
         $items = Item::with('type')
+            ->where('category', 'gold')
             ->filters($filters)
             ->orderBy('code', 'desc')
             ->paginate(10)
             ->onEachSide(1)
             ->withQueryString();
 
-        $items->each(fn ($i) => $i->append('image'));
+        $items->each(fn($i) => $i->append('image'));
 
         return inertia('item/Index', [
             'items' => $items,
             'itemTypes' => ItemType::pluck('name', 'id'),
-            'totalWeight'    => $totalWeight,
-            'totalItems'     => (int) $totalItems,
+            'totalWeight' => $totalWeight,
+            'totalItems' => (int) $totalItems,
             'itemTypeTotals' => $itemTypeTotals,
             'filters' => $filters,
         ]);
@@ -61,7 +63,7 @@ class ItemsController extends Controller
         try {
             DB::beginTransaction();
 
-            $item = Item::create($request->validated());
+            $item = Item::create($request->validated() + ['category' => 'gold']);
 
             if ($request->hasFile('image')) {
                 $item->addMedia($request->file('image'))

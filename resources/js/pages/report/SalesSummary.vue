@@ -156,7 +156,7 @@ const formatWeight = (value: number) => {
                                 <div class="overflow-x-auto rounded-md border">
                                     <Table>
                                         <TableHeader>
-                                            <TableRow class="bg-gray-500 hover:bg-gray-500">
+                                            <TableRow class="bg-gray-600 hover:bg-gray-600">
                                                 <TableHead class="w-[80px] text-center text-white">No.</TableHead>
                                                 <TableHead class="text-white">Jenis Bayar</TableHead>
                                                 <TableHead class="text-right text-white">Total</TableHead>
@@ -169,7 +169,7 @@ const formatWeight = (value: number) => {
                                                 <TableCell class="text-right">{{ formatRupiah(item.total) }}</TableCell>
                                             </TableRow>
                                             <!-- Grand Total -->
-                                            <TableRow class="bg-gray-500 font-bold hover:bg-gray-500">
+                                            <TableRow class="bg-gray-600 font-bold hover:bg-gray-600">
                                                 <TableCell colspan="2" class="text-center text-white">Grand Total</TableCell>
                                                 <TableCell class="text-right text-white">{{ formatRupiah(totalPenerimaanGrosir()) }}</TableCell>
                                             </TableRow>
@@ -184,11 +184,11 @@ const formatWeight = (value: number) => {
                                 <div class="overflow-x-auto rounded-md border">
                                     <Table>
                                         <TableBody>
-                                            <TableRow class="bg-gray-500 font-bold hover:bg-gray-500">
+                                            <TableRow class="bg-gray-600 font-bold hover:bg-gray-600">
                                                 <TableCell class="text-white">Grand Total Berat Gram</TableCell>
                                                 <TableCell class="w-[250px] text-right text-white">{{ formatWeight(buybacks.weight) }}</TableCell>
                                             </TableRow>
-                                            <TableRow class="bg-gray-500 font-bold hover:bg-gray-500">
+                                            <TableRow class="bg-gray-600 font-bold hover:bg-gray-600">
                                                 <TableCell class="text-white">Grand Total Nominal</TableCell>
                                                 <TableCell class="w-[250px] text-right text-white">{{ formatRupiah(buybacks.nominal) }}</TableCell>
                                             </TableRow>

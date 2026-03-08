@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import { useFormat } from '@/composables/useFormat';
 import { useSearch } from '@/composables/useSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -20,6 +21,7 @@ import ItemForm from '@/pages/item/partial/ItemForm.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -36,6 +38,12 @@ const { items, itemTypes, totalItems, totalWeight, itemTypeTotals, filters } = d
 ]);
 
 const { search } = useSearch('store.items.index', route().params.search, ['items']);
+
+useBarcodeScanner((code: string) => {
+    search.value = code;
+    toast.success(`Scan: ${code}`);
+});
+
 const { formatRupiah } = useFormat();
 
 const status = ref(filters.status || 'all');
@@ -172,10 +180,9 @@ watch([status, item_type_id], applyFilters);
                                         <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="ready">Siap Jual</SelectItem>
-                                            <SelectItem value="sold">Terjual</SelectItem>
+                                            <SelectItem value="ready">Ready</SelectItem>
+                                            <SelectItem value="sold">Kosong</SelectItem>
                                             <SelectItem value="damaged">Rusak</SelectItem>
-                                            <SelectItem value="not_ready">Belum Siap</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

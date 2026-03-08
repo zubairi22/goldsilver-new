@@ -1,39 +1,45 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Label } from '@/components/ui/label'
-import InputError from '@/components/InputError.vue'
-import Multiselect from '@vueform/multiselect'
-import VueDatePicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import { useBarcodeScanner } from '@/composables/useBarcodeScanner'
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
+import Multiselect from '@vueform/multiselect';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { toast } from 'vue-sonner';
 
 const { items, disabled, submitting } = defineProps<{
-    items: any
-    disabled?: boolean
-    submitting?: boolean
-}>()
+    items: any;
+    disabled?: boolean;
+    submitting?: boolean;
+}>();
 
-const form = defineModel<any>('form')
+const emit = defineEmits(['submit']);
+const form = defineModel<any>('form');
 
 const addItem = (itemId: number) => {
-    if (disabled) return
-    if (form.value.items.includes(itemId)) return
-    form.value.items.push(itemId)
-}
+    if (disabled) return;
+    if (form.value.items.includes(itemId)) return;
+    form.value.items.push(itemId);
+};
 
 const removeItem = (idx: number) => {
-    if (disabled) return
-    form.value.items.splice(idx, 1)
-}
+    if (disabled) return;
+    form.value.items.splice(idx, 1);
+};
 
-const { initScan } = useBarcodeScanner()
+useBarcodeScanner((code: string) => {
+    if (disabled) return;
 
-const handleFound = (item: any) => {
-    addItem(item.id)
-}
-
-initScan(handleFound)
+    const item = items.find((i: any) => i.code === code);
+    if (item) {
+        addItem(item.id);
+        toast.success(`Berhasil scan: ${item.name}`);
+    } else {
+        toast.error(`Item dengan kode ${code} tidak ditemukan dakam daftar opname ini`);
+    }
+});
 </script>
 
 <template>
@@ -43,12 +49,11 @@ initScan(handleFound)
 
             <VueDatePicker
                 v-model="form.opname_at"
-                :enable-time-picker="true"
-                locale="id"
-                format="yyyy-MM-dd HH:mm"
-                model-type="yyyy-MM-dd HH:mm:ss"
+                :enable-time-picker="false"
+                model-type="yyyy-MM-dd"
                 :disabled="disabled"
                 class="w-full"
+                auto-apply
             />
 
             <InputError :message="form.errors.opname_at" />
@@ -57,12 +62,7 @@ initScan(handleFound)
         <div>
             <Label class="text-sm font-medium">Catatan</Label>
 
-            <textarea
-                v-model="form.notes"
-                :disabled="disabled"
-                class="w-full rounded-md border px-3 py-2 text-sm"
-                rows="3"
-            />
+            <textarea v-model="form.notes" :disabled="disabled" class="w-full rounded-md border px-3 py-2 text-sm" rows="3" />
         </div>
     </div>
 
@@ -70,21 +70,11 @@ initScan(handleFound)
         <hr class="mb-3" />
 
         <div class="mb-2 flex items-center justify-between">
-            <h3 class="font-semibold">
-                Item Discan ({{ form.items.length }})
-            </h3>
+            <h3 class="font-semibold">Item Discan ({{ form.items.length }})</h3>
         </div>
 
         <div class="mb-3">
-            <Multiselect
-                :options="items"
-                label="name"
-                value-prop="id"
-                searchable
-                append-to-body
-                :disabled="disabled"
-                @select="addItem"
-            />
+            <Multiselect :options="items" label="name" value-prop="id" searchable append-to-body :disabled="disabled" @select="addItem" />
         </div>
 
         <div class="overflow-x-auto">
@@ -99,38 +89,26 @@ initScan(handleFound)
                 </TableHeader>
 
                 <TableBody>
-                    <TableRow
-                        v-for="(id, idx) in form.items"
-                        :key="id"
-                    >
+                    <TableRow v-for="(id, idx) in form.items" :key="id">
                         <TableCell>
-                            {{ items.find((i:any) => i.id === id)?.code }}
+                            {{ items.find((i: any) => i.id === id)?.code }}
                         </TableCell>
 
                         <TableCell>
-                            {{ items.find((i:any) => i.id === id)?.name }}
+                            {{ items.find((i: any) => i.id === id)?.name }}
                         </TableCell>
 
                         <TableCell>
-                            {{ items.find((i:any) => i.id === id)?.weight }}
+                            {{ items.find((i: any) => i.id === id)?.weight }}
                         </TableCell>
 
                         <TableCell>
-                            <Button
-                                size="icon"
-                                variant="destructive"
-                                :disabled="disabled"
-                                @click="removeItem(idx)"
-                            >
-                                ✕
-                            </Button>
+                            <Button size="icon" variant="destructive" :disabled="disabled" @click="removeItem(idx)"> ✕ </Button>
                         </TableCell>
                     </TableRow>
 
                     <TableRow v-if="!form.items.length">
-                        <TableCell colspan="4">
-                            Belum ada item discan
-                        </TableCell>
+                        <TableCell colspan="4"> Belum ada item discan </TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
@@ -139,15 +117,7 @@ initScan(handleFound)
         <InputError class="mt-2" :message="form.errors.items" />
     </div>
 
-    <div v-if="!disabled" class="mt-4 flex justify-end">
-        <Button
-            type="button"
-            :disabled="submitting"
-            @click="emit('submit')"
-        >
-            Simpan
-        </Button>
-    </div>
+
 </template>
 
 <style src="@vueform/multiselect/themes/default.css" />

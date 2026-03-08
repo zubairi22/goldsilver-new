@@ -29,7 +29,7 @@ class StockOpnameController extends Controller
     public function create(): Response
     {
         return inertia('stock-opname/Create', [
-            'items' => Item::where('status', 'ready')
+            'items' => Item::where('category', 'gold')->where('status', 'ready')
                 ->select('id', 'code', 'name', 'weight')
                 ->get(),
             'defaults' => [
@@ -44,12 +44,14 @@ class StockOpnameController extends Controller
         $data = $request->validate([
             'opname_at' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
+            'items' => ['nullable', 'array'],
+            'items.*' => ['required', 'exists:items,id'],
         ]);
 
         try {
             DB::beginTransaction();
 
-            $totalSystem = Item::where('status', 'ready')->count();
+            $totalSystem = Item::where('category', 'gold')->where('status', 'ready')->count();
 
             $opname = StockOpname::create([
                 'user_id' => auth()->id(),
@@ -59,16 +61,24 @@ class StockOpnameController extends Controller
                 'status' => 'draft',
             ]);
 
+            if (isset($data['items'])) {
+                foreach ($data['items'] as $itemId) {
+                    StockOpnameItem::create([
+                        'stock_opname_id' => $opname->id,
+                        'item_id' => $itemId,
+                    ]);
+                }
+            }
+
             DB::commit();
 
             $this->flashSuccess('Stock opname berhasil dibuat.');
-            return Redirect::route('stock-opnames.edit', $opname->id);
+            return Redirect::route('store.stock-opnames.edit', $opname->id);
 
         } catch (Throwable $e) {
             DB::rollBack();
-            report($e);
 
-            $this->flashError('Gagal membuat stock opname.');
+            $this->flashError('Gagal membuat stock opname.', $e);
             return back();
         }
     }
@@ -79,7 +89,7 @@ class StockOpnameController extends Controller
 
         return inertia('stock-opname/Edit', [
             'opname' => $stockOpname,
-            'items' => Item::select('id', 'code', 'name', 'weight', 'status')->get(),
+            'items' => Item::where('category', 'gold')->select('id', 'code', 'name', 'weight', 'status')->get(),
         ]);
     }
 
@@ -125,7 +135,7 @@ class StockOpnameController extends Controller
             DB::rollBack();
             report($e);
 
-            $this->flashError('Gagal memperbarui stock opname.');
+            $this->flashError('Gagal memperbarui stock opname.', $e);
             return back();
         }
     }
@@ -144,7 +154,7 @@ class StockOpnameController extends Controller
 
             $scannedIds = $stockOpname->items->pluck('item_id');
 
-            $totalSystem = Item::where('status', 'ready')->count();
+            $totalSystem = Item::where('category', 'gold')->where('status', 'ready')->count();
             $totalScanned = $scannedIds->count();
             $missing = max($totalSystem - $totalScanned, 0);
 
@@ -169,9 +179,8 @@ class StockOpnameController extends Controller
 
         } catch (Throwable $e) {
             DB::rollBack();
-            report($e);
-
-            $this->flashError('Gagal menyetujui stock opname.');
+            
+            $this->flashError('Gagal menyetujui stock opname.', $e);
             return back();
         }
     }
@@ -196,10 +205,35 @@ class StockOpnameController extends Controller
 
         } catch (Throwable $e) {
             DB::rollBack();
-            report($e);
 
-            $this->flashError('Gagal menghapus stock opname.');
+            $this->flashError('Gagal menghapus stock opname.', $e);
             return back();
         }
+    }
+
+    public function compare(StockOpname $stockOpname): Response
+    {
+        $previousOpname = StockOpname::where('status', 'approved')
+            ->where('opname_at', '<', $stockOpname->opname_at)
+            ->latest('opname_at')
+            ->first();
+
+        $currentItemsIds = $stockOpname->items()->pluck('item_id');
+        $previousItemsIds = $previousOpname ? $previousOpname->items()->pluck('item_id') : collect([]);
+
+        // Items in previous but not in current
+        $missingIds = $previousItemsIds->diff($currentItemsIds);
+
+        // Filter items that are still in ready/not_ready status (not sold/damaged)
+        $missingItems = Item::with('type')
+            ->whereIn('id', $missingIds)
+            ->whereIn('status', ['ready', 'not_ready', 'damaged'])
+            ->get();
+
+        return inertia('stock-opname/Compare', [
+            'opname' => $stockOpname,
+            'previousOpname' => $previousOpname,
+            'missingItems' => $missingItems,
+        ]);
     }
 }

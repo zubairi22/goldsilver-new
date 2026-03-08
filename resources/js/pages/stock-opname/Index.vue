@@ -109,14 +109,23 @@ const destroyOpname = (id: number) => {
                                             </span>
                                         </TableCell>
 
-                                        <TableCell class="px-1">
-                                            <Link
-                                                :href="route('store.stock-opnames.edit', op.id)"
-                                            >
-                                                <Button size="sm" variant="secondary">
-                                                    Detail
-                                                </Button>
-                                            </Link>
+                                        <TableCell class="p-1">
+                                            <div class="flex gap-1">
+                                                <Link
+                                                    :href="route('store.stock-opnames.edit', op.id)"
+                                                >
+                                                    <Button size="sm" variant="outline">
+                                                        Detail
+                                                    </Button>
+                                                </Link>
+                                                <Link
+                                                    :href="route('store.stock-opnames.compare', op.id)"
+                                                >
+                                                    <Button size="sm" variant="secondary">
+                                                        Bandingkan
+                                                    </Button>
+                                                </Link>
+                                            </div>
                                         </TableCell>
 
                                         <TableCell class="px-1">
@@ -133,7 +142,7 @@ const destroyOpname = (id: number) => {
                                             <DeleteButton
                                                 size="sm"
                                                 :disabled="op.status === 'approved'"
-                                                @click="destroyOpname(op.id)"
+                                                @confirm="destroyOpname(op.id)"
                                             />
                                         </TableCell>
                                     </TableRow>
