@@ -107,7 +107,7 @@ const handleDueDate = () => {
                                 <TableBody>
                                     <TableRow v-for="sale in sales.data" :key="sale.id">
                                         <TableCell>{{ sale.invoice_no }}</TableCell>
-                                        <TableCell>{{ sale.customer?.name ?? '-' }}</TableCell>
+                                        <TableCell>{{ sale.customer ?? '-' }}</TableCell>
                                         <TableCell>{{ sale.user?.name }}</TableCell>
                                         <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
@@ -198,7 +198,7 @@ const handleDueDate = () => {
                     <div>
                         <p class="font-semibold text-muted-foreground">Pelanggan</p>
                         <p>
-                            {{ selectedSale.customer?.name || '-' }}
+                            {{ selectedSale.customer || '-' }}
                         </p>
                     </div>
                 </div>

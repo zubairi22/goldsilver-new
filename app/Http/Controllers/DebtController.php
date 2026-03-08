@@ -15,7 +15,7 @@ class DebtController extends Controller
     {
         $sales = Sale::where('category', $category)
             ->where('remaining_amount', '>', 0)
-            ->with(['customer', 'items.item', 'payments.paymentMethod', 'user'])
+            ->with(['items.item', 'payments.paymentMethod', 'user'])
             ->latest()
             ->paginate(20)
             ->withQueryString();
