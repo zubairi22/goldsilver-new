@@ -6,16 +6,21 @@ use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Sale extends Model
+class Sale extends Model implements HasMedia
 {
-    use GeneratesQrCode, SoftDeletes;
+    use GeneratesQrCode, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'invoice_no',
+        'legacy_hash',
         'category',
         'sale_type',
-        'customer_id',
+        'customer',
         'user_id',
         'payment_method_id',
         'total_weight',
@@ -48,11 +53,6 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -66,6 +66,30 @@ class Sale extends Model
     public function payments()
     {
         return $this->hasMany(SalePayment::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('sale-image')->singleFile();
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->format('webp')
+            ->fit(Fit::Max, 800, 800)
+            ->quality(80)
+            ->nonQueued();
+    }
+
+    public function getSaleImageAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('sale-image', 'thumb') ?: null;
+    }
+
+    public function getSaleImagePathAttribute(): ?string
+    {
+        return $this->getFirstMediaPath('sale-image', 'thumb') ?: null;
     }
 
     public function getStatusLabelAttribute(): string
@@ -83,10 +107,7 @@ class Sale extends Model
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($qq) use ($search) {
                 $qq->where('invoice_no', 'like', "%{$search}%")
-                    ->orWhereHas(
-                        'customer',
-                        fn($c) => $c->where('name', 'like', "%{$search}%")
-                    )
+                    ->orWhere('customer', 'like', "%{$search}%")
                     ->orWhereHas(
                         'user',
                         fn($u) => $u->where('name', 'like', "%{$search}%")
@@ -115,11 +136,8 @@ class Sale extends Model
         );
 
         $query->when(
-            !empty($filters['start']) && !empty($filters['end']),
-            fn($q) => $q->whereBetween('created_at', [
-                Carbon::parse($filters['start'])->startOfDay(),
-                Carbon::parse($filters['end'])->endOfDay(),
-            ])
+            empty($filters['search']) && ($filters['date'] ?? null),
+            fn($q) => $q->whereDate('created_at', $filters['date'])
         );
 
         $query->when(

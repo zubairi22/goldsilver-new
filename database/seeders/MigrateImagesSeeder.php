@@ -16,9 +16,9 @@ class MigrateImagesSeeder extends Seeder
     public function run(): void
     {
         $this->migrateItemImages();
-        $this->migrateManualSaleImages();
-        $this->migrateBuybackImages();
-        $this->migrateBuybackManualImages();
+        // $this->migrateManualSaleImages();
+        // $this->migrateBuybackImages();
+        // $this->migrateBuybackManualImages();
     }
 
     /* =====================================================
@@ -40,7 +40,8 @@ class MigrateImagesSeeder extends Seeder
                     foreach ($extensions as $ext) {
                         try {
                             $resp = Http::timeout(10)->get("{$baseUrl}{$code}.{$ext}");
-                            if (! $resp->successful()) continue;
+                            if (!$resp->successful())
+                                continue;
 
                             $media = $item->addMediaFromString($resp->body())
                                 ->usingFileName("{$code}.{$ext}")
@@ -85,7 +86,8 @@ class MigrateImagesSeeder extends Seeder
                     foreach ($extensions as $ext) {
                         try {
                             $resp = Http::timeout(10)->get("{$baseUrl}{$oldBarangId}.{$ext}");
-                            if (! $resp->successful()) continue;
+                            if (!$resp->successful())
+                                continue;
 
                             $media = $saleItem
                                 ->addMediaFromString($resp->body())
@@ -124,7 +126,8 @@ class MigrateImagesSeeder extends Seeder
                 foreach ($buybackItems as $buybackItem) {
 
                     $item = $buybackItem->item;
-                    if (! $item) continue;
+                    if (!$item)
+                        continue;
 
                     $code = (int) $item->code;
                     $baseUrl = 'https://karina-goldsilver.com/siperak/assets/upload/barang/';
@@ -133,7 +136,8 @@ class MigrateImagesSeeder extends Seeder
                     foreach ($extensions as $ext) {
                         try {
                             $resp = Http::timeout(10)->get("{$baseUrl}{$code}.{$ext}");
-                            if (! $resp->successful()) continue;
+                            if (!$resp->successful())
+                                continue;
 
                             $media = $buybackItem
                                 ->addMediaFromString($resp->body())
@@ -159,8 +163,8 @@ class MigrateImagesSeeder extends Seeder
     }
 
     /* =====================================================
-    * BUYBACK MANUAL IMAGE (PAKAI old_barang_id)
-    * ===================================================== */
+     * BUYBACK MANUAL IMAGE (PAKAI old_barang_id)
+     * ===================================================== */
     protected function migrateBuybackManualImages(): void
     {
         BuybackItem::whereNull('item_id')
@@ -181,7 +185,8 @@ class MigrateImagesSeeder extends Seeder
                             $resp = Http::timeout(10)
                                 ->get("{$baseUrl}{$oldBarangId}.{$ext}");
 
-                            if (! $resp->successful()) continue;
+                            if (!$resp->successful())
+                                continue;
 
                             $media = $buybackItem
                                 ->addMediaFromString($resp->body())

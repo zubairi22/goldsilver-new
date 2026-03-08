@@ -12,8 +12,7 @@ use Illuminate\Support\Str;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Item;
-use App\Models\Buyback;
-use App\Models\BuybackItem;
+use Zxing\QrReader;
 
 class MigratePenjualanSeeder extends Seeder
 {
@@ -48,31 +47,30 @@ class MigratePenjualanSeeder extends Seeder
             return;
         }
 
-        $category = ((int)$row->kategorijual === 1) ? 'silver' : 'gold';
-        $saleType = ((int)$row->jenisjual === 2) ? 'wholesale' : 'retail';
+        $category = ((int) $row->kategorijual === 1) ? 'silver' : 'gold';
+        $saleType = ((int) $row->jenisjual === 2) ? 'wholesale' : 'retail';
 
-        $totalPrice = (float)$row->harganet;
-        $paidAmount = (float)$row->totalbayar;
-        $remaining  = max(0, $totalPrice - $paidAmount);
+        $totalPrice = (float) $row->harganet;
+        $paidAmount = (float) $row->totalbayar;
+        $remaining = max(0, $totalPrice - $paidAmount);
 
         $status = match (true) {
             $paidAmount >= $totalPrice && $totalPrice > 0 => 'paid',
-            $paidAmount > 0                                => 'partial',
-            default                                        => 'unpaid',
+            $paidAmount > 0 => 'partial',
+            default => 'unpaid',
         };
 
-        $paymentMethodId = match ((int)$row->jenisbayar) {
-            4       => 4,
-            3       => 3,
-            2       => 2,
+        $paymentMethodId = match ((int) $row->jenisbayar) {
+            4 => 4,
+            3 => 3,
+            2 => 2,
             default => 1,
         };
-
-        $customerId = $this->resolveCustomer($row->namapembeli);
 
         // ========== DOWNLOAD QR LAMA ==========
         $qrUrl = "https://karina-goldsilver.com/siperak/assets/generated/qr/penjualan/{$row->idpenjualan}.png";
         $qrPath = null;
+        $legacyHash = null;
 
         try {
             $resp = Http::timeout(15)->get($qrUrl);
@@ -88,6 +86,15 @@ class MigratePenjualanSeeder extends Seeder
                 Storage::disk('public')->put($folder . '/' . $filename, $resp->body());
 
                 $qrPath = $folder . '/' . $filename;
+
+                $absolutePath = storage_path('app/public/' . $qrPath);
+
+                $qrcode = new QrReader($absolutePath);
+                $text = $qrcode->text();
+
+                if ($text) {
+                    $legacyHash = trim($text);
+                }
             } else {
                 Log::warning("Gagal download QR: ID {$row->idpenjualan}");
             }
@@ -96,22 +103,23 @@ class MigratePenjualanSeeder extends Seeder
         }
 
         $sale = Sale::createQuietly([
-            'invoice_no'        => 'PJ-' . $row->idpenjualan,
-            'qr_path'           => $qrPath,
-            'category'          => $category,
-            'sale_type'         => $saleType,
-            'customer_id'       => $customerId,
-            'user_id'           => 1,
-            'total_weight'      => $row->berattotal,
-            'total_price'       => $totalPrice,
-            'paid_amount'       => $paidAmount,
-            'remaining_amount'  => $remaining,
-            'change_amount'     => $row->kembalibayar ?? 0,
+            'invoice_no' => 'PJ-' . $row->idpenjualan,
+            'qr_path' => $qrPath,
+            'legacy_hash' => $legacyHash,
+            'category' => $category,
+            'sale_type' => $saleType,
+            'customer' => $row->namapembeli,
+            'user_id' => 1,
+            'total_weight' => $row->berattotal,
+            'total_price' => $totalPrice,
+            'paid_amount' => $paidAmount,
+            'remaining_amount' => $remaining,
+            'change_amount' => $row->kembalibayar ?? 0,
             'payment_method_id' => $paymentMethodId,
-            'status'            => $status,
-            'notes'             => $row->keterangan,
-            'created_at'        => $row->datecreated,
-            'updated_at'        => $row->datecreated,
+            'status' => $status,
+            'notes' => $row->keterangan,
+            'created_at' => $row->datecreated,
+            'updated_at' => $row->datecreated,
         ]);
 
         if ($paymentMethodId === 4) {
@@ -150,47 +158,25 @@ class MigratePenjualanSeeder extends Seeder
 
         foreach ($details as $d) {
 
-            $code = str_pad((string)$d->idbarang, 6, '0', STR_PAD_LEFT);
+            $code = str_pad((string) $d->idbarang, 6, '0', STR_PAD_LEFT);
             $item = Item::where('code', $code)->first();
 
             SaleItem::create([
-                'sale_id'     => $sale->id,
-                'item_id'     => $item?->id,
+                'sale_id' => $sale->id,
+                'item_id' => $item?->id,
                 'manual_name' => $item ? null : $d->namabarang,
-                'weight'      => $d->berat,
-                'price'       => $d->harganet,
-                'subtotal'    => $d->subtotalnet,
-                'old_barang_id'  => $item ? null : (int) $d->idbarang,
-                'source'         => $saleSource,
-                'created_at'  => $d->datecreated,
-                'updated_at'  => $d->datecreated,
+                'weight' => $d->berat,
+                'price' => $d->harganet,
+                'subtotal' => $d->subtotalnet,
+                'old_barang_id' => $item ? null : (int) $d->idbarang,
+                'source' => $saleSource,
+                'created_at' => $d->datecreated,
+                'updated_at' => $d->datecreated,
             ]);
 
             if ($item) {
                 $item->updateQuietly(['status' => 'sold']);
             }
         }
-    }
-
-    /* =====================================================
-     * CUSTOMER
-     * ===================================================== */
-    protected function resolveCustomer(?string $name): ?int
-    {
-        if (!$name || trim($name) === '') return null;
-
-        $name = trim($name);
-
-        $existing = DB::table('customers')
-            ->whereRaw('LOWER(name) = ?', [strtolower($name)])
-            ->first();
-
-        return $existing
-            ? $existing->id
-            : DB::table('customers')->insertGetId([
-                'name' => $name,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
     }
 }

@@ -7,34 +7,44 @@ import { Link } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Toko',
+        title: 'Toko Emas',
         url: 'store.settings.index',
+        param: 'gold',
+        icon: 'X',
+    },
+    {
+        title: 'Toko Perak',
+        url: 'store.settings.index',
+        param: 'silver',
         icon: 'X',
     },
     {
         title: 'Metode Pembayaran',
         url: 'store.payment-methods.index',
+        param: '',
         icon: 'X',
     },
 ];
-
 </script>
 
 <template>
     <div class="px-4 py-6">
         <Heading title="Pengaturan Toko" description="Kelola data dari toko anda" />
 
-        <div class="flex flex-col space-y-8 lg:space-y-0 lg:flex-row lg:space-x-12">
+        <div class="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
             <aside class="w-full max-w-xl lg:w-48">
-                <nav class="flex flex-col space-x-0 space-y-1">
+                <nav class="flex flex-col space-y-1 space-x-0">
                     <Button
                         v-for="item in sidebarNavItems"
                         :key="item.url"
                         variant="ghost"
-                        :class="['w-full justify-start', { 'bg-muted': route().current(item.url) }]"
+                        :class="[
+                            'w-full justify-start',
+                            { 'bg-muted': route().current(item.url) && (item.param === null || item.param === route().params.category) },
+                        ]"
                         as-child
                     >
-                        <Link :href="route(item.url)">
+                        <Link :href="route(item.url, { category: item.param })">
                             {{ item.title }}
                         </Link>
                     </Button>

@@ -4,49 +4,61 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class StoreSetting extends Model
+class StoreSetting extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
     protected $fillable = [
+        'category',
         'store_name',
         'phone',
         'instagram',
         'address',
-        'gold_invoice_color',
-        'silver_invoice_color',
-        'footer_gold_wholesale',
-        'footer_gold_retail',
-        'footer_silver_wholesale',
-        'footer_silver_retail',
+        'invoice_color',
+        'header',
+        'footer_wholesale',
+        'footer_retail',
     ];
 
-    /**
-     * Ambil konfigurasi utama (singleton)
-     */
-    public static function current(): self
+    protected $appends = ['logo', 'logo_path'];
+
+    public static function current(string $category = 'gold')
     {
-        return self::firstOrCreate([], [
-            'store_name' => 'Toko Emas Kita',
-            'gold_invoice_color' => '#FFD700',
-            'silver_invoice_color' => '#C0C0C0',
-        ]);
+        return self::firstOrCreate(
+            ['category' => $category],
+            [
+                'store_name' => $category === 'gold' ? 'Toko Emas Kita' : 'Toko Perak Kita',
+                'invoice_color' => $category === 'gold' ? '#FFD700' : '#C0C0C0',
+            ]
+        );
     }
 
-    public function getInvoiceColor(string $category): string
+    public function registerMediaCollections(): void
     {
-        return $category === 'gold'
-            ? $this->gold_invoice_color
-            : $this->silver_invoice_color;
+        $this->addMediaCollection('store-logo')->singleFile();
     }
 
-    public function getFooter(string $category, string $saleType): ?string
+    public function registerMediaConversions(Media $media = null): void
     {
-        return match ([$category, $saleType]) {
-            ['gold', 'wholesale'] => $this->footer_gold_wholesale,
-            ['gold', 'retail'] => $this->footer_gold_retail,
-            ['silver', 'wholesale'] => $this->footer_silver_wholesale,
-            ['silver', 'retail'] => $this->footer_silver_retail,
-            default => null,
-        };
+        $this->addMediaConversion('thumb')
+            ->format('webp')
+            ->fit(Fit::Max, 400, 400)
+            ->quality(80)
+            ->nonQueued();
+    }
+
+    public function getLogoAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('store-logo', 'thumb') ?: null;
+    }
+
+    public function getLogoPathAttribute(): ?string
+    {
+        return $this->getFirstMediaPath('store-logo', 'thumb') ?: null;
     }
 }

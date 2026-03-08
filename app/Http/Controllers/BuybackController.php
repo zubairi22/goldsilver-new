@@ -18,14 +18,14 @@ class BuybackController extends Controller
         $filters = [
             'search' => request('search'),
             'payment_type' => request('payment_type'),
-            'date' => request('date'),
+            'date' => request('date', now()->toDateString()),
             'qc_status' => request('qc_status'),
             'category' => $category,
         ];
 
         return inertia('buyback/Index', [
             'category' => $category,
-            'buybacks' => Buyback::with(['customer', 'user', 'items.item'])
+            'buybacks' => Buyback::with(['user', 'items.item'])
                 ->filters($filters)
                 ->latest()
                 ->paginate(20)
@@ -47,7 +47,7 @@ class BuybackController extends Controller
             return back();
         }
 
-        $sale->load(['items.item', 'items.buybackItem', 'customer', 'user']);
+        $sale->load(['items.item', 'items.buybackItem', 'user']);
 
         $sale->items->each(function ($saleItem) {
             if ($saleItem->item) {
@@ -58,7 +58,6 @@ class BuybackController extends Controller
         return inertia('buyback/Create', [
             'category' => $category,
             'sale' => $sale,
-            'customer' => $sale->customer,
             'items' => $sale->items,
         ]);
     }
@@ -75,7 +74,7 @@ class BuybackController extends Controller
         $validated = $request->validate([
             'source' => 'required|in:sale,manual',
             'sale_id' => $isManual ? 'nullable' : 'required|exists:sales,id',
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer' => 'nullable',
             'items' => 'required|array|min:1',
             'items.*.sale_item_id' => $isManual ? 'nullable' : 'required|exists:sale_items,id',
             'items.*.item_id' => 'nullable|exists:items,id',
@@ -105,7 +104,7 @@ class BuybackController extends Controller
                 $buyback = Buyback::create([
                     'buyback_no' => Buyback::generateBuybackNumber(),
                     'sale_id' => $isManual ? null : $validated['sale_id'],
-                    'customer_id' => $validated['customer_id'] ?? null,
+                    'customer' => $validated['customer'] ?? null,
                     'user_id' => auth()->id(),
                     'category' => $category,
                     'payment_type' => 'cash',

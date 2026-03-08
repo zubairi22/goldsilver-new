@@ -2,12 +2,12 @@
 
 use App\Http\Controllers\CashierController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ItemsController;
 use App\Http\Controllers\ItemTypesController;
 use App\Http\Controllers\Reports\SalesEmployeeReportController;
 use App\Http\Controllers\Reports\SalesItemReportController;
 use App\Http\Controllers\Reports\SalesNoteReportController;
+use App\Http\Controllers\Reports\SalesSummaryReportController;
 use App\Http\Controllers\Reports\StockReportController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\Store\PaymentMethodController;
@@ -34,13 +34,19 @@ Route::middleware('auth')->group(function () {
     Route::post('cashier/scan', [CashierController::class, 'scan'])->name('cashier.scan');
 
     Route::middleware('role:super-admin')->prefix('store')->name('store.')->group(function () {
-        Route::get('settings', [StoreController::class, 'index'])->name('settings.index');
-        Route::patch('settings', [StoreController::class, 'update'])->name('settings.update');
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('{category}', [StoreController::class, 'index'])
+                ->whereIn('category', ['gold', 'silver'])
+                ->name('index');
+
+            Route::patch('{category}', [StoreController::class, 'update'])
+                ->whereIn('category', ['gold', 'silver'])
+                ->name('update');
+        });
 
         Route::resource('payment-methods', PaymentMethodController::class)->except(['show', 'create', 'edit']);
         Route::resource('item-types', ItemTypesController::class)->except(['show', 'create', 'edit']);
         Route::resource('items', ItemsController::class)->except(['show', 'create', 'edit']);
-        Route::resource('customers', CustomersController::class)->except(['show', 'create', 'edit']);
 
         Route::prefix('stock-opnames')->name('stock-opnames.')->group(function () {
             Route::get('/', [StockOpnameController::class, 'index'])->name('index');
@@ -101,6 +107,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:super-admin')->name('reports.')->prefix('reports')->group(function () {
+        Route::get('sales/summary/{category}', [SalesSummaryReportController::class, 'index'])->name('sales.summary');
         Route::get('sales/note', [SalesNoteReportController::class, 'index'])->name('sales.note');
         Route::get('sales/item', [SalesItemReportController::class, 'index'])->name('sales.item');
         Route::get('sales/item/gold/retail', [SalesItemReportController::class, 'retail'])->name('sales.item.gold.retail');

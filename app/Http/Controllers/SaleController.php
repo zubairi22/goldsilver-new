@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class SaleController extends Controller
 {
@@ -21,8 +22,7 @@ class SaleController extends Controller
             'search' => request('search'),
             'sale_type' => request('sale_type'),
             'payment_method_id' => request('payment_method_id'),
-            'start' => request('start'),
-            'end' => request('end'),
+            'date' => request('date', now()->toDateString()),
             'category' => $category,
         ];
 
@@ -31,7 +31,6 @@ class SaleController extends Controller
             'sales' => Sale::with([
                 'items.item',
                 'payments',
-                'customer',
                 'user',
                 'paymentMethod',
             ])
@@ -52,7 +51,6 @@ class SaleController extends Controller
         return inertia('sale/Create', [
             'category' => $category,
             'saleType' => $saleType,
-            'customers' => Customer::pluck('name', 'id'),
             'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
             'items' => Item::where('category', $category)
                 ->where('status', 'ready')
@@ -78,7 +76,8 @@ class SaleController extends Controller
         $data = $request->validate([
             'sale_type' => 'required|in:retail,wholesale',
             'notes' => 'nullable|string|max:500',
-            'customer_id' => 'nullable',
+            'image' => 'nullable|image|max:2048',
+            'customer' => 'nullable',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
             'paid_amount' => 'nullable|numeric|min:0',
             'cashier_id' => 'required|exists:users,id',
@@ -98,18 +97,10 @@ class SaleController extends Controller
 
         if (!$cashier) {
             $this->flashError('Password atau QR admin tidak valid.');
-
             return back();
         }
 
-        if (!empty($data['customer_id']) && !is_numeric($data['customer_id'])) {
-            $customer = Customer::create([
-                'name' => $data['customer_id'],
-            ]);
-            $data['customer_id'] = $customer->id;
-        }
-
-        return DB::transaction(function () use ($data, $category, $cashier) {
+        return DB::transaction(function () use ($request, $data, $category, $cashier) {
 
             $totalWeight = collect($data['items'])->sum('weight');
             $totalPrice = collect($data['items'])->sum('subtotal');
@@ -117,7 +108,7 @@ class SaleController extends Controller
             $sale = Sale::create([
                 'category' => $category,
                 'sale_type' => $data['sale_type'],
-                'customer_id' => $data['customer_id'],
+                'customer' => $data['customer'],
                 'user_id' => $cashier->id,
                 'payment_method_id' => $data['payment_method_id'],
                 'total_weight' => $totalWeight,
@@ -128,6 +119,18 @@ class SaleController extends Controller
                 'status' => 'unpaid',
                 'notes' => $data['notes'] ?? null,
             ]);
+
+            if ($request->hasFile('image')) {
+
+                $media = $sale
+                    ->addMediaFromRequest('image')
+                    ->toMediaCollection('sale-image');
+
+                $path = $media->getPath();
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
+            }
 
             foreach ($data['items'] as $item) {
 
@@ -183,12 +186,11 @@ class SaleController extends Controller
             return back();
         }
 
-        $sale->load(['items.item', 'customer', 'paymentMethod']);
+        $sale->load(['items.item', 'paymentMethod']);
 
         return inertia('sale/Edit', [
             'category' => $category,
             'sale' => $sale,
-            'customers' => Customer::pluck('name', 'id'),
             'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
             'items' => Item::where('category', $category)
                 ->where(function ($q) use ($sale) {
@@ -213,7 +215,8 @@ class SaleController extends Controller
         $data = $request->validate([
             'sale_type' => 'required|in:retail,wholesale',
             'notes' => 'nullable|string|max:500',
-            'customer_id' => 'nullable',
+            'image' => 'nullable|image|max:2048',
+            'customer' => 'nullable',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
             'paid_amount' => 'nullable|numeric|min:0',
             'cashier_id' => 'required|exists:users,id',
@@ -236,7 +239,7 @@ class SaleController extends Controller
             return back();
         }
 
-        return DB::transaction(function () use ($data, $category, $sale, $cashier) {
+        return DB::transaction(function () use ($request, $data, $category, $sale) {
             $oldItemIds = $sale->items()->whereNotNull('item_id')->pluck('item_id');
             Item::whereIn('id', $oldItemIds)->update(['status' => 'ready']);
 
@@ -245,9 +248,21 @@ class SaleController extends Controller
             $totalWeight = collect($data['items'])->sum('weight');
             $totalPrice = collect($data['items'])->sum('subtotal');
 
+            if ($request->hasFile('image')) {
+
+                $media = $sale
+                    ->addMediaFromRequest('image')
+                    ->toMediaCollection('sale-image');
+
+                $path = $media->getPath();
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
+            }
+
             $sale->update([
                 'sale_type' => $data['sale_type'],
-                'customer_id' => $data['customer_id'],
+                'customer' => $data['customer'],
                 'payment_method_id' => $data['payment_method_id'],
                 'total_weight' => $totalWeight,
                 'total_price' => $totalPrice,
@@ -352,7 +367,8 @@ class SaleController extends Controller
             return back();
         }
 
-        $sale->load(['items.item', 'customer', 'paymentMethod', 'user']);
+        $sale->load(['items.item', 'paymentMethod', 'user']);
+        $sale->append('sale_image_path');
 
         $sale->items->each(function ($saleItem) {
             $saleItem->append('manual_image_path');
@@ -361,15 +377,18 @@ class SaleController extends Controller
             }
         });
 
-        $store = StoreSetting::current();
-        $footer = $store->getFooter($sale->category, $sale->sale_type);
-        $color = $store->getInvoiceColor($sale->category);
+        $store = StoreSetting::current($category);
 
-        $pdf = Pdf::loadView('pdf.receipt', [
+        $view = match ($category) {
+            'gold' => 'pdf.receipt-gold',
+            'silver' => 'pdf.receipt-silver',
+            default => abort(404)
+        };
+
+        $pdf = Pdf::loadView($view, [
+
             'sale' => $sale,
             'store' => $store,
-            'footer' => $footer,
-            'color' => $color,
         ])
             ->setPaper('A4', 'landscape')
             ->setOption('margin-top', 5)

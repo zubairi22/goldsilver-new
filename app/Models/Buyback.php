@@ -46,11 +46,6 @@ class Buyback extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
-    }
-
     public function items()
     {
         return $this->hasMany(BuybackItem::class);
@@ -68,9 +63,7 @@ class Buyback extends Model
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($subQuery) use ($search) {
                 $subQuery->where('buyback_no', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function ($sub) use ($search) {
-                        $sub->where('name', 'like', "%{$search}%");
-                    })
+                    ->orWhere('customer', 'like', "%{$search}%")
                     ->orWhereHas('items', function ($sub) use ($search) {
                         $sub->where('manual_name', 'like', "%{$search}%")
                             ->orWhereHas('item', function ($i) use ($search) {
@@ -88,9 +81,10 @@ class Buyback extends Model
             $q->where('category', $filters['category']);
         });
 
-        $query->when(($filters['date'] ?? null), function ($q) use ($filters) {
-            $q->whereDate('created_at', $filters['date']);
-        });
+        $query->when(
+            empty($filters['search']) && ($filters['date'] ?? null),
+            fn($q) => $q->whereDate('created_at', $filters['date'])
+        );
 
         $query->when(($filters['qc_status'] ?? 'all') === 'pending', function ($q) {
             $q->whereHas('items', function ($item) {

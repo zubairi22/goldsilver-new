@@ -20,11 +20,6 @@ class SalePayment extends Model
         return $this->belongsTo(Sale::class);
     }
 
-    public function cashierSession()
-    {
-        return $this->belongsTo(CashierSession::class);
-    }
-
     public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class);

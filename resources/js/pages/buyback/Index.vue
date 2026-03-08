@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import { useFormat } from '@/composables/useFormat';
 import { useSearch } from '@/composables/useSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -19,7 +20,9 @@ import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import { Printer } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 const props = defineProps(['buybacks', 'filters', 'category']);
 
@@ -33,6 +36,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 const { formatRupiah, formatDate } = useFormat();
 
 const { search } = useSearch('buyback.index', props.filters.search, ['buybacks'], { category: props.category });
+
+useBarcodeScanner((code: string) => {
+    search.value = code;
+    toast.success(`Scan: ${code}`);
+});
 
 const payment_type = ref(props.filters.payment_type ?? 'all');
 const date = ref(props.filters.date ?? null);
@@ -130,8 +138,12 @@ watch([payment_type, date, qc_status], applyFilters);
                     :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()} (Pencarian pakai No Bukti atau Nama Barang)`"
                 />
 
-                <div>
-                    <Button variant="secondary" @click="openPrintModal"> Cetak Label </Button>
+                <div class="flex items-center gap-2">
+                    <Button variant="info" @click="openPrintModal">
+                        <Printer />
+                        Cetak Label
+                    </Button>
+
                     <Button v-if="category === 'silver'" variant="secondary" @click="router.get(route('buyback.create.manual', { category }))">
                         + Buyback Manual
                     </Button>
@@ -212,7 +224,7 @@ watch([payment_type, date, qc_status], applyFilters);
                                                     {{ formatDate(bb.created_at, 'dd MMM yyyy HH:mm') }}
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{{ bb.customer?.name || '-' }}</TableCell>
+                                            <TableCell>{{ bb.customer || '-' }}</TableCell>
                                             <TableCell>{{ bb.user?.name || '-' }}</TableCell>
                                             <TableCell class="text-right">{{ bb.total_weight }}</TableCell>
                                             <TableCell class="text-right">{{ formatRupiah(bb.total_price) }}</TableCell>
@@ -253,12 +265,12 @@ watch([payment_type, date, qc_status], applyFilters);
 
                                                                     <template v-else>
                                                                         <Button
-                                                                            variant="secondary"
+                                                                            variant="info"
                                                                             v-if="it.condition === 'good'"
                                                                             size="sm"
                                                                             @click="printLabel(it)"
                                                                         >
-                                                                            Cetak Label
+                                                                            <Printer />
                                                                         </Button>
 
                                                                         <Badge v-else-if="it.condition === 'broken'"> Rusak </Badge>

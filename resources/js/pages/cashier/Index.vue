@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
@@ -34,6 +35,11 @@ const scanForm = useForm({
     code: '',
 });
 
+useBarcodeScanner((barcode: string) => {
+    scanForm.code = barcode;
+    submitScan();
+});
+
 const submitOpen = () => {
     openForm.post(route('cashier.open'), { preserveScroll: true });
 };
@@ -43,7 +49,16 @@ const submitClose = () => {
 };
 
 const submitScan = () => {
-    scanForm.post(route('cashier.scan'), { preserveScroll: true });
+    if (!scanForm.code) return;
+    scanForm.post(route('cashier.scan'), {
+        preserveScroll: true,
+        onSuccess: (page: any) => {
+            if (page.props.flash?.sale) {
+                window.open(page.props.flash.sale, '_blank');
+            }
+            scanForm.reset();
+        },
+    });
 };
 </script>
 
@@ -58,7 +73,7 @@ const submitScan = () => {
                 <!-- CARD UTAMA -->
                 <Card class="py-6 md:mx-4">
                     <CardContent class="space-y-8">
-                        <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
+                        <div v-if="$page.props.auth.isAdmin" class="grid grid-cols-1 gap-10 lg:grid-cols-2">
                             <div class="space-y-6">
                                 <p class="text-lg font-semibold">Status Kasir</p>
 
@@ -164,19 +179,19 @@ const submitScan = () => {
                             </div>
                         </div>
 
-                        <hr />
+                        <hr v-if="$page.props.auth.isAdmin" />
 
                         <!-- ======================================= -->
                         <!-- SCAN QR / KODE -->
                         <!-- ======================================= -->
                         <div class="space-y-4">
-                            <p class="text-lg font-semibold">Scan / Masukkan Kode Transaksi</p>
+                            <p class="text-lg font-semibold">Scan / Masukkan Nomor Nota</p>
 
                             <div class="flex w-full flex-col gap-3 sm:flex-row">
                                 <Input
                                     v-model="scanForm.code"
                                     type="text"
-                                    placeholder="Scan QR atau masukkan kode transaksi"
+                                    placeholder="Scan QR atau masukkan nomor nota"
                                     class="w-full"
                                     @keyup.enter="submitScan"
                                 />
@@ -189,9 +204,7 @@ const submitScan = () => {
 
                             <InputError :message="scanForm.errors.code" />
 
-                            <p class="text-xs text-gray-500">
-                                Bisa berupa <strong>invoice_no</strong>, <strong>qr_token</strong>, atau <strong>nomor buyback</strong>.
-                            </p>
+                            <p class="text-xs text-gray-500">Berupa <strong>Nomor Nota</strong>.</p>
                         </div>
                     </CardContent>
                 </Card>

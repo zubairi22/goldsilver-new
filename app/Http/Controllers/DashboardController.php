@@ -23,7 +23,7 @@ class DashboardController extends Controller
         $start = null;
         $end = null;
 
-        if (! empty($filters['start']) && ! empty($filters['end'])) {
+        if (!empty($filters['start']) && !empty($filters['end'])) {
             $start = Carbon::createFromFormat('Y-m-d', $filters['start'])->startOfDay();
             $end = Carbon::createFromFormat('Y-m-d', $filters['end'])->endOfDay();
         } else {
@@ -63,14 +63,13 @@ class DashboardController extends Controller
             ->count();
 
         $latestSales = Sale::query()
-            ->with('customer')
             ->latest()
             ->take(5)
             ->get()
             ->map(fn($sale) => [
                 'id' => $sale->id,
                 'invoice_no' => $sale->invoice_no,
-                'customer_name' => $sale->customer->name ?? 'Umum',
+                'customer_name' => $sale->customer ?? 'Umum',
                 'total_price' => $sale->total_price,
                 'status' => $sale->status,
                 'status_label' => $sale->status_label,
@@ -78,10 +77,9 @@ class DashboardController extends Controller
             ]);
 
         $latestBuybacks = Buyback::query()
-            ->with('customer')
             ->latest()
             ->take(5)
-            ->get()
+            ->get() 
             ->map(fn($buyback) => [
                 'id' => $buyback->id,
                 'buyback_no' => $buyback->buyback_no,

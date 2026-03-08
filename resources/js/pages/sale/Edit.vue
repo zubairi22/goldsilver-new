@@ -25,7 +25,6 @@ const props = defineProps<{
     category: 'gold' | 'silver';
     sale: any;
     paymentMethods: any[];
-    customers: any[];
     items: any[];
     cashiers: any[];
 }>();
@@ -42,8 +41,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm({
     sale_type: props.sale.sale_type,
-    mode: 'auto',
-    customer_id: props.sale.customer_id ?? '',
+    mode: props.category === 'gold' ? 'auto' : 'manual',
+    image: undefined as File | undefined,
+    customer: props.sale.customer ?? '',
     payment_method_id: props.sale.payment_method_id,
     paid_amount: props.sale.paid_amount,
     cashier_id: null,
@@ -237,7 +237,7 @@ watch(successModal, (val) => {
                     <CardContent class="grid gap-4 md:grid-cols-2">
                         <div>
                             <Label>Tipe Penjualan</Label>
-                            <Select v-model="form.sale_type">
+                            <Select disabled v-model="form.sale_type">
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="retail">Eceran</SelectItem>
@@ -251,7 +251,7 @@ watch(successModal, (val) => {
                             <Select v-model="form.mode">
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="auto">Dari Stok</SelectItem>
+                                    <SelectItem v-if="category === 'gold'" value="auto">Dari Stok</SelectItem>
                                     <SelectItem value="manual">Manual</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -290,7 +290,7 @@ watch(successModal, (val) => {
                                     >
                                         <TableCell>
                                             <span v-if="item.mode === 'auto'">
-                                                {{ items.find((i: any) => i.id === item.id)?.name ?? '-' }}
+                                                {{ items.find((i: any) => Number(i.id) === Number(item.id))?.name ?? '-' }}
                                             </span>
                                             <span v-else>{{ item.manual_name }}</span>
                                         </TableCell>
@@ -365,14 +365,11 @@ watch(successModal, (val) => {
                             <div class="flex flex-col gap-6">
                                 <div>
                                     <Label>Pelanggan</Label>
-                                    <Multiselect
-                                        v-model="form.customer_id"
-                                        :options="customers"
-                                        searchable
-                                        placeholder="Pilih atau tambah pelanggan"
-                                        :create-option="true"
-                                        :add-option="true"
-                                    />
+                                    <Input type="text" v-model="form.customer" />
+                                </div>
+                                <div>
+                                    <Label>Upload Foto</Label>
+                                    <CameraUploader v-model="form.image" />
                                 </div>
 
                                 <div>
@@ -420,8 +417,10 @@ watch(successModal, (val) => {
                         <Label>Nama Barang</Label>
                         <Input v-model="modalItem.manual_name" />
 
-                        <Label class="mt-2">Foto Barang</Label>
-                        <CameraUploader v-model="modalItem.image" />
+                        <template v-if="category === 'gold'">
+                            <Label class="mt-2">Foto Barang</Label>
+                            <CameraUploader v-model="modalItem.image" />
+                        </template>
                     </div>
 
                     <div>

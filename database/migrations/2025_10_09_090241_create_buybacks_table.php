@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('buyback_no')->unique();
             $table->foreignId('sale_id')->nullable()->constrained('sales')->cascadeOnDelete();
             $table->enum('category', ['gold', 'silver'])->default('gold');
-            $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
+            $table->foreignId('customer')->nullable();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('total_weight', 10, 2)->default(0);
             $table->decimal('total_price', 15, 2)->default(0);

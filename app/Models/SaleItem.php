@@ -19,7 +19,8 @@ class SaleItem extends Model implements HasMedia
         'weight',
         'price',
         'subtotal',
-        'buybacked_at'
+        'buybacked_at',
+        'source',
     ];
 
     public function sale()

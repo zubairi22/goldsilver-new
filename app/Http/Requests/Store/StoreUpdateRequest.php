@@ -15,17 +15,17 @@ class StoreUpdateRequest extends FormRequest
     {
         return [
             'store_name' => 'required|string|max:255',
-            'phone'      => 'nullable|string|max:255',
-            'instagram'  => 'nullable|string|max:255',
-            'address'    => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:255',
+            'instagram' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
 
-            'gold_invoice_color'   => 'required|string|max:20',
-            'silver_invoice_color' => 'required|string|max:20',
+            'invoice_color' => 'required|string|max:20',
 
-            'footer_gold_wholesale'   => 'nullable|string',
-            'footer_gold_retail'      => 'nullable|string',
-            'footer_silver_wholesale' => 'nullable|string',
-            'footer_silver_retail'    => 'nullable|string',
+            'header' => 'nullable|string',
+
+            'footer_wholesale' => 'nullable|string',
+            'footer_retail' => 'nullable|string',
+            'logo' => 'nullable|image|max:2048',
         ];
     }
 }

@@ -19,16 +19,19 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 2, 'name' => 'manage users', 'guard_name' => 'web'],
             ['id' => 3, 'name' => 'manage roles', 'guard_name' => 'web'],
             ['id' => 4, 'name' => 'manage store settings', 'guard_name' => 'web'],
-            ['id' => 5, 'name' => 'manage sales', 'guard_name' => 'web'],
-            ['id' => 6, 'name' => 'manage buyback', 'guard_name' => 'web'],
+            ['id' => 5, 'name' => 'manage gold sales', 'guard_name' => 'web'],
+            ['id' => 6, 'name' => 'manage gold buyback', 'guard_name' => 'web'],
             ['id' => 7, 'name' => 'manage item types', 'guard_name' => 'web'],
             ['id' => 8, 'name' => 'manage items', 'guard_name' => 'web'],
-            ['id' => 9, 'name' => 'manage damaged', 'guard_name' => 'web'],
-            ['id' => 10, 'name' => 'manage debts', 'guard_name' => 'web'],
-            ['id' => 11, 'name' => 'manage customers', 'guard_name' => 'web'],
+            ['id' => 9, 'name' => 'manage gold damaged', 'guard_name' => 'web'],
+            ['id' => 10, 'name' => 'manage gold debts', 'guard_name' => 'web'],
             ['id' => 12, 'name' => 'manage cashier', 'guard_name' => 'web'],
             ['id' => 13, 'name' => 'manage opname', 'guard_name' => 'web'],
             ['id' => 14, 'name' => 'view reports', 'guard_name' => 'web'],
+            ['id' => 15, 'name' => 'manage silver sales', 'guard_name' => 'web'],
+            ['id' => 16, 'name' => 'manage silver buyback', 'guard_name' => 'web'],
+            ['id' => 17, 'name' => 'manage silver damaged', 'guard_name' => 'web'],
+            ['id' => 18, 'name' => 'manage silver debts', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);
@@ -46,13 +49,26 @@ class MenuRolePermissionSeeder extends Seeder
 
         $admin->assignRole($role);
 
-        $cashierRole = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'web']);
-        $cashierRole->syncPermissions([1, 5, 6, 9]);
+        $cashierRole = Role::firstOrCreate(['name' => 'cashier gold', 'guard_name' => 'web']);
+        $cashierRole->syncPermissions([1, 5, 6, 9, 12]);
 
         $cashier = User::firstOrCreate(
-            ['email' => 'kasir@temantekno.com'],
+            ['email' => 'kasiremas@temantekno.com'],
             [
-                'name' => 'Kasir',
+                'name' => 'Kasir Emas',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        $cashier->assignRole($cashierRole);
+
+        $cashierRole = Role::firstOrCreate(['name' => 'cashier silver', 'guard_name' => 'web']);
+        $cashierRole->syncPermissions([1, 15, 16, 17, 12]);
+
+        $cashier = User::firstOrCreate(
+            ['email' => 'kasiperak@temantekno.com'],
+            [
+                'name' => 'Kasir Perak',
                 'password' => Hash::make('password'),
             ]
         );
@@ -60,41 +76,50 @@ class MenuRolePermissionSeeder extends Seeder
         $cashier->assignRole($cashierRole);
 
         $menus = [
-            ['id' => 1,  'title' => 'Dashboard', 'url' => 'dashboard', 'param' => null, 'parent_id' => null, 'icon' => 'LayoutDashboard', 'sort' => 1],
-            ['id' => 2,  'title' => 'Master', 'url' => 'master', 'param' => null, 'parent_id' => null, 'icon' => 'Database', 'sort' => 10],
-            ['id' => 3,  'title' => 'Pengguna', 'url' => 'master.users.index', 'param' => null, 'parent_id' => 2, 'icon' => 'UsersRound', 'sort' => 1],
-            ['id' => 4,  'title' => 'Peran', 'url' => 'master.roles.index', 'param' => null, 'parent_id' => 2, 'icon' => 'UserCog', 'sort' => 2],
+            ['id' => 1, 'title' => 'Dashboard', 'url' => 'dashboard', 'param' => null, 'parent_id' => null, 'icon' => 'LayoutDashboard', 'sort' => 1],
+            ['id' => 2, 'title' => 'Master', 'url' => 'master', 'param' => null, 'parent_id' => null, 'icon' => 'Database', 'sort' => 10],
+            ['id' => 3, 'title' => 'Pengguna', 'url' => 'master.users.index', 'param' => null, 'parent_id' => 2, 'icon' => 'UsersRound', 'sort' => 1],
+            ['id' => 4, 'title' => 'Peran', 'url' => 'master.roles.index', 'param' => null, 'parent_id' => 2, 'icon' => 'UserCog', 'sort' => 2],
 
-            ['id' => 5,  'title' => 'Manajemen Toko', 'url' => 'store', 'param' => null, 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 8],
-            ['id' => 6,  'title' => 'Pengaturan', 'url' => 'store.settings.index', 'param' => null, 'parent_id' => 5, 'icon' => 'Settings2', 'sort' => 1],
+            ['id' => 5, 'title' => 'Manajemen Toko', 'url' => 'store', 'param' => null, 'parent_id' => null, 'icon' => 'Warehouse', 'sort' => 8],
+            ['id' => 6, 'title' => 'Pengaturan', 'url' => 'store.settings.index', 'param' => 'gold', 'parent_id' => 5, 'icon' => 'Settings2', 'sort' => 1],
 
-            ['id' => 7,  'title' => 'Transaksi Emas', 'url' => 'gold', 'param' => 'gold', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 3],
-            ['id' => 8,  'title' => 'Daftar Penjualan', 'url' => 'sales.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Receipt', 'sort' => 1],
-            ['id' => 9,  'title' => 'Buyback', 'url' => 'buyback.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'RefreshCw', 'sort' => 3],
+            ['id' => 7, 'title' => 'Transaksi Emas', 'url' => 'gold', 'param' => 'gold', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 3],
+            ['id' => 8, 'title' => 'Daftar Penjualan', 'url' => 'sales.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Receipt', 'sort' => 1],
+            ['id' => 9, 'title' => 'Buyback', 'url' => 'buyback.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'RefreshCw', 'sort' => 4],
 
             ['id' => 10, 'title' => 'Jenis Item', 'url' => 'store.item-types.index', 'param' => null, 'parent_id' => 5, 'icon' => 'Tags', 'sort' => 2],
             ['id' => 11, 'title' => 'Daftar Item', 'url' => 'store.items.index', 'param' => null, 'parent_id' => 5, 'icon' => 'PackageSearch', 'sort' => 3],
 
-            ['id' => 12, 'title' => 'Barang Rusak', 'url' => 'damaged.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'PackageX', 'sort' => 4],
-            ['id' => 13, 'title' => 'Penjualan', 'url' => 'sales.create', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Store', 'sort' => 2],
-            ['id' => 14, 'title' => 'Daftar Piutang', 'url' => 'debt.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'FileText', 'sort' => 5],
-
-            ['id' => 15, 'title' => 'Pelanggan', 'url' => 'store.customers.index', 'param' => null, 'parent_id' => 5, 'icon' => 'Users', 'sort' => 4],
+            ['id' => 12, 'title' => 'Barang Rusak', 'url' => 'damaged.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'PackageX', 'sort' => 5],
+            ['id' => 13, 'title' => 'Penjualan Eceran', 'url' => 'sales.create.retail', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Store', 'sort' => 2],
+            ['id' => 14, 'title' => 'Daftar Piutang', 'url' => 'debt.index', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'FileText', 'sort' => 6],
 
             ['id' => 16, 'title' => 'Kasir', 'url' => 'cashier.index', 'param' => null, 'parent_id' => null, 'icon' => 'Banknote', 'sort' => 2],
 
             ['id' => 17, 'title' => 'Transaksi Perak', 'url' => 'silver', 'param' => 'silver', 'parent_id' => null, 'icon' => 'ShoppingCart', 'sort' => 4],
             ['id' => 18, 'title' => 'Daftar Penjualan', 'url' => 'sales.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Receipt', 'sort' => 1],
-            ['id' => 19, 'title' => 'Buyback', 'url' => 'buyback.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'RefreshCw', 'sort' => 3],
-            ['id' => 20, 'title' => 'Barang Rusak', 'url' => 'damaged.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'PackageX', 'sort' => 4],
-            ['id' => 21, 'title' => 'Penjualan', 'url' => 'sales.create', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 2],
-            ['id' => 22, 'title' => 'Daftar Piutang', 'url' => 'debt.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'FileText', 'sort' => 5],
+            ['id' => 19, 'title' => 'Buyback', 'url' => 'buyback.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'RefreshCw', 'sort' => 4],
+            ['id' => 20, 'title' => 'Barang Rusak', 'url' => 'damaged.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'PackageX', 'sort' => 5],
+            ['id' => 21, 'title' => 'Penjualan Eceran', 'url' => 'sales.create.retail', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 2],
+            ['id' => 22, 'title' => 'Daftar Piutang', 'url' => 'debt.index', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'FileText', 'sort' => 6],
 
             ['id' => 23, 'title' => 'Stok Opname', 'url' => 'store.stock-opnames.index', 'param' => null, 'parent_id' => 5, 'icon' => 'ShoppingBag', 'sort' => 4],
-            ['id' => 24,  'title' => 'Laporan', 'url' => 'reports', 'param' => null, 'parent_id' => null, 'icon' => 'Newspaper', 'sort' => 9],
-            ['id' => 25,  'title' => 'Nota Penjualan', 'url' => 'reports.sales.note', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 1],
-            ['id' => 26,  'title' => 'Penjualan Barang', 'url' => 'reports.sales.item', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 2],
-            ['id' => 27,  'title' => 'Stok', 'url' => 'reports.stock.index', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 3],
+            ['id' => 24, 'title' => 'Laporan', 'url' => 'reports', 'param' => null, 'parent_id' => null, 'icon' => 'Newspaper', 'sort' => 9],
+            ['id' => 25, 'title' => 'Nota Penjualan', 'url' => 'reports.sales.note', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 1],
+            ['id' => 26, 'title' => 'Penjualan Barang', 'url' => 'reports.sales.item', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 2],
+            ['id' => 27, 'title' => 'Stok', 'url' => 'reports.stock.index', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 7],
+
+            ['id' => 28, 'title' => 'Penjualan Partai', 'url' => 'sales.create.wholesale', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Store', 'sort' => 3],
+            ['id' => 29, 'title' => 'Penjualan Partai', 'url' => 'sales.create.wholesale', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 3],
+
+            ['id' => 30, 'title' => 'Penjualan Emas Eceran', 'url' => 'reports.sales.item.gold.retail', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 3],
+            ['id' => 31, 'title' => 'Penjualan Emas Partai', 'url' => 'reports.sales.item.gold.wholesale', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 4],
+            ['id' => 32, 'title' => 'Penjualan Perak Eceran', 'url' => 'reports.sales.item.silver.retail', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 5],
+            ['id' => 33, 'title' => 'Penjualan Perak Partai', 'url' => 'reports.sales.item.silver.wholesale', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 6],
+            ['id' => 34, 'title' => 'Performa Karyawan', 'url' => 'reports.sales.employee', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 8],
+            ['id' => 35, 'title' => 'Hasil Penjualan Emas', 'url' => 'reports.sales.summary', 'param' => 'gold', 'parent_id' => 24, 'icon' => 'TrendingUp', 'sort' => 9],
+            ['id' => 36, 'title' => 'Hasil Penjualan Perak', 'url' => 'reports.sales.summary', 'param' => 'silver', 'parent_id' => 24, 'icon' => 'TrendingUp', 'sort' => 10],
         ];
 
         Menu::insert($menus);
@@ -119,21 +144,31 @@ class MenuRolePermissionSeeder extends Seeder
             ['menu_id' => 13, 'permission_id' => 5],
             ['menu_id' => 14, 'permission_id' => 10],
 
-            ['menu_id' => 15, 'permission_id' => 11],
             ['menu_id' => 16, 'permission_id' => 12],
 
-            ['menu_id' => 17, 'permission_id' => 5],
-            ['menu_id' => 18, 'permission_id' => 5],
-            ['menu_id' => 19, 'permission_id' => 6],
-            ['menu_id' => 20, 'permission_id' => 9],
-            ['menu_id' => 21, 'permission_id' => 5],
-            ['menu_id' => 22, 'permission_id' => 10],
+            ['menu_id' => 17, 'permission_id' => 15],
+            ['menu_id' => 18, 'permission_id' => 15],
+            ['menu_id' => 19, 'permission_id' => 16],
+            ['menu_id' => 20, 'permission_id' => 17],
+            ['menu_id' => 21, 'permission_id' => 15],
+            ['menu_id' => 22, 'permission_id' => 18],
 
             ['menu_id' => 23, 'permission_id' => 13],
             ['menu_id' => 24, 'permission_id' => 14],
             ['menu_id' => 25, 'permission_id' => 14],
             ['menu_id' => 26, 'permission_id' => 14],
             ['menu_id' => 27, 'permission_id' => 14],
+
+            ['menu_id' => 28, 'permission_id' => 5],
+            ['menu_id' => 29, 'permission_id' => 15],
+
+            ['menu_id' => 30, 'permission_id' => 13],
+            ['menu_id' => 31, 'permission_id' => 14],
+            ['menu_id' => 32, 'permission_id' => 14],
+            ['menu_id' => 33, 'permission_id' => 14],
+            ['menu_id' => 34, 'permission_id' => 14],
+            ['menu_id' => 35, 'permission_id' => 14],
+            ['menu_id' => 36, 'permission_id' => 14],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);

@@ -39,7 +39,7 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $appName = StoreSetting::first()->name ?? config('app.name');
+        $appName = StoreSetting::first()->store_name ?? config('app.name');
 
         $shared = [
             ...parent::share($request),

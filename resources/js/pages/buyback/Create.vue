@@ -20,7 +20,6 @@ import { computed, watch } from 'vue';
 const props = defineProps<{
     category: 'gold' | 'silver';
     sale: any;
-    customer: any;
     items: any[];
 }>();
 
@@ -37,7 +36,7 @@ const { today } = useTime();
 
 const form = useForm({
     sale_id: props.sale.id,
-    customer_id: props.customer?.id ?? null,
+    customer: props.sale.customer ?? null,
     items: props.items.map((it: any) => {
         const bb = it.buyback_item;
 
@@ -152,16 +151,12 @@ watch(
                                     </div>
                                 </div>
 
-                                <div v-if="customer">
+                                <div v-if="sale.customer">
                                     <p class="mb-2 font-semibold">Informasi Pelanggan</p>
                                     <div class="space-y-1">
                                         <div class="flex justify-between">
                                             <span class="text-gray-500">Nama</span>
-                                            <span>{{ customer.name }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-500">No HP</span>
-                                            <span>{{ customer.phone ?? '-' }}</span>
+                                            <span>{{ sale.customer }}</span>
                                         </div>
                                     </div>
                                 </div>

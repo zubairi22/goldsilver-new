@@ -1,86 +1,52 @@
-import { ref, onMounted, onBeforeUnmount } from "vue"
-import axios from "axios"
-import { toast } from "vue-sonner"
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-type ScanHandler = (product: any, code: string) => void
-type MultiHandler = (products: any[], code: string) => void
+export function useBarcodeScanner(onScan: (code: string) => void) {
+    const buffer = ref('');
+    let scanTimeout: ReturnType<typeof setTimeout> | null = null;
+    let lastKeyTime = 0;
 
-export function useBarcodeScanner() {
-    const buffer = ref("")
-    let scanTimeout: ReturnType<typeof setTimeout> | null = null
-    let lastKeyTime = 0
+    const handleKeydown = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
 
-    const initScan = (
-        onFound: ScanHandler,
-        onNotFound?: (code: string) => void,
-        onMultipleFound?: MultiHandler
-    ) => {
-        const fetchProduct = async (code: string) => {
-            try {
-                const { data } = await axios.get(`/api/products/search?sku=${code}`)
-                if (data.success && !data.multiple && data.product) {
-                    onFound(data.product, code)
-                    toast.success(`Produk ${data.product.name} ditemukan`, { position: "top-center" })
-                } else if (data.success && data.multiple && data.products?.length) {
-                    onMultipleFound?.(data.products, code)
-                    toast.info(`Ditemukan ${data.products.length} varian untuk SKU ${code}`, { position: "top-center" })
-                } else {
-                    onNotFound?.(code)
-                    toast.warning(`Produk dengan SKU: ${code} tidak ditemukan`, { position: "top-center" })
-                }
-            } catch (err) {
-                console.error(err)
-                toast.error("Gagal mengambil data produk", { position: "top-center" })
-            }
+        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target.closest('.multiselect')) {
+            return;
         }
 
-        const handleKeydown = (e: KeyboardEvent) => {
-            const target = e.target as HTMLElement
+        const char = e.key;
+        const now = Date.now();
+        const diff = now - lastKeyTime;
+        lastKeyTime = now;
 
-            if (
-                target instanceof HTMLInputElement ||
-                target instanceof HTMLTextAreaElement ||
-                target.closest(".multiselect")
-            ) {
-                return
-            }
+        if (diff > 100) buffer.value = '';
 
-            const char = e.key
-            const now = Date.now()
-            const diff = now - lastKeyTime
-            lastKeyTime = now
-
-            if (diff > 100) buffer.value = ""
-
-            if (char.length === 1 && /[a-zA-Z0-9]/.test(char)) {
-                buffer.value += char
-            }
-
-            if (char === "Enter") {
-                const code = buffer.value.trim()
-                buffer.value = ""
-                if (!code) return
-                void fetchProduct(code)
-            }
-
-            if (scanTimeout) clearTimeout(scanTimeout)
-            scanTimeout = setTimeout(() => {
-                buffer.value = ""
-            }, 800)
+        if (char.length === 1 && /[a-zA-Z0-9]/.test(char)) {
+            buffer.value += char;
         }
 
-        onMounted(() => {
-            window.addEventListener("keydown", handleKeydown)
-        })
+        if (char === 'Enter') {
+            const code = buffer.value.trim();
+            buffer.value = '';
+            if (!code) return;
 
-        onBeforeUnmount(() => {
-            window.removeEventListener("keydown", handleKeydown)
-            if (scanTimeout) clearTimeout(scanTimeout)
-        })
-    }
+            onScan(code);
+        }
+
+        if (scanTimeout) clearTimeout(scanTimeout);
+        scanTimeout = setTimeout(() => {
+            buffer.value = '';
+        }, 800);
+    };
+
+    onMounted(() => {
+        window.addEventListener('keydown', handleKeydown);
+    });
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('keydown', handleKeydown);
+        if (scanTimeout) clearTimeout(scanTimeout);
+    });
 
     return {
-        initScan,
         buffer,
-    }
+    };
 }

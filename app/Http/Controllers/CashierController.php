@@ -83,23 +83,13 @@ class CashierController extends Controller
         $sale = Sale::where('invoice_no', $code)->first();
 
         if ($sale) {
-            return redirect()->route('sales.index', [
-                'category' => 'gold',
-                'search' => $code,
-            ]);
+            session()->flash('sale', route('sales.print', [
+                'category' => $sale->category,
+                'sale' => $sale->id,
+            ]));
+            return back();
         }
 
-        // Buyback
-        $buyback = Buyback::where('buyback_no', $code)->first();
-
-        if ($buyback) {
-            return redirect()->route('buyback.index', [
-                'category' => 'gold',
-                'search' => $code,
-            ]);
-        }
-
-        // Jika tidak ditemukan
         $this->flashError('Transaksi tidak ditemukan.');
         return back();
     }

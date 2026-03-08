@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import { useFormat } from '@/composables/useFormat';
 import { useSearch } from '@/composables/useSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -47,11 +48,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { search } = useSearch('sales.index', props.filters.search, ['sales'], { category: props.category });
 
+useBarcodeScanner((code: string) => {
+    search.value = code;
+    toast.success(`Scan: ${code}`);
+});
+
 const { formatRupiah, formatDate } = useFormat();
 
 const sale_type = ref(props.filters.sale_type);
 const payment_method_id = ref(props.filters.payment_method_id);
-const date = ref(props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : []);
+const date = ref(props.filters.date ?? null);
 
 const saleModal = ref(false);
 const selectedSale = ref<any>(null);
@@ -150,10 +156,7 @@ const applyFilters = () => {
     if (payment_method_id.value && payment_method_id.value !== 'all') {
         params.payment_method_id = payment_method_id.value;
     }
-    if (date.value?.[0] && date.value?.[1]) {
-        params.start = date.value[0];
-        params.end = date.value[1];
-    }
+    if (date.value) params.date = date.value;
 
     router.get(route('sales.index', { category: props.category }), params, {
         preserveScroll: true,
@@ -210,11 +213,10 @@ watch([sale_type, payment_method_id, date], applyFilters);
                             <div class="w-full sm:w-auto lg:w-80">
                                 <VueDatePicker
                                     v-model="date"
-                                    range
-                                    :enable-time-picker="false"
                                     model-type="yyyy-MM-dd"
-                                    locale="id"
-                                    placeholder="Rentang tanggal"
+                                    :enable-time-picker="false"
+                                    auto-apply
+                                    placeholder="Pilih tanggal"
                                 />
                             </div>
                         </div>
@@ -312,7 +314,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                         </div>
                         <div>
                             <p class="font-semibold">Pelanggan</p>
-                            <p>{{ selectedSale.customer?.name || '-' }}</p>
+                            <p>{{ selectedSale.customer || '-' }}</p>
                         </div>
                         <div>
                             <p class="font-semibold">Kasir</p>
