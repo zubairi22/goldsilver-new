@@ -24,7 +24,7 @@ return new class extends Migration {
             $table->integer('paid_amount')->default(0);
             $table->integer('remaining_amount')->default(0);
             $table->integer('change_amount')->default(0);
-            $table->enum('status', ['unpaid', 'partial', 'paid'])->default('paid');
+            $table->enum('status', ['unpaid', 'partial', 'paid', 'draft'])->default('paid');
             $table->date('due_date')->nullable();
             $table->text('notes')->nullable();
             $table->string('qr_path')->nullable();

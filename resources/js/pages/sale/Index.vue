@@ -5,6 +5,7 @@ import Icon from '@/components/Icon.vue';
 import PageNav from '@/components/PageNav.vue';
 import QrScanner from '@/components/QrScanner.vue';
 import SearchInput from '@/components/SearchInput.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -234,13 +235,13 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Tanggal</TableHead>
-                                        <TableHead>Invoice</TableHead>
-                                        <TableHead>Kasir</TableHead>
+                                        <TableHead>Nota</TableHead>
                                         <TableHead>Jenis</TableHead>
                                         <TableHead class="text-right">Berat</TableHead>
                                         <TableHead class="text-right">Total</TableHead>
                                         <TableHead class="text-right">Dibayar</TableHead>
                                         <TableHead class="text-right">Sisa</TableHead>
+                                        <TableHead class="text-center">Status</TableHead>
                                         <TableHead class="text-center">Metode</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
@@ -256,17 +257,22 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                     >
                                         <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
                                         <TableCell>{{ sale.invoice_no }}</TableCell>
-                                        <TableCell>{{ sale.user?.name || '-' }}</TableCell>
                                         <TableCell>{{ sale.sale_type === 'retail' ? 'Eceran' : 'Grosir' }}</TableCell>
                                         <TableCell class="text-right">{{ sale.total_weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.remaining_amount) }}</TableCell>
                                         <TableCell class="text-center">
+                                            <Badge v-if="sale.status === 'paid'" variant="success">Selesai</Badge>
+                                            <Badge v-else-if="sale.status === 'partial'" variant="warning">Sebagian</Badge>
+                                            <Badge v-else-if="sale.status === 'unpaid'" variant="destructive">Belum Bayar</Badge>
+                                            <Badge v-else-if="sale.status === 'draft'" variant="secondary">Belum Selesai</Badge>
+                                        </TableCell>
+                                        <TableCell class="text-center">
                                             {{ sale.payment_method?.name || '-' }}
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <EditButton @click.stop="editSale(sale)" />
+                                            <EditButton v-if="sale.status === 'draft'" @click.stop="editSale(sale)" />
                                         </TableCell>
                                         <TableCell class="px-1">
                                             <Button class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
@@ -276,7 +282,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                     </TableRow>
 
                                     <TableRow v-if="!sales.total">
-                                        <TableCell colspan="10" class="py-4 text-center">
+                                        <TableCell colspan="12" class="py-4 text-center">
                                             Belum ada penjualan {{ categoryLabel.toLowerCase() }}.
                                         </TableCell>
                                     </TableRow>

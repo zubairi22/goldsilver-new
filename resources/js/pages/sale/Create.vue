@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import { useFormat } from '@/composables/useFormat';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -51,6 +52,7 @@ const form = useForm({
     qr_token: '',
     notes: '',
     items: [] as any[],
+    is_draft: false as boolean,
 });
 
 const saleTypeLabel = computed(() => (props.saleType === 'retail' ? 'Eceran' : 'Partai'));
@@ -177,7 +179,23 @@ const openVerifyModal = () => {
     verifyModal.value = true;
 };
 
+const submitSaleDraft = () => {
+    if (!form.items.length) {
+        toast.error('Minimal 1 item harus ditambahkan.');
+        return;
+    }
+    form.is_draft = true;
+    form.post(route('sales.store', { category: props.category }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Draft berhasil disimpan.');
+            router.visit(route('sales.index', { category: props.category }));
+        },
+    });
+};
+
 const submitSaleFinal = () => {
+    form.is_draft = false;
     form.post(route('sales.store', { category: props.category }), {
         preserveScroll: true,
         onSuccess: (page) => {
@@ -219,6 +237,28 @@ watch(successModal, (val) => {
         }, 1500);
     }
 });
+
+const onBarcodeScanned = (code: string) => {
+    const item = props.items.find((i: any) => i.code === code);
+    if (item) {
+        modalItem.value = {
+            id: item.id,
+            mode: 'auto',
+            manual_name: '',
+            weight: item.weight,
+            price: item.price_sell,
+            subtotal: Math.round(Number(item.weight) * Number(item.price_sell)),
+            image: undefined,
+        };
+        editIndex.value = null;
+        showAddItemModal.value = true;
+        toast.success(`Item ditemukan: ${item.name}`);
+    } else {
+        toast.error(`Barcode ${code} tidak ditemukan.`);
+    }
+};
+
+useBarcodeScanner(onBarcodeScanned);
 </script>
 
 <template>
@@ -383,8 +423,9 @@ watch(successModal, (val) => {
                             </div>
                         </div>
 
-                        <div class="pt-4 text-right">
-                            <Button @click="openVerifyModal" class="px-6">Simpan Transaksi</Button>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <Button variant="outline" @click="submitSaleDraft" :disabled="form.processing">Simpan Sementara</Button>
+                            <Button @click="openVerifyModal" class="px-6" :disabled="form.processing">Simpan Transaksi</Button>
                         </div>
                     </CardContent>
                 </Card>

@@ -98,6 +98,7 @@ class Sale extends Model implements HasMedia
             'paid' => 'Selesai',
             'partial' => 'Sebagian',
             'unpaid' => 'Belum Dibayar',
+            'draft' => 'Draft',
             default => ucfirst($this->status),
         };
     }
@@ -189,6 +190,11 @@ class Sale extends Model implements HasMedia
         $this->remaining_amount = max(0, $this->total_price - $this->paid_amount);
         $this->change_amount = max(0, $this->paid_amount - $this->total_price);
 
+        if ($this->status === 'draft') {
+            $this->save();
+            return;
+        }
+
         if ($this->remaining_amount <= 0) {
             $this->status = 'paid';
         } elseif ($this->paid_amount > 0) {
@@ -198,5 +204,10 @@ class Sale extends Model implements HasMedia
         }
 
         $this->save();
+    }
+
+    public function isEditable(): bool
+    {
+        return $this->status === 'draft';
     }
 }

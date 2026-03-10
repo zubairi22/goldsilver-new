@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\PaymentMethod;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\StoreSetting;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -83,6 +84,7 @@ class SaleController extends Controller
             'cashier_id' => 'required|exists:users,id',
             'password' => 'nullable|string',
             'qr_token' => 'nullable|string',
+            'is_draft' => 'nullable|boolean',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:items,id',
             'items.*.manual_name' => 'nullable|string|max:255',
@@ -93,7 +95,11 @@ class SaleController extends Controller
             'items.*.mode' => 'required|in:auto,manual',
         ]);
 
-        $cashier = $this->verifyAuth($data);
+        if ($data['is_draft'] ?? false) {
+            $cashier = User::find($data['cashier_id']);
+        } else {
+            $cashier = $this->verifyAuth($data);
+        }
 
         if (!$cashier) {
             $this->flashError('Password atau QR admin tidak valid.');
@@ -116,7 +122,7 @@ class SaleController extends Controller
                 'paid_amount' => $data['paid_amount'] ?? 0,
                 'remaining_amount' => 0,
                 'change_amount' => 0,
-                'status' => 'unpaid',
+                'status' => ($data['is_draft'] ?? false) ? 'draft' : 'unpaid',
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -168,7 +174,9 @@ class SaleController extends Controller
                 ]);
             }
 
-            $sale->refreshPaymentTotals();
+            if ($sale->status !== 'draft') {
+                $sale->refreshPaymentTotals();
+            }
 
             $this->flashSuccess("Penjualan {$category} berhasil disimpan.");
 
@@ -183,6 +191,11 @@ class SaleController extends Controller
         if ($sale->category !== $category) {
             $this->flashError('Penjualan tidak ditemukan.');
 
+            return back();
+        }
+
+        if (!$sale->isEditable()) {
+            $this->flashError('Hanya penjualan berstatus Draft yang dapat diubah.');
             return back();
         }
 
@@ -222,20 +235,24 @@ class SaleController extends Controller
             'cashier_id' => 'required|exists:users,id',
             'password' => 'nullable|string',
             'qr_token' => 'nullable|string',
+            'is_draft' => 'nullable|boolean',
             'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|exists:items,id',
-            'items.*.manual_name' => 'nullable|string|max:255',
-            'items.*.weight' => 'required|numeric|min:0.01',
-            'items.*.price' => 'required|numeric|min:0',
-            'items.*.subtotal' => 'required|numeric|min:0',
-            'items.*.mode' => 'required|in:auto,manual',
         ]);
 
-        $cashier = $this->verifyAuth($data);
+        if ($data['is_draft'] ?? false) {
+            $cashier = User::find($data['cashier_id']);
+        } else {
+            $cashier = $this->verifyAuth($data);
+        }
 
         if (!$cashier) {
             $this->flashError('Password atau QR admin tidak valid.');
 
+            return back();
+        }
+
+        if (!$sale->isEditable()) {
+            $this->flashError('Hanya penjualan berstatus Draft yang dapat diubah.');
             return back();
         }
 
@@ -263,10 +280,12 @@ class SaleController extends Controller
             $sale->update([
                 'sale_type' => $data['sale_type'],
                 'customer' => $data['customer'],
+                'user_id' => $cashier->id,
                 'payment_method_id' => $data['payment_method_id'],
                 'total_weight' => $totalWeight,
                 'total_price' => $totalPrice,
                 'paid_amount' => $data['paid_amount'] ?? 0,
+                'status' => ($data['is_draft'] ?? false) ? 'draft' : 'unpaid',
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -328,8 +347,18 @@ class SaleController extends Controller
         }
 
         return DB::transaction(function () use ($sale, $category) {
-            $itemIds = $sale->items()->whereNotNull('item_id')->pluck('item_id');
-            Item::whereIn('id', $itemIds)->update(['status' => 'ready']);
+            $itemIds = $sale->items()
+                ->whereNotNull('item_id')
+                ->pluck('item_id');
+
+            $usedAfter = SaleItem::whereIn('item_id', $itemIds)
+                ->where('sale_id', '>', $sale->id)
+                ->pluck('item_id')
+                ->unique();
+
+            $readyItemIds = $itemIds->diff($usedAfter);
+
+            Item::whereIn('id', $readyItemIds)->update(['status' => 'ready']);
 
             $sale->delete();
 

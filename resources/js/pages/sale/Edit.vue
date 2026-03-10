@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import { useFormat } from '@/composables/useFormat';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -35,7 +36,7 @@ const categoryLabel = computed(() => (props.category === 'gold' ? 'Emas' : 'Pera
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: `Penjualan ${categoryLabel.value}`, href: `/sale/${props.category}` },
+    { title: `Penjualan ${categoryLabel.value}`, href: route('sales.index', { category: props.category }) },
     { title: 'Edit', href: '#' },
 ];
 
@@ -46,7 +47,7 @@ const form = useForm({
     customer: props.sale.customer ?? '',
     payment_method_id: props.sale.payment_method_id,
     paid_amount: props.sale.paid_amount,
-    cashier_id: null,
+    cashier_id: props.sale.user_id,
     password: '',
     qr_token: '',
     notes: props.sale.notes ?? '',
@@ -58,6 +59,7 @@ const form = useForm({
         subtotal: i.subtotal,
         mode: i.source === 'manual' ? 'manual' : 'auto',
     })),
+    is_draft: (props.sale.status === 'draft') as boolean,
 });
 
 const verifyModal = ref(false);
@@ -182,7 +184,23 @@ const openVerifyModal = () => {
     verifyModal.value = true;
 };
 
+const submitSaleDraft = () => {
+    if (!form.items.length) {
+        toast.error('Minimal 1 item harus ditambahkan.');
+        return;
+    }
+    form.is_draft = true;
+    form.patch(route('sales.update', { category: props.category, sale: props.sale.id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Draft berhasil diperbarui.');
+            router.visit(route('sales.index', { category: props.category }));
+        },
+    });
+};
+
 const submitSaleFinal = () => {
+    form.is_draft = false;
     form.patch(route('sales.update', { category: props.category, sale: props.sale.id }), {
         preserveScroll: true,
         onSuccess: (page) => {
@@ -221,6 +239,28 @@ watch(successModal, (val) => {
         router.visit(route('sales.index', { category: props.category }));
     }
 });
+
+const onBarcodeScanned = (code: string) => {
+    const item = props.items.find((i: any) => i.code === code);
+    if (item) {
+        modalItem.value = {
+            id: item.id,
+            mode: 'auto',
+            manual_name: '',
+            weight: item.weight,
+            price: item.price_sell,
+            subtotal: Math.round(Number(item.weight) * Number(item.price_sell)),
+            image: undefined,
+        };
+        editIndex.value = null;
+        showAddItemModal.value = true;
+        toast.success(`Item ditemukan: ${item.name}`);
+    } else {
+        toast.error(`Barcode ${code} tidak ditemukan.`);
+    }
+};
+
+useBarcodeScanner(onBarcodeScanned);
 </script>
 
 <template>
@@ -379,8 +419,9 @@ watch(successModal, (val) => {
                             </div>
                         </div>
 
-                        <div class="pt-4 text-right">
-                            <Button @click="openVerifyModal" class="px-6">Simpan Perubahan</Button>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <Button type="button" variant="outline" @click="submitSaleDraft" :disabled="form.processing">Simpan Sementara</Button>
+                            <Button @click="openVerifyModal" class="px-6" :disabled="form.processing">Simpan Transaksi</Button>
                         </div>
                     </CardContent>
                 </Card>
