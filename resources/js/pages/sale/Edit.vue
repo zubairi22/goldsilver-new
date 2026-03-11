@@ -47,11 +47,12 @@ const form = useForm({
     customer: props.sale.customer ?? '',
     payment_method_id: props.sale.payment_method_id,
     paid_amount: props.sale.paid_amount,
-    cashier_id: props.sale.user_id,
+    cashier_id: props.sale.user_id || props.cashiers?.[0]?.id,
     password: '',
     qr_token: '',
     notes: props.sale.notes ?? '',
     items: props.sale.items.map((i: any) => ({
+        sale_item_id: i.id,
         id: i.item_id,
         manual_name: i.manual_name,
         weight: i.weight,
@@ -59,7 +60,6 @@ const form = useForm({
         subtotal: i.subtotal,
         mode: i.source === 'manual' ? 'manual' : 'auto',
     })),
-    is_draft: (props.sale.status === 'draft') as boolean,
 });
 
 const verifyModal = ref(false);
@@ -68,6 +68,8 @@ const savedSale = ref<any>(null);
 
 const showAddItemModal = ref(false);
 const editIndex = ref<number | null>(null);
+const isAddingItem = ref(false);
+const isRemovingItem = ref(false);
 
 const modalItem = ref<any>({
     id: null,
@@ -88,6 +90,7 @@ const addItem = () => {
         price: 0,
         subtotal: 0,
         image: undefined,
+        sale_item_id: null,
     };
     editIndex.value = null;
     showAddItemModal.value = true;
@@ -103,13 +106,24 @@ const editItem = (index: number) => {
         price: it.price,
         subtotal: it.subtotal,
         image: it.image,
+        sale_item_id: it.sale_item_id,
     };
     editIndex.value = index;
     showAddItemModal.value = true;
 };
 
 const removeItem = (index: number) => {
-    form.items.splice(index, 1);
+    const item = form.items[index];
+    if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
+        isRemovingItem.value = true;
+        router.delete(route('sales.removeItem', { category: props.category, sale: props.sale.id }), {
+            data: { sale_item_id: item.sale_item_id },
+            onFinish: () => (isRemovingItem.value = false),
+            onSuccess: () => {
+                toast.success('Item berhasil dihapus.');
+            },
+        });
+    }
 };
 
 watch(
@@ -133,34 +147,25 @@ const saveModalItem = () => {
         return;
     }
 
-    form.items.push({
-        id: modalItem.value.id,
-        manual_name: modalItem.value.manual_name,
-        weight: modalItem.value.weight,
-        price: modalItem.value.price,
-        subtotal: modalItem.value.subtotal,
-        image: modalItem.value.image,
-        mode: modalItem.value.mode,
+    isAddingItem.value = true;
+    router.post(route('sales.addItem', { category: props.category, sale: props.sale.id }), modalItem.value, {
+        onSuccess: () => {
+            toast.success('Item berhasil ditambahkan.');
+            showAddItemModal.value = false;
+        },
+        onFinish: () => (isAddingItem.value = false),
     });
-
-    showAddItemModal.value = false;
 };
 
 const updateModalItem = () => {
-    if (editIndex.value === null) return;
-
-    form.items[editIndex.value] = {
-        id: modalItem.value.id,
-        manual_name: modalItem.value.manual_name,
-        weight: modalItem.value.weight,
-        price: modalItem.value.price,
-        subtotal: modalItem.value.subtotal,
-        image: modalItem.value.image,
-        mode: modalItem.value.mode,
-    };
-
-    editIndex.value = null;
-    showAddItemModal.value = false;
+    isAddingItem.value = true;
+    router.post(route('sales.addItem', { category: props.category, sale: props.sale.id }), modalItem.value, {
+        onSuccess: () => {
+            toast.success('Item berhasil diperbarui.');
+            showAddItemModal.value = false;
+        },
+        onFinish: () => (isAddingItem.value = false),
+    });
 };
 
 const totalPrice = computed(() => Math.round(form.items.reduce((sum: number, i: any) => sum + Number(i.subtotal || 0), 0)));
@@ -184,24 +189,11 @@ const openVerifyModal = () => {
     verifyModal.value = true;
 };
 
-const submitSaleDraft = () => {
-    if (!form.items.length) {
-        toast.error('Minimal 1 item harus ditambahkan.');
-        return;
-    }
-    form.is_draft = true;
-    form.patch(route('sales.update', { category: props.category, sale: props.sale.id }), {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.success('Draft berhasil diperbarui.');
-            router.visit(route('sales.index', { category: props.category }));
-        },
-    });
-};
-
 const submitSaleFinal = () => {
-    form.is_draft = false;
-    form.patch(route('sales.update', { category: props.category, sale: props.sale.id }), {
+    form.transform((data) => ({
+        ...data,
+        _method: 'PATCH',
+    })).post(route('sales.update', { category: props.category, sale: props.sale.id }), {
         preserveScroll: true,
         onSuccess: (page) => {
             savedSale.value = page.props.flash.sale;
@@ -233,6 +225,22 @@ const onQrScanned = (token: string) => {
         toast.error('QR tidak dikenal.');
     }
 };
+
+watch(
+    () => props.sale.items,
+    (newItems) => {
+        form.items = newItems.map((i: any) => ({
+            sale_item_id: i.id,
+            id: i.item_id,
+            manual_name: i.manual_name,
+            weight: i.weight,
+            price: i.price,
+            subtotal: i.subtotal,
+            mode: i.source === 'manual' ? 'manual' : 'auto',
+        }));
+    },
+    { immediate: true, deep: true },
+);
 
 watch(successModal, (val) => {
     if (!val) {
@@ -391,6 +399,7 @@ useBarcodeScanner(onBarcodeScanned);
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+                                    <InputError :message="form.errors.payment_method_id" />
                                 </div>
 
                                 <div>
@@ -399,6 +408,7 @@ useBarcodeScanner(onBarcodeScanned);
                                         <CurrencyInput v-model="form.paid_amount" class="flex-1" />
                                         <Button type="button" @click="setExactPayment">PAS</Button>
                                     </div>
+                                    <InputError :message="form.errors.paid_amount" />
                                 </div>
                             </div>
 
@@ -420,7 +430,6 @@ useBarcodeScanner(onBarcodeScanned);
                         </div>
 
                         <div class="flex justify-end gap-3 pt-4">
-                            <Button type="button" variant="outline" @click="submitSaleDraft" :disabled="form.processing">Simpan Sementara</Button>
                             <Button @click="openVerifyModal" class="px-6" :disabled="form.processing">Simpan Transaksi</Button>
                         </div>
                     </CardContent>
@@ -482,9 +491,15 @@ useBarcodeScanner(onBarcodeScanned);
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" @click="showAddItemModal = false">Batal</Button>
-                    <Button v-if="editIndex === null" @click="saveModalItem">Tambah</Button>
-                    <Button v-else @click="updateModalItem">Simpan</Button>
+                    <Button variant="outline" :disabled="isAddingItem" @click="showAddItemModal = false">Batal</Button>
+                    <Button v-if="editIndex === null" :disabled="isAddingItem" @click="saveModalItem">
+                        <Icon v-if="isAddingItem" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                        Tambah
+                    </Button>
+                    <Button v-else :disabled="isAddingItem" @click="updateModalItem">
+                        <Icon v-if="isAddingItem" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                        Simpan
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

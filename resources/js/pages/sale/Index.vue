@@ -275,7 +275,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                             <EditButton v-if="sale.status === 'draft'" @click.stop="editSale(sale)" />
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <Button class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
+                                            <Button v-if="sale.status !== 'draft'" class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
                                                 <Trash />
                                             </Button>
                                         </TableCell>

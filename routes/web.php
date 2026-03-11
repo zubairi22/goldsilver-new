@@ -99,6 +99,9 @@ Route::middleware('auth')->group(function () {
                     Route::get('/wholesale/create', [SaleController::class, 'createWholesale'])
                         ->name('create.wholesale');
                     Route::post('/', [SaleController::class, 'store'])->name('store');
+                    Route::post('/initiate', [SaleController::class, 'initiate'])->name('initiate');
+                    Route::post('/{sale}/addItem', [SaleController::class, 'addItem'])->name('addItem');
+                    Route::delete('/{sale}/removeItem', [SaleController::class, 'removeItem'])->name('removeItem');
                     Route::get('/{sale}/print', [SaleController::class, 'print'])->name('print');
                     Route::get('/{sale}/edit', [SaleController::class, 'edit'])->name('edit');
                     Route::patch('/{sale}', [SaleController::class, 'update'])->name('update');

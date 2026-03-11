@@ -186,17 +186,115 @@ class SaleController extends Controller
         });
     }
 
+    public function initiate(Request $request, string $category)
+    {
+        $data = $request->validate([
+            'sale_type' => 'required|in:retail,wholesale',
+        ]);
+
+        $sale = Sale::create([
+            'category' => $category,
+            'sale_type' => $data['sale_type'],
+            'user_id' => auth()->id(),
+            'status' => 'draft',
+            'total_weight' => 0,
+            'total_price' => 0,
+            'paid_amount' => 0,
+        ]);
+
+        return redirect()->route('sales.edit', [
+            'category' => $category,
+            'sale' => $sale->id,
+        ]);
+    }
+
+    public function addItem(Request $request, string $category, Sale $sale)
+    {
+        $data = $request->validate([
+            'sale_item_id' => 'nullable|exists:sale_items,id', // Add this
+            'id' => 'nullable|exists:items,id',
+            'manual_name' => 'nullable|string|max:255',
+            'weight' => 'required|numeric|min:0.01',
+            'price' => 'required|numeric|min:0',
+            'subtotal' => 'required|numeric|min:0',
+            'mode' => 'required|in:auto,manual',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        return DB::transaction(function () use ($request, $data, $sale) {
+            if (isset($data['sale_item_id'])) {
+                $saleItem = $sale->items()->findOrFail($data['sale_item_id']);
+
+                // If the stock item changed, revert the old one
+                if ($saleItem->item_id && $saleItem->item_id != $data['id']) {
+                    Item::where('id', $saleItem->item_id)->update(['status' => 'ready']);
+                }
+
+                $saleItem->update([
+                    'item_id' => $data['mode'] === 'auto' ? $data['id'] : null,
+                    'manual_name' => $data['mode'] === 'manual' ? $data['manual_name'] : null,
+                    'weight' => $data['weight'],
+                    'price' => $data['price'],
+                    'subtotal' => $data['subtotal'],
+                    'source' => $data['mode'] === 'manual' ? 'manual' : 'stock',
+                ]);
+            } else {
+                $saleItem = $sale->items()->create([
+                    'item_id' => $data['mode'] === 'auto' ? $data['id'] : null,
+                    'manual_name' => $data['mode'] === 'manual' ? $data['manual_name'] : null,
+                    'weight' => $data['weight'],
+                    'price' => $data['price'],
+                    'subtotal' => $data['subtotal'],
+                    'source' => $data['mode'] === 'manual' ? 'manual' : 'stock',
+                ]);
+            }
+
+            if ($request->hasFile('image')) {
+                $saleItem->addMediaFromRequest('image')->toMediaCollection('manual');
+            }
+
+            if ($data['mode'] === 'auto' && $data['id']) {
+                Item::where('id', $data['id'])->update(['status' => 'sold']);
+            }
+
+            $sale->update([
+                'total_weight' => $sale->items()->sum('weight'),
+                'total_price' => $sale->items()->sum('subtotal'),
+            ]);
+
+            return back();
+        });
+    }
+
+    public function removeItem(Request $request, string $category, Sale $sale)
+    {
+        $data = $request->validate([
+            'sale_item_id' => 'required|exists:sale_items,id',
+        ]);
+
+        return DB::transaction(function () use ($data, $sale) {
+            $saleItem = $sale->items()->findOrFail($data['sale_item_id']);
+
+            if ($saleItem->item_id) {
+                Item::where('id', $saleItem->item_id)->update(['status' => 'ready']);
+            }
+
+            $saleItem->delete();
+
+            $sale->update([
+                'total_weight' => $sale->items()->sum('weight'),
+                'total_price' => $sale->items()->sum('subtotal'),
+            ]);
+
+            return back();
+        });
+    }
+
     public function edit(string $category, Sale $sale)
     {
         if ($sale->category !== $category) {
             $this->flashError('Penjualan tidak ditemukan.');
-
-            return back();
-        }
-
-        if (!$sale->isEditable()) {
-            $this->flashError('Hanya penjualan berstatus Draft yang dapat diubah.');
-            return back();
+            return redirect()->route('sales.index', ['category' => $category]);
         }
 
         $sale->load(['items.item', 'paymentMethod']);
@@ -230,20 +328,14 @@ class SaleController extends Controller
             'notes' => 'nullable|string|max:500',
             'image' => 'nullable|image|max:2048',
             'customer' => 'nullable',
-            'payment_method_id' => 'nullable|exists:payment_methods,id',
-            'paid_amount' => 'nullable|numeric|min:0',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'paid_amount' => 'required|numeric|min:0',
             'cashier_id' => 'required|exists:users,id',
             'password' => 'nullable|string',
             'qr_token' => 'nullable|string',
-            'is_draft' => 'nullable|boolean',
-            'items' => 'required|array|min:1',
         ]);
 
-        if ($data['is_draft'] ?? false) {
-            $cashier = User::find($data['cashier_id']);
-        } else {
-            $cashier = $this->verifyAuth($data);
-        }
+        $cashier = $this->verifyAuth($data);
 
         if (!$cashier) {
             $this->flashError('Password atau QR admin tidak valid.');
@@ -256,25 +348,9 @@ class SaleController extends Controller
             return back();
         }
 
-        return DB::transaction(function () use ($request, $data, $category, $sale) {
-            $oldItemIds = $sale->items()->whereNotNull('item_id')->pluck('item_id');
-            Item::whereIn('id', $oldItemIds)->update(['status' => 'ready']);
-
-            $sale->items()->delete();
-
-            $totalWeight = collect($data['items'])->sum('weight');
-            $totalPrice = collect($data['items'])->sum('subtotal');
-
+        return DB::transaction(function () use ($request, $data, $category, $sale, $cashier) {
             if ($request->hasFile('image')) {
-
-                $media = $sale
-                    ->addMediaFromRequest('image')
-                    ->toMediaCollection('sale-image');
-
-                $path = $media->getPath();
-                if (file_exists($path)) {
-                    @unlink($path);
-                }
+                $sale->addMediaFromRequest('image')->toMediaCollection('sale-image');
             }
 
             $sale->update([
@@ -282,44 +358,48 @@ class SaleController extends Controller
                 'customer' => $data['customer'],
                 'user_id' => $cashier->id,
                 'payment_method_id' => $data['payment_method_id'],
-                'total_weight' => $totalWeight,
-                'total_price' => $totalPrice,
-                'paid_amount' => $data['paid_amount'] ?? 0,
-                'status' => ($data['is_draft'] ?? false) ? 'draft' : 'unpaid',
+                'paid_amount' => $data['paid_amount'],
+                'status' => 'unpaid',
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            foreach ($data['items'] as $item) {
-                $sale->items()->create([
-                    'item_id' => $item['mode'] === 'auto' ? $item['id'] : null,
-                    'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
-                    'weight' => $item['weight'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['subtotal'],
-                    'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
+            $selectedMethod = PaymentMethod::find($data['payment_method_id']);
+
+            if ($selectedMethod && $selectedMethod->name === 'Split') {
+                $tunaiMethod = PaymentMethod::where('name', 'Tunai')->first();
+                $nonTunaiMethod = PaymentMethod::where('name', 'Non Tunai')->first();
+
+                // Payment 1: Tunai
+                $sale->payments()->create([
+                    'payment_method_id' => $tunaiMethod?->id,
+                    'amount' => $data['paid_amount'],
+                    'note' => 'Split (Tunai)',
+                    'user_id' => $cashier->id,
                 ]);
 
-                if ($item['mode'] === 'auto' && $item['id']) {
-                    Item::where('id', $item['id'])->update(['status' => 'sold']);
+                // Payment 2: Non Tunai
+                $remaining = $sale->total_price - $data['paid_amount'];
+                if ($remaining > 0) {
+                    $sale->payments()->create([
+                        'payment_method_id' => $nonTunaiMethod?->id,
+                        'amount' => $remaining,
+                        'note' => 'Split (Non Tunai)',
+                        'user_id' => $cashier->id,
+                    ]);
                 }
-            }
-
-            $sale->payments()->delete();
-
-            if (!empty($data['paid_amount']) && $data['paid_amount'] > 0) {
+            } else {
                 $sale->payments()->create([
                     'payment_method_id' => $data['payment_method_id'],
                     'amount' => $data['paid_amount'],
-                    'note' => 'Pembayaran update',
-                    'user_id' => auth()->id(),
+                    'note' => 'Pembayaran',
+                    'user_id' => $cashier->id,
                 ]);
             }
 
             $sale->refreshPaymentTotals();
 
-            $this->flashSuccess("Penjualan {$category} berhasil diperbarui.");
-
-            session()?->flash('sale', $sale);
+            session()?->flash('sale', $sale->load('items.item'));
+            $this->flashSuccess('Transaksi berhasil disimpan.');
 
             return back();
         });

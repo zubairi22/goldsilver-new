@@ -64,6 +64,19 @@ const savedSale = ref<any>(null);
 const showAddItemModal = ref(false);
 const editIndex = ref<number | null>(null);
 
+const isInitiating = ref(false);
+
+const initiateSale = () => {
+    isInitiating.value = true;
+    router.post(
+        route('sales.initiate', { category: props.category }),
+        { sale_type: form.sale_type },
+        {
+            onFinish: () => (isInitiating.value = false),
+        },
+    );
+};
+
 const modalItem = ref<any>({
     id: null,
     mode: 'auto',
@@ -269,8 +282,14 @@ useBarcodeScanner(onBarcodeScanned);
                 <!-- INFO PENJUALAN -->
                 <Card>
                     <CardHeader>
-                        <CardTitle class="mb-1">Informasi Penjualan Emas</CardTitle>
-                        <hr />
+                        <div class="flex items-center justify-between">
+                            <CardTitle class="mb-1">Informasi Penjualan {{ categoryLabel }}</CardTitle>
+                            <Button @click="initiateSale" :disabled="isInitiating">
+                                <Icon v-if="isInitiating" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                                Buat Nota
+                            </Button>
+                        </div>
+                        <hr class="mt-4" />
                     </CardHeader>
 
                     <CardContent class="grid gap-4 md:grid-cols-2">
@@ -287,7 +306,7 @@ useBarcodeScanner(onBarcodeScanned);
 
                         <div>
                             <Label>Mode Input</Label>
-                            <Select v-model="form.mode">
+                            <Select disabled v-model="form.mode">
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-if="category === 'gold'" value="auto">Dari Stok</SelectItem>
@@ -299,7 +318,7 @@ useBarcodeScanner(onBarcodeScanned);
                 </Card>
 
                 <!-- ITEM -->
-                <Card>
+                <Card class="pointer-events-none opacity-50">
                     <CardHeader>
                         <div class="mb-1 flex items-center justify-between">
                             <CardTitle>Daftar Item</CardTitle>
@@ -354,7 +373,7 @@ useBarcodeScanner(onBarcodeScanned);
                 </Card>
 
                 <!-- PEMBAYARAN -->
-                <Card>
+                <Card class="pointer-events-none opacity-50">
                     <CardHeader>
                         <CardTitle class="mb-1">Pembayaran</CardTitle>
                         <hr />
