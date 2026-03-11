@@ -20,6 +20,14 @@ class CashierController extends Controller
     }
 
     /**
+     * Halaman scan QR/Nomor Nota
+     */
+    public function scanView()
+    {
+        return inertia('cashier/Scan');
+    }
+
+    /**
      * Buka kasir
      */
     public function open(Request $request)
@@ -72,7 +80,7 @@ class CashierController extends Controller
     /**
      * Proses scan QR atau kode manual
      */
-    public function scan(Request $request)
+    public function submitScan(Request $request)
     {
         $data = $request->validate([
             'code' => 'required|string|max:255',

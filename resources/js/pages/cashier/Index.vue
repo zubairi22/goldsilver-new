@@ -6,9 +6,7 @@ import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
@@ -31,34 +29,8 @@ const closeForm = useForm({
     silver_closing_cash: 0,
 });
 
-const scanForm = useForm({
-    code: '',
-});
-
-useBarcodeScanner((barcode: string) => {
-    scanForm.code = barcode;
-    submitScan();
-});
-
-const submitOpen = () => {
-    openForm.post(route('cashier.open'), { preserveScroll: true });
-};
-
 const submitClose = () => {
     closeForm.post(route('cashier.close'), { preserveScroll: true });
-};
-
-const submitScan = () => {
-    if (!scanForm.code) return;
-    scanForm.post(route('cashier.scan'), {
-        preserveScroll: true,
-        onSuccess: (page: any) => {
-            if (page.props.flash?.sale) {
-                window.open(page.props.flash.sale, '_blank');
-            }
-            scanForm.reset();
-        },
-    });
 };
 </script>
 
@@ -180,32 +152,6 @@ const submitScan = () => {
                         </div>
 
                         <hr v-if="$page.props.auth.isAdmin" />
-
-                        <!-- ======================================= -->
-                        <!-- SCAN QR / KODE -->
-                        <!-- ======================================= -->
-                        <div class="space-y-4">
-                            <p class="text-lg font-semibold">Scan / Masukkan Nomor Nota</p>
-
-                            <div class="flex w-full flex-col gap-3 sm:flex-row">
-                                <Input
-                                    v-model="scanForm.code"
-                                    type="text"
-                                    placeholder="Scan QR atau masukkan nomor nota"
-                                    class="w-full"
-                                    @keyup.enter="submitScan"
-                                />
-
-                                <Button :disabled="scanForm.processing" @click="submitScan" class="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
-                                    <Icon name="search" class="mr-2" />
-                                    Cari
-                                </Button>
-                            </div>
-
-                            <InputError :message="scanForm.errors.code" />
-
-                            <p class="text-xs text-gray-500">Berupa <strong>Nomor Nota</strong>.</p>
-                        </div>
                     </CardContent>
                 </Card>
             </div>

@@ -29,9 +29,10 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('cashier', [CashierController::class, 'index'])->name('cashier.index');
+    Route::get('cashier/scan', [CashierController::class, 'scanView'])->name('cashier.scan.view');
     Route::post('cashier/open', [CashierController::class, 'open'])->name('cashier.open');
     Route::post('cashier/close', [CashierController::class, 'close'])->name('cashier.close');
-    Route::post('cashier/scan', [CashierController::class, 'scan'])->name('cashier.scan');
+    Route::post('cashier/scan', [CashierController::class, 'submitScan'])->name('cashier.scan.submit');
 
     Route::middleware('role:super-admin')->prefix('store')->name('store.')->group(function () {
         Route::prefix('settings')->name('settings.')->group(function () {

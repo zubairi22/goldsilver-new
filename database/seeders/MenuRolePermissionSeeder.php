@@ -32,6 +32,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 16, 'name' => 'manage silver buyback', 'guard_name' => 'web'],
             ['id' => 17, 'name' => 'manage silver damaged', 'guard_name' => 'web'],
             ['id' => 18, 'name' => 'manage silver debts', 'guard_name' => 'web'],
+            ['id' => 19, 'name' => 'manage print note', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);
@@ -118,8 +119,11 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 32, 'title' => 'Penjualan Perak Eceran', 'url' => 'reports.sales.item.silver.retail', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 5],
             ['id' => 33, 'title' => 'Penjualan Perak Partai', 'url' => 'reports.sales.item.silver.wholesale', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 6],
             ['id' => 34, 'title' => 'Performa Karyawan', 'url' => 'reports.sales.employee', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 8],
-            ['id' => 35, 'title' => 'Hasil Penjualan Emas', 'url' => 'reports.sales.summary', 'param' => 'gold', 'parent_id' => 24, 'icon' => 'TrendingUp', 'sort' => 9],
-            ['id' => 36, 'title' => 'Hasil Penjualan Perak', 'url' => 'reports.sales.summary', 'param' => 'silver', 'parent_id' => 24, 'icon' => 'TrendingUp', 'sort' => 10],
+            ['id' => 35, 'title' => 'Emas', 'url' => 'reports.sales.summary', 'param' => 'gold', 'parent_id' => 37, 'icon' => 'TrendingUp', 'sort' => 9],
+            ['id' => 36, 'title' => 'Perak', 'url' => 'reports.sales.summary', 'param' => 'silver', 'parent_id' => 37, 'icon' => 'TrendingUp', 'sort' => 10],
+
+            ['id' => 37, 'title' => 'Hasil Penjualan', 'url' => 'reports.sales.summary', 'param' => null, 'parent_id' => null, 'icon' => 'FileText', 'sort' => 7],
+            ['id' => 38, 'title' => 'Cetak Nota', 'url' => 'cashier.scan.view', 'param' => null, 'parent_id' => null, 'icon' => 'FileText', 'sort' => 6],
         ];
 
         Menu::insert($menus);
@@ -169,6 +173,8 @@ class MenuRolePermissionSeeder extends Seeder
             ['menu_id' => 34, 'permission_id' => 14],
             ['menu_id' => 35, 'permission_id' => 14],
             ['menu_id' => 36, 'permission_id' => 14],
+            ['menu_id' => 37, 'permission_id' => 14],
+            ['menu_id' => 38, 'permission_id' => 19],
         ];
 
         DB::table('menu_has_permissions')->insert($menuPermissions);
