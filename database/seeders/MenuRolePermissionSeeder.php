@@ -32,7 +32,7 @@ class MenuRolePermissionSeeder extends Seeder
             ['id' => 16, 'name' => 'manage silver buyback', 'guard_name' => 'web'],
             ['id' => 17, 'name' => 'manage silver damaged', 'guard_name' => 'web'],
             ['id' => 18, 'name' => 'manage silver debts', 'guard_name' => 'web'],
-            ['id' => 19, 'name' => 'manage print note', 'guard_name' => 'web'],
+            ['id' => 19, 'name' => 'view print note', 'guard_name' => 'web'],
         ];
 
         Permission::insert($permissions);

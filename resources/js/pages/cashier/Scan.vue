@@ -41,17 +41,13 @@ const submitScan = () => {
     <Head title="Cetak Nota" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="py-12">
+        <div class="py-8">
             <Heading class="mx-4" title="Cetak Nota" description="Scan QR atau masukkan nomor nota untuk mencetak" />
 
-            <div class="mx-auto max-w-4xl">
+            <div class="max-w-8xl mx-auto">
                 <Card class="py-10 md:mx-4">
                     <CardContent class="space-y-8">
                         <div class="space-y-6 text-center">
-                            <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                                <Icon name="qr-code" size="40" />
-                            </div>
-
                             <div class="space-y-2">
                                 <h3 class="text-xl font-bold">Scan Nota Penjualan</h3>
                                 <p class="text-muted-foreground">
@@ -59,7 +55,7 @@ const submitScan = () => {
                                 </p>
                             </div>
 
-                            <div class="mx-auto max-w-md space-y-4">
+                            <div class="mx-auto max-w-6xl space-y-4">
                                 <div class="flex w-full flex-col gap-3 sm:flex-row">
                                     <Input
                                         v-model="scanForm.code"
@@ -70,19 +66,13 @@ const submitScan = () => {
                                         autofocus
                                     />
 
-                                    <Button :disabled="scanForm.processing" @click="submitScan" class="h-11 bg-blue-600 px-8 hover:bg-blue-700">
+                                    <Button :disabled="scanForm.processing" @click="submitScan">
                                         <Icon name="search" class="mr-2" />
                                         Cari
                                     </Button>
                                 </div>
 
                                 <InputError :message="scanForm.errors.code" />
-                            </div>
-
-                            <div class="pt-4">
-                                <p class="text-sm text-muted-foreground italic">
-                                    *Pastikan kursor fokus pada input di atas jika menggunakan scanner hardware.
-                                </p>
                             </div>
                         </div>
                     </CardContent>
