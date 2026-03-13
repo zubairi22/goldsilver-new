@@ -48,9 +48,8 @@ class SalesEmployeeReportController extends Controller
 
         $sales = $baseQuery
             ->orderByDesc('invoice_no')
-            ->paginate(100)
-            ->withQueryString()
-            ->through(fn ($sale) => [
+            ->get()
+            ->map(fn ($sale) => [
                 'invoice'      => $sale->invoice_no,
                 'date'         => $sale->created_at->format('d-m-Y'),
                 'employee'     => $sale->user?->name,

@@ -47,9 +47,8 @@ class StockReportController extends Controller
             $q->where('status', $filters['status'])
             )
             ->orderBy('code', 'desc')
-            ->paginate(100)
-            ->withQueryString()
-            ->through(fn ($item) => [
+            ->get()
+            ->map(fn ($item) => [
                 'code'       => $item->code,
                 'name'       => $item->name,
                 'category'   => $item->category === 'gold' ? 'Emas' : 'Perak',

@@ -29,6 +29,10 @@ const closeForm = useForm({
     silver_closing_cash: 0,
 });
 
+const submitOpen = () => {
+    openForm.post(route('cashier.open'), { preserveScroll: true });
+};
+
 const submitClose = () => {
     closeForm.post(route('cashier.close'), { preserveScroll: true });
 };

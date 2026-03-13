@@ -14,6 +14,8 @@ import { Head, router } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { ref, watch } from 'vue';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 const { items, filters, totalWeight, totalAmount, isSegmented } = defineProps<{
@@ -60,7 +62,8 @@ const applyFilters = () => {
 watch([category, date], applyFilters);
 
 const exportExcel = () => {
-    const rows = items.data.map((row: any) => ({
+    const rows = items.map((row: any, index: number) => ({
+        No: index + 1,
         Nota: row.invoice,
         Tanggal: row.date,
         Jenis: row.sale_type,
@@ -70,20 +73,52 @@ const exportExcel = () => {
         Subtotal: row.subtotal,
     }));
 
-    rows.push({});
-    rows.push({
-        Nota: 'TOTAL',
-        'Berat (gr)': totalWeight,
-        Subtotal: totalAmount,
-    });
-
     const worksheet = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.sheet_add_aoa(worksheet, [
+        ['TOTAL', '', '', '', '', '', totalWeight, totalAmount]
+    ], { origin: -1 });
+
     const workbook = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Item');
 
     const filename = `laporan-penjualan-item-${filters.start}-sd-${filters.end}.xlsx`;
     XLSX.writeFile(workbook, filename);
+};
+
+const exportPdf = (action: 'download' | 'stream') => {
+    const doc = new jsPDF();
+    
+    doc.text('Laporan Penjualan Per Item', 14, 15);
+    
+    const tableData = items.map((row: any, index: number) => [
+        index + 1,
+        row.invoice,
+        row.date,
+        row.sale_type,
+        row.category,
+        row.item,
+        row.weight,
+        formatRupiah(row.subtotal)
+    ]);
+
+    autoTable(doc, {
+        startY: 20,
+        head: [['No', 'Nota', 'Tanggal', 'Jenis', 'Kategori', 'Item', 'Berat', 'Subtotal']],
+        body: tableData,
+        foot: [['', 'TOTAL', '', '', '', '', totalWeight.toFixed(2), formatRupiah(totalAmount)]],
+        showFoot: 'lastPage',
+        theme: 'striped',
+        headStyles: { fillColor: [30, 41, 59] },
+        footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' },
+        styles: { fontSize: 8 }
+    });
+
+    if (action === 'download') {
+        doc.save(`laporan-item-${filters.start}-sd-${filters.end}.pdf`);
+    } else {
+        window.open(doc.output('bloburl'), '_blank');
+    }
 };
 </script>
 
@@ -148,7 +183,11 @@ const exportExcel = () => {
                                 <SearchInput v-model:search="search" />
                             </div>
 
-                            <Button variant="secondary" @click="exportExcel"> Export Excel </Button>
+                            <div class="flex gap-2">
+                                <Button variant="secondary" @click="exportExcel"> Excel </Button>
+                                <Button variant="secondary" @click="exportPdf('stream')"> Print </Button>
+                                <Button variant="secondary" @click="exportPdf('download')"> PDF </Button>
+                            </div>
                         </div>
 
                         <!-- TABLE -->
@@ -167,26 +206,31 @@ const exportExcel = () => {
                                 </TableHeader>
 
                                 <TableBody>
-                                    <TableRow v-for="row in items.data" :key="row.invoice + row.item">
+                                    <TableRow v-for="row in items" :key="row.invoice + row.item">
                                         <TableCell>{{ row.invoice }}</TableCell>
                                         <TableCell>{{ row.date }}</TableCell>
                                         <TableCell>{{ row.sale_type }}</TableCell>
                                         <TableCell>{{ row.category }}</TableCell>
                                         <TableCell>{{ row.item }}</TableCell>
-                                        <TableCell class="text-right">{{ row.weight }}</TableCell>
+                                        <TableCell class="text-right">{{ row.weight }} gr</TableCell>
                                         <TableCell class="text-right">
                                             {{ formatRupiah(row.subtotal) }}
                                         </TableCell>
                                     </TableRow>
 
-                                    <TableRow v-if="!items.total">
+                                    <TableRow v-if="items.length" class="bg-muted/50 font-bold">
+                                        <TableCell colspan="5" class="text-right">TOTAL</TableCell>
+                                        <TableCell class="text-right">{{ totalWeight.toFixed(2) }} gr</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(totalAmount) }}</TableCell>
+                                    </TableRow>
+
+                                    <TableRow v-if="!items.length">
                                         <TableCell colspan="7" class="py-4 text-center"> Tidak ada data item terjual. </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
                         </div>
 
-                        <PageNav :data="items" />
                     </CardContent>
                 </Card>
             </div>

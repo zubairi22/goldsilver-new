@@ -15,6 +15,8 @@ import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import * as XLSX from 'xlsx'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const {
     sales,
@@ -76,30 +78,60 @@ const applyFilters = () => {
 watch([user_id, category, date], applyFilters)
 
 const exportExcel = () => {
-    const rows = sales.data.map((row: any) => ({
-        Nota: row.invoice,
-        Tanggal: row.date,
-        Karyawan: row.employee,
-        Jenis: row.sale_type,
+    const rows = sales.map((row: any, index: number) => ({
+        No: index + 1,
+        'Nomor Nota': row.invoice,
+        'Tanggal Penjualan': row.date,
+        'Nama Karyawan': row.employee,
         Kategori: row.category,
-        'Total Berat (gr)': row.total_weight,
+        'Total Berat': row.total_weight,
         Nominal: row.total_price,
     }))
 
-    rows.push({})
-    rows.push({
-        Nota: 'TOTAL',
-        'Total Berat (gr)': totalWeight,
-        Nominal: totalAmount,
-    })
-
     const worksheet = XLSX.utils.json_to_sheet(rows)
-    const workbook = XLSX.utils.book_new()
+    XLSX.utils.sheet_add_aoa(worksheet, [
+        ['TOTAL', '', '', '', '', totalWeight, totalAmount]
+    ], { origin: -1 })
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Penjualan Karyawan')
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Karyawan')
 
     const filename = `laporan-penjualan-karyawan-${filters.start}-sd-${filters.end}.xlsx`
     XLSX.writeFile(workbook, filename)
+}
+
+const exportPdf = (action: 'download' | 'stream') => {
+    const doc = new jsPDF()
+    
+    doc.text('Laporan Penjualan Per Karyawan', 14, 15)
+    
+    const tableData = sales.map((row: any, index: number) => [
+        index + 1,
+        row.invoice,
+        row.date,
+        row.employee,
+        row.category,
+        row.total_weight,
+        formatRupiah(row.total_price)
+    ])
+
+    autoTable(doc, {
+        startY: 20,
+        head: [['No', 'Nomor Nota', 'Tanggal', 'Karyawan', 'Kategori', 'Berat', 'Nominal']],
+        body: tableData,
+        foot: [['', 'TOTAL', '', '', '', totalWeight.toFixed(2), formatRupiah(totalAmount)]],
+        showFoot: 'lastPage',
+        theme: 'striped',
+        headStyles: { fillColor: [30, 41, 59] },
+        footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' },
+        styles: { fontSize: 8 }
+    })
+
+    if (action === 'download') {
+        doc.save(`laporan-karyawan-${filters.start}-sd-${filters.end}.pdf`)
+    } else {
+        window.open(doc.output('bloburl'), '_blank')
+    }
 }
 </script>
 
@@ -212,9 +244,17 @@ const exportExcel = () => {
                                 <SearchInput v-model:search="search" />
                             </div>
 
-                            <Button variant="secondary" @click="exportExcel">
-                                Export Excel
-                            </Button>
+                            <div class="flex gap-2">
+                                <Button variant="secondary" @click="exportExcel">
+                                    Excel
+                                </Button>
+                                <Button variant="secondary" @click="exportPdf('stream')">
+                                    Print
+                                </Button>
+                                <Button variant="secondary" @click="exportPdf('download')">
+                                    PDF
+                                </Button>
+                            </div>
                         </div>
 
                         <div class="overflow-x-auto max-h-[70vh] overflow-y-auto">
@@ -233,7 +273,7 @@ const exportExcel = () => {
 
                                 <TableBody>
                                     <TableRow
-                                        v-for="row in sales.data"
+                                        v-for="(row, index) in sales"
                                         :key="row.invoice"
                                     >
                                         <TableCell class="font-medium">
@@ -251,7 +291,13 @@ const exportExcel = () => {
                                         </TableCell>
                                     </TableRow>
 
-                                    <TableRow v-if="!sales.total">
+                                    <TableRow v-if="sales.length" class="bg-muted/50 font-bold">
+                                        <TableCell colspan="5" class="text-right">TOTAL</TableCell>
+                                        <TableCell class="text-right">{{ totalWeight.toFixed(2) }}</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(totalAmount) }}</TableCell>
+                                    </TableRow>
+
+                                    <TableRow v-if="!sales.length">
                                         <TableCell colspan="7" class="text-center py-4">
                                             Tidak ada data penjualan.
                                         </TableCell>
@@ -260,7 +306,6 @@ const exportExcel = () => {
                             </Table>
                         </div>
 
-                        <PageNav :data="sales" />
                     </CardContent>
                 </Card>
             </div>

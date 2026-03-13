@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge'
 import { useFormat } from '@/composables/useFormat'
 import type { BreadcrumbItem } from '@/types'
 import * as XLSX from 'xlsx'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const {
     items,
@@ -58,37 +60,58 @@ const applyFilters = () => {
 
 watch([category, item_type_id, status], applyFilters)
 
-/* ===============================
-   EXPORT EXCEL (XLSX)
-   =============================== */
 const exportExcel = () => {
-    const rows = items.data.map((row: any) => ({
+    const rows = items.map((row: any, index: number) => ({
+        No: index + 1,
         Kode: row.code,
-        Nama: row.name,
-        Kategori: row.category,
-        Tipe: row.type,
+        'Nama Barang': row.name,
+        Berat: row.weight,
         Status: row.status_label,
-        'Berat (gr)': row.weight,
-        'Harga Beli': row.price_buy,
-        'Harga Jual': row.price_sell,
     }))
 
-    rows.push({})
-
-    rows.push({
-        Kode: 'TOTAL',
-        'Berat (gr)': summary.totalWeight,
-        'Harga Beli': summary.totalBuy,
-        'Harga Jual': summary.totalSell,
-    })
-
     const worksheet = XLSX.utils.json_to_sheet(rows)
+    XLSX.utils.sheet_add_aoa(worksheet, [
+        ['', 'TOTAL', '', summary.totalWeight]
+    ], { origin: -1 })
+
     const workbook = XLSX.utils.book_new()
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Stok')
 
     const filename = `laporan-stok-${category.value}-${status.value}.xlsx`
     XLSX.writeFile(workbook, filename)
+}
+
+const exportPdf = (action: 'download' | 'stream') => {
+    const doc = new jsPDF()
+    
+    doc.text('Laporan Stok', 14, 15)
+    
+    const tableData = items.map((row: any, index: number) => [
+        index + 1,
+        row.code,
+        row.name,
+        row.weight,
+        row.status_label,
+    ])
+
+    autoTable(doc, {
+        startY: 20,
+        head: [['No', 'Kode', 'Nama Barang', 'Berat', 'Status']],
+        body: tableData,
+        foot: [['', 'TOTAL', '', summary.totalWeight, '']],
+        showFoot: 'lastPage',
+        theme: 'striped',
+        headStyles: { fillColor: [30, 41, 59] },
+        footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' },
+        styles: { fontSize: 9 }
+    })
+
+    if (action === 'download') {
+        doc.save(`laporan-stok-${category.value}-${status.value}.pdf`)
+    } else {
+        window.open(doc.output('bloburl'), '_blank')
+    }
 }
 </script>
 
@@ -211,9 +234,17 @@ const exportExcel = () => {
                                 </div>
                             </div>
 
-                            <Button variant="secondary" @click="exportExcel">
-                                Export Excel
-                            </Button>
+                            <div class="flex gap-2">
+                                <Button variant="secondary" @click="exportExcel">
+                                    Excel
+                                </Button>
+                                <Button variant="secondary" @click="exportPdf('stream')">
+                                    Print
+                                </Button>
+                                <Button variant="secondary" @click="exportPdf('download')">
+                                    PDF
+                                </Button>
+                            </div>
                         </div>
 
                         <div class="overflow-x-auto max-h-[70vh] overflow-y-auto">
@@ -232,7 +263,7 @@ const exportExcel = () => {
                                 </TableHeader>
 
                                 <TableBody>
-                                    <TableRow v-for="row in items.data" :key="row.code">
+                                    <TableRow v-for="row in items" :key="row.code">
                                         <TableCell>{{ row.code }}</TableCell>
                                         <TableCell>{{ row.name }}</TableCell>
                                         <TableCell>{{ row.category }}</TableCell>
@@ -245,7 +276,14 @@ const exportExcel = () => {
                                         <TableCell class="text-right">{{ formatRupiah(row.price_sell) }}</TableCell>
                                     </TableRow>
 
-                                    <TableRow v-if="!items.total">
+                                    <TableRow v-if="items.length" class="bg-muted/50 font-bold">
+                                        <TableCell colspan="5" class="text-right">TOTAL</TableCell>
+                                        <TableCell class="text-right">{{ summary.totalWeight }}</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(summary.totalBuy) }}</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(summary.totalSell) }}</TableCell>
+                                    </TableRow>
+
+                                    <TableRow v-if="!items.length">
                                         <TableCell colspan="8" class="text-center py-4">
                                             Tidak ada data stok.
                                         </TableCell>
@@ -254,7 +292,6 @@ const exportExcel = () => {
                             </Table>
                         </div>
 
-                        <PageNav :data="items" />
                     </CardContent>
                 </Card>
             </div>

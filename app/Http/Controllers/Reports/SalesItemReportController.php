@@ -86,9 +86,8 @@ class SalesItemReportController extends Controller
         $items = $baseQuery
             ->with(['sale', 'item'])
             ->latest()
-            ->paginate(100)
-            ->withQueryString()
-            ->through(fn($row) => [
+            ->get()
+            ->map(fn($row) => [
                 'invoice' => $row->sale->invoice_no,
                 'date' => $row->sale->created_at->format('d-m-Y'),
                 'sale_type' => $row->sale->sale_type === 'wholesale' ? 'Grosir' : 'Retail',
