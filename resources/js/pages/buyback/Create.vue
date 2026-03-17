@@ -35,6 +35,7 @@ const { formatRupiah, formatDate } = useFormat();
 const { today } = useTime();
 
 const form = useForm({
+    source: 'sale',
     sale_id: props.sale.id,
     customer: props.sale.customer ?? null,
     items: props.items.map((it: any) => {

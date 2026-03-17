@@ -2,7 +2,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BrowserQRCodeReader } from '@zxing/browser';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits(['update:open', 'scanned', 'error']);
@@ -10,13 +10,13 @@ const emit = defineEmits(['update:open', 'scanned', 'error']);
 const videoElem = ref<HTMLVideoElement | null>(null);
 const isScanning = ref(false);
 let controls: any = null;
-let qrReader: BrowserQRCodeReader | null = null;
+let qrReader: BrowserMultiFormatReader | null = null;
 
 const startScan = async () => {
     if (isScanning.value) return;
 
     if (!qrReader) {
-        qrReader = new BrowserQRCodeReader();
+        qrReader = new BrowserMultiFormatReader();
     }
 
     isScanning.value = true;
