@@ -211,7 +211,7 @@ class SaleController extends Controller
     public function addItem(Request $request, string $category, Sale $sale)
     {
         $data = $request->validate([
-            'sale_item_id' => 'nullable|exists:sale_items,id', // Add this
+            'sale_item_id' => 'nullable|exists:sale_items,id',
             'id' => 'nullable|exists:items,id',
             'manual_name' => 'nullable|string|max:255',
             'weight' => 'required|numeric|min:0.01',

@@ -37,22 +37,24 @@ class SalesSummaryReportController extends Controller
             ->get();
 
         foreach ($paymentMethods as $pm) {
-            $retailTotal = $payments->filter(function ($p) use ($pm) {
-                return ($p->sale?->sale_type === 'retail') && ($p->payment_method_id === $pm->id);
-            })->sum('amount');
+            $retailTotal = $payments
+                ->where('payment_method_id', $pm->id)
+                ->where('sale.sale_type', 'retail')
+                ->sum('amount');
 
-            $wholesaleTotal = $payments->filter(function ($p) use ($pm) {
-                return ($p->sale?->sale_type === 'wholesale') && ($p->payment_method_id === $pm->id);
-            })->sum('amount');
+            $wholesaleTotal = $payments
+                ->where('payment_method_id', $pm->id)
+                ->where('sale.sale_type', 'wholesale')
+                ->sum('amount');
 
             $retailPayments[] = [
                 'method' => $pm->name,
-                'total' => $retailTotal
+                'total' => $retailTotal,
             ];
 
             $wholesalePayments[] = [
                 'method' => $pm->name,
-                'total' => $wholesaleTotal
+                'total' => $wholesaleTotal,
             ];
         }
 
@@ -69,7 +71,7 @@ class SalesSummaryReportController extends Controller
 
         $grandTotalCash = $totalCashIn - $buybackNominal;
 
-        return inertia('report/SalesSummary', [
+        return inertia('reports/sales/Summary', [
             'category' => $category,
             'date' => $date,
             'soldWeights' => [
@@ -80,9 +82,9 @@ class SalesSummaryReportController extends Controller
             'wholesalePayments' => $wholesalePayments,
             'buybacks' => [
                 'weight' => $buybackWeight,
-                'nominal' => $buybackNominal
+                'nominal' => $buybackNominal,
             ],
-            'grandTotalCash' => collect([$grandTotalCash])->flatten()->first() // ensure float
+            'grandTotalCash' => collect([$grandTotalCash])->flatten()->first(), // ensure float
         ]);
     }
 }

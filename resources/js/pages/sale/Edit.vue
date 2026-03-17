@@ -249,6 +249,11 @@ watch(successModal, (val) => {
 });
 
 const onBarcodeScanned = (code: string) => {
+    console.log('SCAN:', code);
+    console.log(
+        'ITEMS:',
+        props.items.map((i: any) => i.code),
+    );
     const item = props.items.find((i: any) => i.code === code);
     if (item) {
         modalItem.value = {
@@ -269,6 +274,10 @@ const onBarcodeScanned = (code: string) => {
 };
 
 useBarcodeScanner(onBarcodeScanned);
+
+(window as any).scan = (code: string) => {
+    onBarcodeScanned(code);
+};
 </script>
 
 <template>
