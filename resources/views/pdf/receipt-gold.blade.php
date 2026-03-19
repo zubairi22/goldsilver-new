@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             margin: 0;
             padding: 0;
         }
@@ -39,7 +39,7 @@
 
     {{-- ================= HEADER ================= --}}
 
-    <table style="width:100%; background: {{ $store->invoice_color }}; padding:10px 15px; border-collapse: collapse;">
+    <table style="width:100%; background: {{ $store->invoice_color }}; padding:5px 10px; border-collapse: collapse;">
         <tr>
             {{-- LEFT SIDE --}}
             <td style="width:70%; padding:10px; vertical-align:top;">
@@ -52,7 +52,7 @@
                         @endif
 
                         <td style="vertical-align:top;">
-                            <h1 style="margin:0; font-size:22px; font-weight:bold;">
+                            <h1 style="margin:0; font-size:22px; font-weight:semibold;">
                                 {{ strtoupper($store->store_name) }}
                             </h1>
 
@@ -79,7 +79,7 @@
                     {{ now()->format('H:i:s') }}
                 </div>
 
-                <img src="{{ public_path('storage/' . $sale->qr_path) }}" width="85"
+                <img src="{{ public_path('storage/' . $sale->qr_path) }}" width="65"
                     style="margin: 5px auto; display:block;">
 
                 <b style="margin-top:4px; display:block;">Nota {{ $sale->invoice_no }}</b>
