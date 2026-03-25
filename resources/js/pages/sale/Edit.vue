@@ -45,7 +45,7 @@ const form = useForm({
     mode: props.category === 'gold' ? 'auto' : 'manual',
     image: undefined as File | undefined,
     customer: props.sale.customer ?? '',
-    payment_method_id: props.sale.payment_method_id,
+    payment_method_id: props.sale.payment_method_id ?? 1,
     paid_amount: props.sale.paid_amount,
     cashier_id: props.sale.user_id || props.cashiers?.[0]?.id,
     password: '',

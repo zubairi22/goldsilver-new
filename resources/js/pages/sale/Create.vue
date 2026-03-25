@@ -326,7 +326,7 @@ useBarcodeScanner(onBarcodeScanned);
                             <div class="flex items-center gap-2">
                                 <Button variant="secondary" @click="scanItemModal = true">
                                     <Icon name="camera" class="mr-2 h-4 w-4" />
-                                    Scan QRCode Item
+                                    Scan Item
                                 </Button>
                                 <Button @click="addItem">Tambah Item</Button>
                             </div>

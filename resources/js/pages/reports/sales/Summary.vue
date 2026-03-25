@@ -16,7 +16,7 @@ const { formatRupiah } = useFormat();
 
 const props = defineProps<{
     category: string;
-    date: string;
+    filters: { start: string; end: string };
     soldWeights: { type: string; total: number }[];
     retailPayments: { method: string; total: number }[];
     wholesalePayments: { method: string; total: number }[];
@@ -28,22 +28,29 @@ const categoryLabel = computed(() => {
     return props.category === 'gold' ? 'Emas' : 'Perak';
 });
 
+const dateDescription = computed(() => {
+    const startDate = format(new Date(props.filters.start), 'dd MMMM yyyy', { locale: id });
+    const endDate = format(new Date(props.filters.end), 'dd MMMM yyyy', { locale: id });
+    return startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Laporan', href: '#' },
     { title: `Hasil Penjualan ${categoryLabel.value}`, href: '#' },
 ];
 
-const selectedDate = ref(props.date);
+const selectedDate = ref(props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : []);
 
-const filterDate = () => {
-    router.get(route('reports.sales.summary', { category: props.category }), { date: selectedDate.value }, { preserveState: true });
+const applyFilters = () => {
+    const params: Record<string, any> = {};
+    if (selectedDate.value?.[0] && selectedDate.value?.[1]) {
+        params.start = selectedDate.value[0];
+        params.end = selectedDate.value[1];
+    }
+    router.get(route('reports.sales.summary', { category: props.category }), params, { preserveState: true });
 };
 
-watch(selectedDate, () => {
-    if (selectedDate.value) {
-        filterDate();
-    }
-});
+watch(selectedDate, applyFilters);
 
 const totalBeratLaku = () => {
     return props.soldWeights.reduce((acc, curr) => acc + curr.total, 0);
@@ -70,7 +77,7 @@ const formatWeight = (value: number) => {
             <Heading
                 class="mx-4"
                 :title="`Hasil Penjualan ${categoryLabel}`"
-                :description="`Laporan transaksi untuk tanggal ${format(new Date(date), 'dd MMMM yyyy', { locale: id })}`"
+                :description="`Laporan transaksi dari tanggal ${dateDescription}`"
             />
 
             <div class="max-w-8xl mx-auto">
@@ -87,8 +94,10 @@ const formatWeight = (value: number) => {
                                     v-model="selectedDate"
                                     model-type="yyyy-MM-dd"
                                     :enable-time-picker="false"
+                                    range
                                     auto-apply
-                                    placeholder="Pilih tanggal"
+                                    placeholder="Pilih rentang tanggal"
+                                    locale="id"
                                 />
                             </div>
                         </div>

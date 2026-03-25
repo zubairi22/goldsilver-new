@@ -14,10 +14,11 @@ class SalesSummaryReportController extends Controller
 {
     public function index(Request $request, string $category): Response
     {
-        $date = $request->input('date', now()->toDateString());
+        $startDate = $request->input('start', now()->toDateString());
+        $endDate = $request->input('end', now()->toDateString());
 
         $sales = Sale::where('category', $category)
-            ->whereDate('created_at', $date)
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->where('status', '!=', 'unpaid')
             ->get();
 
@@ -30,9 +31,9 @@ class SalesSummaryReportController extends Controller
         $paymentMethods = PaymentMethod::all();
 
         $payments = SalePayment::with(['paymentMethod', 'sale'])
-            ->whereHas('sale', function ($query) use ($category, $date) {
+            ->whereHas('sale', function ($query) use ($category, $startDate, $endDate) {
                 $query->where('category', $category)
-                    ->whereDate('created_at', $date);
+                    ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
             })
             ->get();
 
@@ -59,7 +60,7 @@ class SalesSummaryReportController extends Controller
         }
 
         $buybacks = Buyback::where('category', $category)
-            ->whereDate('created_at', $date)
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->get();
 
         $buybackWeight = $buybacks->sum('total_weight');
@@ -73,7 +74,10 @@ class SalesSummaryReportController extends Controller
 
         return inertia('reports/sales/Summary', [
             'category' => $category,
-            'date' => $date,
+            'filters' => [
+                'start' => $startDate,
+                'end' => $endDate,
+            ],
             'soldWeights' => [
                 ['type' => 'Eceran', 'total' => $retailWeight],
                 ['type' => 'Grosir', 'total' => $wholesaleWeight],

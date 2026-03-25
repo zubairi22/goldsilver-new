@@ -77,7 +77,7 @@ class SaleController extends Controller
         $data = $request->validate([
             'sale_type' => 'required|in:retail,wholesale',
             'notes' => 'nullable|string|max:500',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:4096',
             'customer' => 'nullable',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -85,14 +85,6 @@ class SaleController extends Controller
             'password' => 'nullable|string',
             'qr_token' => 'nullable|string',
             'is_draft' => 'nullable|boolean',
-            'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|exists:items,id',
-            'items.*.manual_name' => 'nullable|string|max:255',
-            'items.*.weight' => 'required|numeric|min:0.01',
-            'items.*.price' => 'required|numeric|min:0',
-            'items.*.subtotal' => 'required|numeric|min:0',
-            'items.*.image' => 'nullable|image|max:2048',
-            'items.*.mode' => 'required|in:auto,manual',
         ]);
 
         if ($data['is_draft'] ?? false) {
@@ -108,8 +100,8 @@ class SaleController extends Controller
 
         return DB::transaction(function () use ($request, $data, $category, $cashier) {
 
-            $totalWeight = collect($data['items'])->sum('weight');
-            $totalPrice = collect($data['items'])->sum('subtotal');
+            $totalWeight = collect($request->input('items', []))->sum('weight');
+            $totalPrice = collect($request->input('items', []))->sum('subtotal');
 
             $sale = Sale::create([
                 'category' => $category,
@@ -138,40 +130,37 @@ class SaleController extends Controller
                 }
             }
 
-            foreach ($data['items'] as $item) {
-
-                $saleItem = $sale->items()->create([
-                    'item_id' => $item['mode'] === 'auto' ? $item['id'] : null,
-                    'manual_name' => $item['mode'] === 'manual' ? $item['manual_name'] : null,
-                    'weight' => $item['weight'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['subtotal'],
-                    'source' => $item['mode'] === 'manual' ? 'manual' : 'stock',
-                ]);
-
-                if (!empty($item['image'])) {
-                    $media = $saleItem
-                        ->addMedia($item['image'])
-                        ->toMediaCollection('manual');
-
-                    $path = $media->getPath();
-                    if (file_exists($path)) {
-                        @unlink($path);
-                    }
-                }
-
-                if ($item['mode'] === 'auto' && $item['id']) {
-                    Item::where('id', $item['id'])->update(['status' => 'sold']);
-                }
-            }
-
             if (!empty($data['paid_amount']) && $data['paid_amount'] > 0) {
-                $sale->payments()->create([
-                    'payment_method_id' => $data['payment_method_id'],
-                    'amount' => $data['paid_amount'],
-                    'note' => 'Pembayaran awal',
-                    'user_id' => auth()->id(),
-                ]);
+                $selectedMethod = PaymentMethod::find($data['payment_method_id']);
+
+                if ($selectedMethod && $selectedMethod->name === 'Split') {
+                    $tunaiMethod = PaymentMethod::where('name', 'Tunai')->first();
+                    $nonTunaiMethod = PaymentMethod::where('name', 'Non Tunai')->first();
+
+                    $sale->payments()->create([
+                        'payment_method_id' => $tunaiMethod?->id,
+                        'amount' => $data['paid_amount'],
+                        'note' => 'Split (Tunai)',
+                        'user_id' => $cashier->id,
+                    ]);
+
+                    $remaining = $sale->total_price - $data['paid_amount'];
+                    if ($remaining > 0) {
+                        $sale->payments()->create([
+                            'payment_method_id' => $nonTunaiMethod?->id,
+                            'amount' => $remaining,
+                            'note' => 'Split (Non Tunai)',
+                            'user_id' => $cashier->id,
+                        ]);
+                    }
+                } else {
+                    $sale->payments()->create([
+                        'payment_method_id' => $data['payment_method_id'],
+                        'amount' => $data['paid_amount'],
+                        'note' => 'Pembayaran awal',
+                        'user_id' => $cashier->id,
+                    ]);
+                }
             }
 
             if ($sale->status !== 'draft') {
@@ -218,7 +207,7 @@ class SaleController extends Controller
             'price' => 'required|numeric|min:0',
             'subtotal' => 'required|numeric|min:0',
             'mode' => 'required|in:auto,manual',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:4096',
         ]);
 
         return DB::transaction(function () use ($request, $data, $sale) {
@@ -250,7 +239,12 @@ class SaleController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                $saleItem->addMediaFromRequest('image')->toMediaCollection('manual');
+                $media = $saleItem->addMediaFromRequest('image')->toMediaCollection('manual');
+
+                $path = $media->getPath();
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
             }
 
             if ($data['mode'] === 'auto' && $data['id']) {
@@ -326,7 +320,7 @@ class SaleController extends Controller
         $data = $request->validate([
             'sale_type' => 'required|in:retail,wholesale',
             'notes' => 'nullable|string|max:500',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:4096',
             'customer' => 'nullable',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'paid_amount' => 'required|numeric|min:0',
@@ -350,7 +344,12 @@ class SaleController extends Controller
 
         return DB::transaction(function () use ($request, $data, $category, $sale, $cashier) {
             if ($request->hasFile('image')) {
-                $sale->addMediaFromRequest('image')->toMediaCollection('sale-image');
+                $media = $sale->addMediaFromRequest('image')->toMediaCollection('sale-image');
+
+                $path = $media->getPath();
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
             }
 
             $sale->update([
@@ -369,7 +368,6 @@ class SaleController extends Controller
                 $tunaiMethod = PaymentMethod::where('name', 'Tunai')->first();
                 $nonTunaiMethod = PaymentMethod::where('name', 'Non Tunai')->first();
 
-                // Payment 1: Tunai
                 $sale->payments()->create([
                     'payment_method_id' => $tunaiMethod?->id,
                     'amount' => $data['paid_amount'],
@@ -377,7 +375,6 @@ class SaleController extends Controller
                     'user_id' => $cashier->id,
                 ]);
 
-                // Payment 2: Non Tunai
                 $remaining = $sale->total_price - $data['paid_amount'];
                 if ($remaining > 0) {
                     $sale->payments()->create([

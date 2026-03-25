@@ -110,11 +110,11 @@
 
                     <td style="border:1px solid #ccc; text-align:center; padding:6px;">
                         @if ($item->manual_image_path)
-                            <img src="{{ $item->manual_image_path }}" width="100">
+                            <img src="{{ $item->manual_image_path }}" width="80">
                         @elseif (optional($item->item)->image_path)
-                            <img src="{{ $item->item->image_path }}" width="100">
+                            <img src="{{ $item->item->image_path }}" width="80">
                         @else
-                            <img src="{{ public_path('placeholder.webp') }}" width="100">
+                            <img src="{{ public_path('placeholder.webp') }}" width="80">
                         @endif
                     </td>
                     <td style="border:1px solid #ccc; padding:6px; font-size:12px;">
