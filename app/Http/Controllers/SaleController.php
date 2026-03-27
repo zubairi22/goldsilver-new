@@ -488,7 +488,6 @@ class SaleController extends Controller
         $view = match ($category) {
             'gold' => 'pdf.receipt-gold',
             'silver' => 'pdf.receipt-silver',
-            default => abort(404)
         };
 
         $pdf = Pdf::loadView($view, [

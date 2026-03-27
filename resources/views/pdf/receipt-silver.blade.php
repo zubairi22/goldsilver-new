@@ -37,148 +37,147 @@
 
 <body>
 
-    {{-- ================= HEADER ================= --}}
+{{-- ================= HEADER ================= --}}
 
-    <table
-        style="width:100%; background: {{ $store->invoice_color }}; padding:5px 10px; border-collapse: collapse;">
-        <tr>
-            {{-- LEFT SIDE --}}
-            <td style="width:70%; padding:10px; vertical-align:top;">
-                <table style="border-collapse: collapse;">
-                    <tr>
-                        @if($store->logo_path)
-                            <td style="padding-right:5px; vertical-align:top;">
-                                <img src="{{ $store->logo_path }}" width="70">
-                            </td>
-                        @endif
-
-                        <td style="vertical-align:top;">
-                            <h1 style="margin:0; font-size:22px; font-weight:semibold;">
-                                {{ strtoupper($store->store_name) }}
-                            </h1>
-
-                            <p style="margin:3px 0; line-height:1.4; font-size:12px;">
-                                {{ strtoupper($store->header) }} <br>
-                                <b>
-                                    {{ $store->address ?? '' }} <br>
-                                    HP/WA: {{ $store->phone }}
-                                    @if($store->instagram)
-                                        — Instagram: {{ $store->instagram }}
-                                    @endif
-                                </b>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-
-            {{-- RIGHT SIDE --}}
-            <td style="width:30%; text-align:right; vertical-align:top; padding:10px;">
-
-                <div style="font-size:12px; margin-bottom:4px;">
-                    {{ now()->format('d-m-Y') }} <br>
-                    {{ now()->format('H:i:s') }}
-                </div>
-
-                <img src="{{ public_path('storage/' . $sale->qr_path) }}" width="65"
-                    style="margin: 5px auto; display:block;">
-
-                <b style="margin-top:4px; display:block;">Nota {{ $sale->invoice_no }}</b>
-            </td>
-        </tr>
-    </table>
-
-
-    {{-- ================= ITEM TABLE ================= --}}
-
-    <table style="border: 1px solid #ccc; border-collapse: collapse; ">
-        <thead>
-            <tr>
-                <th style="width:30px; text-align:center;">No</th>
-                <th style="width:90px; text-align:center;">Foto</th>
-                <th>Nama Barang</th>
-                <th style="width:70px; text-align:center;">Berat</th>
-                <th style="width:110px; text-align:center;">Subtotal</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach ($sale->items as $index => $item)
+<table
+    style="width:100%; background: {{ $store->invoice_color }}; padding:5px 10px; border-collapse: collapse;">
+    <tr>
+        {{-- LEFT SIDE --}}
+        <td style="width:70%; padding:10px; vertical-align:top;">
+            <table style="border-collapse: collapse;">
                 <tr>
-                    <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
-                        {{ $index + 1 }}
-                    </td>
-
-                    @if ($index === 0)
-                        <td rowspan="{{ $sale->items->count() }}"
-                            style="border:1px solid #ccc; text-align:center; padding:6px;">
-                            @if ($sale->sale_image_path)
-                                <img src="{{ $sale->sale_image_path }}" width="100">
-                            @else
-                                <img src="{{ public_path('placeholder.webp') }}" width="100">
-                            @endif
+                    @if($store->logo_path)
+                        <td style="padding-right:5px; vertical-align:top;">
+                            <img src="{{ $store->logo_path }}" width="70">
                         </td>
                     @endif
 
-                    <td style="border:1px solid #ccc; padding:6px; font-size:12px;">
-                        {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
-                    </td>
+                    <td style="vertical-align:top;">
+                        <h1 style="margin:0; font-size:22px; font-weight:bold;">
+                            {{ strtoupper($store->store_name) }}
+                        </h1>
 
-                    <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
-                        {{ number_format($item->weight, 2, ',', '.') }} g
-                    </td>
-
-                    <td style="border:1px solid #ccc; text-align:right; padding:6px; font-weight:bold; font-size:12px;">
-                        Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                        <p style="margin:3px 0; line-height:1.4; font-size:12px;">
+                            {{ strtoupper($store->header) }} <br>
+                            <b>
+                                {{ $store->address ?? '' }} <br>
+                                HP/WA: {{ $store->phone }}
+                                @if($store->instagram)
+                                    — Instagram: {{ $store->instagram }}
+                                @endif
+                            </b>
+                        </p>
                     </td>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </table>
+        </td>
+
+        {{-- RIGHT SIDE --}}
+        <td style="width:30%; text-align:right; vertical-align:top; padding:10px;">
+
+            <div style="font-size:12px; margin-bottom:4px;">
+                {{ now()->format('d-m-Y') }} <br>
+                {{ now()->format('H:i:s') }}
+            </div>
+
+            <img src="{{ public_path('storage/' . $sale->qr_path) }}" width="65"
+                 style="margin: 5px auto; display:block;">
+
+            <b style="margin-top:4px; display:block;">Nota {{ $sale->invoice_no }}</b>
+
+            <b style="margin-top:4px; display:block;">{{ $sale->user->name }}</b>
+        </td>
+    </tr>
+</table>
 
 
-    {{-- ================= FOOTER ================= --}}
+{{-- ================= ITEM TABLE ================= --}}
 
-    <table style="width:100%; border-collapse: collapse;">
+<table style="border: 1px solid #ccc; border-collapse: collapse; ">
+    <thead>
+    <tr>
+        <th style="width:90px; text-align:center;">Foto</th>
+        <th>Nama Barang</th>
+        <th style="width:70px; text-align:center;">Perak</th>
+        <th style="width:70px; text-align:center;">Berat</th>
+        <th style="width:110px; text-align:center;">Subtotal</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    @foreach ($sale->items as $index => $item)
         <tr>
+            @if ($index === 0)
+                <td rowspan="{{ $sale->items->count() }}"
+                    style="border:1px solid #ccc; text-align:center; padding:6px;">
+                    @if ($sale->sale_image_path)
+                        <img src="{{ $sale->sale_image_path }}" width="100">
+                    @else
+                        <img src="{{ public_path('placeholder.webp') }}" width="100">
+                    @endif
+                </td>
+            @endif
 
-            {{-- PERHATIAN --}}
-            <td style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
-                <b style="font-size:12px;">PERHATIAN:</b><br><br>
-
-                <div style="font-size:11px; line-height:1.4;">
-                    {!! nl2br($sale->sale_type === 'wholesale' ? $store->footer_wholesale : $store->footer_retail) !!}
-                </div>
+            <td style="border:1px solid #ccc; padding:6px; font-size:12px;">
+                {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
             </td>
 
-            {{-- JUMLAH & KETERANGAN --}}
-            <td style="width:30%; vertical-align:top; padding:12px; border:1px solid #ccc;">
-                <table style="width:100%; border-collapse: collapse;">
+            <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
+            </td>
+
+            <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
+                {{ number_format($item->weight, 2, ',', '.') }} g
+            </td>
+
+            <td style="border:1px solid #ccc; text-align:right; padding:6px; font-weight:bold; font-size:12px;">
+                Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+            </td>
+        </tr>
+    @endforeach
+        <tr>
+            <td colspan="4" style="text-align:right; padding:6px; border:1px solid #ccc;">
+                <b>Total:</b>
+            </td>
+            <td style="text-align:right; padding:6px; border:1px solid #ccc;">
+                <b>Rp {{ number_format($sale->total_price, 0, ',', '.') }}</b>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+{{-- ================= FOOTER ================= --}}
+
+<table style="width:100%; border-collapse: collapse;">
+    <tr>
+
+        {{-- PERHATIAN --}}
+        <td style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
+            <b style="font-size:12px;">PERHATIAN:</b><br><br>
+
+            <div style="font-size:11px; line-height:1.4;">
+                {!! nl2br($sale->sale_type === 'wholesale' ? $store->footer_wholesale : $store->footer_retail) !!}
+            </div>
+        </td>
+
+        {{-- KETERANGAN --}}
+        <td style="width:30%; vertical-align:top; padding:12px; border:1px solid #ccc;">
+            <table style="width:100%; border-collapse: collapse;">
+                @if ($sale->notes)
                     <tr>
-                        <td class="bold" style="font-size:12px; padding:5px 0;">
-                            Jumlah:
-                        </td>
-                        <td class="bold" style="font-size:12px; text-align:right; padding:5px 0;">
-                            Rp {{ number_format($sale->total_price, 0, ',', '.') }}
+                        <td class="bold" style="font-size:12px; padding:5px 0;">Keterangan:</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:12px; padding:5px 0;">
+                            {{ $sale->notes }}
                         </td>
                     </tr>
-                    <hr style="margin-top:5px; margin-bottom:5px;">
+                @endif
+            </table>
+        </td>
 
-                    @if ($sale->notes)
-                        <tr>
-                            <td class="bold" style="font-size:12px; padding:5px 0;">Keterangan:</td>
-                        </tr>
-                        <tr>
-                            <td style="font-size:12px; padding:5px 0;">
-                                {{ $sale->notes }}
-                            </td>
-                        </tr>
-                    @endif
-                </table>
-            </td>
-
-        </tr>
-    </table>
+    </tr>
+</table>
 
 </body>
 

@@ -208,6 +208,10 @@ const submitSaleDraft = () => {
 };
 
 const submitSaleFinal = () => {
+    if (!form.items.length) {
+        toast.error('Minimal 1 item harus ditambahkan.');
+        return;
+    }
     form.is_draft = false;
     form.post(route('sales.store', { category: props.category }), {
         preserveScroll: true,
@@ -450,7 +454,6 @@ useBarcodeScanner(onBarcodeScanned);
                         </div>
 
                         <div class="flex justify-end gap-3 pt-4">
-                            <Button variant="outline" @click="submitSaleDraft" :disabled="form.processing">Simpan Sementara</Button>
                             <Button @click="openVerifyModal" class="px-6" :disabled="form.processing">Simpan Transaksi</Button>
                         </div>
                     </CardContent>

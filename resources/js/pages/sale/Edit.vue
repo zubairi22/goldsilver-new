@@ -19,6 +19,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import Multiselect from '@vueform/multiselect';
+import { Eye, EyeOff } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -278,6 +279,12 @@ useBarcodeScanner(onBarcodeScanned);
 
 (window as any).scan = (code: string) => {
     onBarcodeScanned(code);
+};
+
+const isPasswordVisible = ref(false);
+
+const togglePasswordVisibility = () => {
+    isPasswordVisible.value = !isPasswordVisible.value;
 };
 </script>
 
@@ -547,8 +554,26 @@ useBarcodeScanner(onBarcodeScanned);
                     <div>
                         <Label>Password / QR Admin</Label>
 
-                        <div class="flex items-center gap-2">
-                            <Input type="password" v-model="form.password" class="flex-1" />
+                        <div class="flex w-full items-center gap-2">
+                            <div class="relative w-full">
+                                <Input
+                                    id="password"
+                                    :type="isPasswordVisible ? 'text' : 'password'"
+                                    required
+                                    v-model="form.password"
+                                    class="w-full pr-10"
+                                />
+
+                                <button
+                                    type="button"
+                                    @click="togglePasswordVisibility"
+                                    class="absolute top-2 right-2 text-sm"
+                                    :aria-label="isPasswordVisible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+                                >
+                                    <EyeOff class="size-5" v-if="isPasswordVisible" />
+                                    <Eye class="size-5" v-else />
+                                </button>
+                            </div>
 
                             <Button type="button" variant="secondary" @click="scanModal = true">
                                 <icon name="camera" />
