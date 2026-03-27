@@ -146,10 +146,10 @@
                             </td>
 
                             <td style="border:1px solid #ccc; text-align:center;">
-                                {{ number_format($item->weight, 2, ',', '.') }} g
                             </td>
 
                             <td style="border:1px solid #ccc; text-align:center;">
+                                {{ number_format($item->weight, 2, ',', '.') }} g
                             </td>
 
                             <td style="border:1px solid #ccc; text-align:right; font-weight:bold;">
@@ -170,7 +170,7 @@
                     @endif
 
                     <tr>
-                        <td colspan="2" style="text-align:right; padding:6px; border:1px solid #ccc;">
+                        <td colspan="3" style="text-align:right; padding:6px; border:1px solid #ccc;">
                             <b>Total:</b>
                         </td>
                         <td style="text-align:right; padding:6px; border:1px solid #ccc;">
