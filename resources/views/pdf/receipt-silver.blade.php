@@ -144,7 +144,6 @@
             @if ($emptyRows > 0)
                 @for ($i = 0; $i < $emptyRows; $i++)
                     <tr>
-                        <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
                         <td style="border:1px solid #ccc;">&nbsp;</td>
                         <td style="border:1px solid #ccc;">&nbsp;</td>
                         <td style="border:1px solid #ccc;">&nbsp;</td>
