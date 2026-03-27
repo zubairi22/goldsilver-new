@@ -133,6 +133,11 @@
                     </thead>
 
                     <tbody>
+                    @php
+                        $minRows = 5;
+                        $currentRows = count($sale->items);
+                        $emptyRows = $minRows - $currentRows;
+                    @endphp
                     @foreach ($sale->items as $item)
                         <tr>
                             <td style="border:1px solid #ccc; padding:6px;">
@@ -148,6 +153,16 @@
                             </td>
                         </tr>
                     @endforeach
+
+                    @if ($emptyRows > 0)
+                        @for ($i = 0; $i < $emptyRows; $i++)
+                            <tr>
+                                <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
+                                <td style="border:1px solid #ccc;">&nbsp;</td>
+                                <td style="border:1px solid #ccc;">&nbsp;</td>
+                            </tr>
+                        @endfor
+                    @endif
 
                     <tr>
                         <td colspan="2" style="text-align:right; padding:6px; border:1px solid #ccc;">
