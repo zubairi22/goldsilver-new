@@ -170,7 +170,7 @@
         <tr>
 
             {{-- PERHATIAN --}}
-            <td style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
+            <td style="width:70%; vertical-align:top; padding:12px; background: {{ $store->invoice_color }}; border:1px solid #ccc;">
                 <b style="font-size:12px;">PERHATIAN:</b><br><br>
 
                 <div style="font-size:11px; line-height:1.4;">
