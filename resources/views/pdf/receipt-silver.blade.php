@@ -116,9 +116,9 @@
                         <td rowspan="{{ $sale->items->count() }}"
                             style="border:1px solid #ccc; text-align:center; padding:6px;">
                             @if ($sale->sale_image_path)
-                                <img src="{{ $sale->sale_image_path }}" width="100">
+                                <img src="{{ $sale->sale_image_path }}" width="200">
                             @else
-                                <img src="{{ public_path('placeholder.webp') }}" width="100">
+                                <img src="{{ public_path('placeholder.webp') }}" width="200">
                             @endif
                         </td>
                     @endif
