@@ -494,7 +494,7 @@ class SaleController extends Controller
             'sale' => $sale,
             'store' => $store,
         ])
-            ->setPaper('A3', 'portrait')
+            ->setPaper('A5', 'portrait')
             ->setOption('margin-top', 5)
             ->setOption('margin-bottom', 5)
             ->setOption('margin-left', 5)
