@@ -182,6 +182,8 @@ const setExactPayment = () => {
     form.paid_amount = totalPrice.value;
 };
 
+const isLocked = computed(() => props.sale.status !== 'draft');
+
 const openVerifyModal = () => {
     if (!form.items.length) {
         toast.error('Minimal 1 item harus ditambahkan.');
@@ -453,7 +455,9 @@ const togglePasswordVisibility = () => {
                         </div>
 
                         <div class="flex justify-end gap-3 pt-4">
-                            <Button @click="openVerifyModal" class="px-6" :disabled="form.processing">Simpan Transaksi</Button>
+                            <Button @click="openVerifyModal" class="px-6" :disabled="form.processing || isLocked">
+                                {{ isLocked ? 'Transaksi Selesai' : 'Simpan Transaksi' }}
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>

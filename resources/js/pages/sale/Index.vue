@@ -49,10 +49,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { search } = useSearch('sales.index', props.filters.search, ['sales'], { category: props.category });
 
-useBarcodeScanner((code: string) => {
+const scanSearchModal = ref(false);
+
+const onBarcodeScanned = (code: string) => {
     search.value = code;
     toast.success(`Scan: ${code}`);
-});
+    scanSearchModal.value = false;
+};
+
+useBarcodeScanner(onBarcodeScanned);
 
 const { formatRupiah, formatDate } = useFormat();
 
@@ -224,8 +229,13 @@ watch([sale_type, payment_method_id, date], applyFilters);
 
                         <!-- SEARCH -->
                         <div class="mb-3 flex w-full justify-end">
-                            <div class="w-full lg:w-80">
-                                <SearchInput v-model:search="search" />
+                            <div class="flex w-full items-center gap-2 lg:w-80">
+                                <div class="flex-1">
+                                    <SearchInput v-model:search="search" />
+                                </div>
+                                <Button variant="secondary" @click="scanSearchModal = true">
+                                    <Icon name="camera" />
+                                </Button>
                             </div>
                         </div>
 
@@ -472,6 +482,9 @@ watch([sale_type, payment_method_id, date], applyFilters);
         </DialogContent>
     </Dialog>
 
-    <!-- MODAL: SCAN QR -->
+    <!-- MODAL: SCAN QR VERIFY -->
     <QrScanner v-model:open="scanModal" @scanned="onQrScanned" />
+
+    <!-- MODAL: SCAN BARKODE SEARCH -->
+    <QrScanner v-model:open="scanSearchModal" @scanned="onBarcodeScanned" />
 </template>
