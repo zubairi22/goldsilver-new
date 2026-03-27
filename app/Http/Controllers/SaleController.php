@@ -491,11 +491,10 @@ class SaleController extends Controller
         };
 
         $pdf = Pdf::loadView($view, [
-
             'sale' => $sale,
             'store' => $store,
         ])
-            ->setPaper('A5', 'portrait')
+            ->setPaper('A3', 'portrait')
             ->setOption('margin-top', 5)
             ->setOption('margin-bottom', 5)
             ->setOption('margin-left', 5)
