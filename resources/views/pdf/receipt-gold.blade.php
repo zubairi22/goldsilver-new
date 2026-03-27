@@ -127,6 +127,7 @@
                     <thead>
                     <tr>
                         <th style="border:1px solid #ccc;">Nama Barang</th>
+                        <th style="border:1px solid #ccc;">Emas</th>
                         <th style="border:1px solid #ccc; width:70px; text-align:center;">Berat</th>
                         <th style="border:1px solid #ccc; width:110px; text-align:center;">Subtotal</th>
                     </tr>
@@ -148,6 +149,9 @@
                                 {{ number_format($item->weight, 2, ',', '.') }} g
                             </td>
 
+                            <td style="border:1px solid #ccc; text-align:center;">
+                            </td>
+
                             <td style="border:1px solid #ccc; text-align:right; font-weight:bold;">
                                 Rp {{ number_format($item->subtotal, 0, ',', '.') }}
                             </td>
@@ -158,6 +162,7 @@
                         @for ($i = 0; $i < $emptyRows; $i++)
                             <tr>
                                 <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
+                                <td style="border:1px solid #ccc;">&nbsp;</td>
                                 <td style="border:1px solid #ccc;">&nbsp;</td>
                                 <td style="border:1px solid #ccc;">&nbsp;</td>
                             </tr>
