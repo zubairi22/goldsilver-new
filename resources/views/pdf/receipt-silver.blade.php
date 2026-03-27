@@ -108,12 +108,13 @@
                 $minRows = 5;
                 $currentRows = count($sale->items);
                 $emptyRows = $minRows - $currentRows;
+                $totalRows = max($minRows, $currentRows);
             @endphp
 
             @foreach ($sale->items as $index => $item)
                 <tr>
                     @if ($index === 0)
-                        <td rowspan="{{ $sale->items->count() }}"
+                        <td rowspan="{{ $totalRows }}"
                             style="border:1px solid #ccc; text-align:center; padding:6px;">
                             @if ($sale->sale_image_path)
                                 <img src="{{ $sale->sale_image_path }}" width="200">
