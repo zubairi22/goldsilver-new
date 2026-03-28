@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 
 const props = defineProps({
     modelValue: File || null,
+    compress:  { type: Boolean, default: true },
     disabled: { type: Boolean, default: false },
 });
 
@@ -80,7 +81,7 @@ const handleFile = async (e: Event) => {
     const file = input.files[0];
 
     try {
-        const compressed = await compressImage(file);
+        const compressed = props.compress ? await compressImage(file) : file;
 
         preview.value = URL.createObjectURL(compressed);
         emit("update:modelValue", compressed);
