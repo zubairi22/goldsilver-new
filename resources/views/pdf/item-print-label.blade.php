@@ -8,120 +8,103 @@
             margin: 0;
         }
 
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: DejaVu Sans, sans-serif;
         }
 
-        .container {
-            width: 400px;
-            margin-left: 0;
-        }
-
-        .row {
-            width: 100%;
-            margin-bottom: 15px;
-        }
-
-        .row:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        .label {
-            width: 40%;
-            float: left;
+        td {
+            width: 32mm;
+            height: 22mm;
             text-align: center;
+            vertical-align: middle;
         }
 
-        .label.right {
-            float: right;
+        td:first-child {
+            padding-right: 7mm;
         }
 
-        .qr {
-            margin-bottom: 5px;
+        td:last-child {
+            padding-left: 7mm;
         }
 
         .qr img {
-            width: 35px;
-            height: 35px;
+            width: 28px;
+            height: 28px;
+            margin-bottom: 2px;
         }
 
         .name {
-            font-size: 8px;
+            font-size: 7px;
+            line-height: 1.1;
         }
 
-        .weight {
-            font-size: 8px;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-
+        .weight,
         .price {
-            font-size: 8px;
+            font-size: 7px;
             font-weight: bold;
-            margin-bottom: 3px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+    @php
+        $chunks = $items->chunk(2)->map(fn($c) => $c->values());
+    @endphp
 
-        @php
-            $chunks = $items->chunk(2)->map(fn($c) => $c->values());
-        @endphp
+    @foreach($chunks as $row)
+        <div class="page">
 
-        @foreach($chunks as $row)
-            <div class="row">
+            <table>
+                <tr>
+                    {{-- LABEL KIRI --}}
+                    <td>
+                        @if(isset($row[0]) && $row[0]->qr_base64)
+                            <div class="qr">
+                                <img src="data:image/png;base64,{{ $row[0]->qr_base64 }}">
+                            </div>
+                        @endif
 
-                <div class="label">
-                    @if($row[0]->qr_base64)
-                        <div class="qr">
-                            <img src="data:image/png;base64,{{ $row[0]->qr_base64 }}">
-                        </div>
-                    @endif
+                        @if(isset($row[0]))
+                            <div class="name">{{ $row[0]->name }}</div>
+                            <div class="weight">
+                                {{ number_format($row[0]->weight, 2) }} gr.
+                            </div>
+                            <div class="price">
+                                Rp {{ number_format($row[0]->price_sell ?? 0, 0, ',', '.') }}
+                            </div>
+                        @endif
+                    </td>
 
-                    <div class="name">
-                        {{ $row[0]->name }}
-                    </div>
-
-                    <div class="weight">
-                        {{ number_format($row[0]->weight, 2) }} gr.
-                    </div>
-
-                    <div class="price">
-                        Rp {{ number_format($row[0]->price_sell ?? 0, 0, ',', '.') }}
-                    </div>
-                </div>
-
-                @if(isset($row[1]))
-                    <div class="label right">
-                        @if($row[1]->qr_base64)
+                    {{-- LABEL KANAN --}}
+                    <td>
+                        @if(isset($row[1]) && $row[1]->qr_base64)
                             <div class="qr">
                                 <img src="data:image/png;base64,{{ $row[1]->qr_base64 }}">
                             </div>
                         @endif
 
-                        <div class="name">
-                            {{ $row[1]->name }}
-                        </div>
+                        @if(isset($row[1]))
+                            <div class="name">{{ $row[1]->name }}</div>
+                            <div class="weight">
+                                {{ number_format($row[1]->weight, 2) }} gr.
+                            </div>
+                            <div class="price">
+                                Rp {{ number_format($row[1]->price_sell ?? 0, 0, ',', '.') }}
+                            </div>
+                        @endif
+                    </td>
 
-                        <div class="weight">
-                            {{ number_format($row[1]->weight, 2) }} gr.
-                        </div>
+                </tr>
+            </table>
 
-                        <div class="price">
-                            Rp {{ number_format($row[1]->price_sell ?? 0, 0, ',', '.') }}
-                        </div>
-                    </div>
-                @endif
-
-            </div>
-        @endforeach
-
-    </div>
+        </div>
+    @endforeach
 
 </body>
 
