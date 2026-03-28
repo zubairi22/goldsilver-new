@@ -35,7 +35,12 @@ class StoreController extends Controller
 
         if ($request->hasFile('logo')) {
             $setting->clearMediaCollection('store-logo');
-            $setting->addMediaFromRequest('logo')->toMediaCollection('store-logo');
+            $media = $setting->addMediaFromRequest('logo')->toMediaCollection('store-logo');
+
+            $path = $media->getPath();
+            if (file_exists($path)) {
+                @unlink($path);
+            }
         }
 
         $this->flashSuccess('Berhasil mengubah pengaturan toko');

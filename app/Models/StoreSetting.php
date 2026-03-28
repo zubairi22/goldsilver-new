@@ -30,11 +30,11 @@ class StoreSetting extends Model implements HasMedia
     public static function current(string $category = 'gold')
     {
         return self::firstOrCreate(
-            ['category' => $category],
-            [
-                'store_name' => $category === 'gold' ? 'Toko Emas Kita' : 'Toko Perak Kita',
-                'invoice_color' => $category === 'gold' ? '#FFD700' : '#C0C0C0',
-            ]
+        ['category' => $category],
+        [
+            'store_name' => $category === 'gold' ? 'Toko Emas Kita' : 'Toko Perak Kita',
+            'invoice_color' => $category === 'gold' ? '#FFD700' : '#C0C0C0',
+        ]
         );
     }
 
@@ -46,7 +46,6 @@ class StoreSetting extends Model implements HasMedia
     public function registerMediaConversions(Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->format('webp')
             ->fit(Fit::Max, 400, 400)
             ->quality(80)
             ->nonQueued();
