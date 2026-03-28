@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <style>
         @page {
-            margin: 20px;
+            margin: 0;
         }
 
         body {
