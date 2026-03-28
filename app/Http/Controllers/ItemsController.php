@@ -8,8 +8,8 @@ use App\Models\Item;
 use App\Models\ItemType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Request;
-use Inertia\Response;
+use Illuminate\Http\Request;
+use Inertia\Response;   
 use Throwable;
 use Illuminate\Support\Facades\DB;
 
