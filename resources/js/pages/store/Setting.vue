@@ -82,7 +82,7 @@ const submit = () => {
                     <!-- Logo -->
                     <div class="grid gap-2">
                         <Label>Logo Toko</Label>
-                        <CameraUploader v-model="form.logo" />
+                        <CameraUploader v-model="form.logo" :compress="false" />
                         <InputError :message="form.errors.logo" />
 
                         <div v-if="setting.logo" class="mt-2">
