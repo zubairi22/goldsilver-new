@@ -14,7 +14,7 @@
 
         .container {
             width: 400px;
-            margin: 0 auto;
+            margin-left: 0;
         }
 
         .row {

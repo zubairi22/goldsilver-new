@@ -14,7 +14,7 @@
 
         .container {
             width: 400px;
-            margin: 0 auto;
+            margin-left: 0;
         }
 
         .row {
@@ -78,7 +78,7 @@
                     @endif
 
                     <div class="name">
-                        {{ $row[0]->manual_name ?? $row[0]->item?->name }}
+                        {{ $row[0]->name }}
                     </div>
 
                     <div class="weight">
@@ -86,7 +86,7 @@
                     </div>
 
                     <div class="price">
-                        Rp {{ number_format($row[0]->item?->price_sell ?? 0, 0, ',', '.') }}
+                        Rp {{ number_format($row[0]->price_sell ?? 0, 0, ',', '.') }}
                     </div>
                 </div>
 
@@ -99,7 +99,7 @@
                         @endif
 
                         <div class="name">
-                            {{ $row[1]->manual_name ?? $row[1]->item?->name }}
+                            {{ $row[1]->name }}
                         </div>
 
                         <div class="weight">
@@ -107,7 +107,7 @@
                         </div>
 
                         <div class="price">
-                            Rp {{ number_format($row[1]->item?->price_sell ?? 0, 0, ',', '.') }}
+                            Rp {{ number_format($row[1]->price_sell ?? 0, 0, ',', '.') }}
                         </div>
                     </div>
                 @endif
