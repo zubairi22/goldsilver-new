@@ -13,38 +13,17 @@
             padding: 0;
         }
 
-        html,
-        body {
-            width: 80mm;
-            height: 24mm;
-        }
-
         body {
             font-family: DejaVu Sans, sans-serif;
         }
 
-        .page {
-            width: 80mm;
-            height: 24mm;
-            page-break-after: always;
-        }
-
-        table {
-            width: 80mm;
-            height: 24mm;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
         td {
             width: 32mm;
-            /* 32 + 32 + (7+7 padding) = 80mm */
-            height: 24mm;
+            height: 22mm;
             text-align: center;
             vertical-align: middle;
         }
 
-        /* 🔥 spacing tengah */
         td:first-child {
             padding-right: 7mm;
         }
