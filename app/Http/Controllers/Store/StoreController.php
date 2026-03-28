@@ -26,7 +26,8 @@ class StoreController extends Controller
 
         if ($setting) {
             $setting->update($request->validated());
-        } else {
+        }
+        else {
             $setting = StoreSetting::create([
                 ...$request->validated(),
                 'category' => $category,
@@ -37,10 +38,10 @@ class StoreController extends Controller
             $setting->clearMediaCollection('store-logo');
             $media = $setting->addMediaFromRequest('logo')->toMediaCollection('store-logo');
 
-            $path = $media->getPath();
-            if (file_exists($path)) {
-                @unlink($path);
-            }
+        // $path = $media->getPath();
+        // if (file_exists($path)) {
+        //     @unlink($path);
+        // }
         }
 
         $this->flashSuccess('Berhasil mengubah pengaturan toko');

@@ -54,11 +54,11 @@ class StoreSetting extends Model implements HasMedia
 
     public function getLogoAttribute(): ?string
     {
-        return $this->getFirstMediaUrl('store-logo', 'thumb') ?: null;
+        return $this->getFirstMediaUrl('store-logo') ?: null;
     }
 
     public function getLogoPathAttribute(): ?string
     {
-        return $this->getFirstMediaPath('store-logo', 'thumb') ?: null;
+        return $this->getFirstMediaPath('store-logo') ?: null;
     }
 }
