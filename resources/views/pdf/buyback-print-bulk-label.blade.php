@@ -64,7 +64,7 @@
     <div class="container">
 
         @php
-            $chunks = $items->chunk(2);
+            $chunks = $items->chunk(2)->map(fn($c) => $c->values());
         @endphp
 
         @foreach($chunks as $row)

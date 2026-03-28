@@ -9,7 +9,7 @@ use App\Models\ItemType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Response;   
+use Inertia\Response;
 use Throwable;
 use Illuminate\Support\Facades\DB;
 
