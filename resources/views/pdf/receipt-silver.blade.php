@@ -45,16 +45,14 @@
             <td style="width:70%; padding:10px; vertical-align:top;">
                 <table style="border-collapse: collapse;">
                     <tr>
-                        @if ($store->logo_path)
-                            <td style="padding-right:5px; vertical-align:top;">
-                                <img src="{{ $store->logo_path }}" width="70">
-                            </td>
-                        @endif
-
                         <td style="vertical-align:top;">
-                            <h1 style="margin:0; font-size:22px; font-weight:bold;">
-                                {{ strtoupper($store->store_name) }}
-                            </h1>
+                            @if($store->logo_path)
+                                <img src="{{ $store->logo_path }}" width="100">
+                            @else
+                                <h1 style="margin:0; font-size:22px; font-weight:bold;">
+                                    {{ strtoupper($store->store_name) }}
+                                </h1>
+                            @endif
 
                             <p style="margin:3px 0; line-height:1.4; font-size:12px;">
                                 {{ strtoupper($store->header) }} <br>

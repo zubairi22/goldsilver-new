@@ -45,16 +45,14 @@
             <td style="width:70%; padding:10px; vertical-align:top;">
                 <table style="border-collapse: collapse;">
                     <tr>
-                        @if($store->logo_path)
-                            <td style="padding-right:5px; vertical-align:top;">
-                                <img src="{{ $store->logo_path }}" width="70">
-                            </td>
-                        @endif
-
                         <td style="vertical-align:top;">
-                            <h1 style="margin:0; font-size:22px; font-weight:bold;">
-                                {{ strtoupper($store->store_name) }}
-                            </h1>
+                            @if($store->logo_path)
+                                <img src="{{ $store->logo_path }}" width="100">
+                            @else
+                                <h1 style="margin:0; font-size:22px; font-weight:bold;">
+                                    {{ strtoupper($store->store_name) }}
+                                </h1>
+                            @endif
 
                             <p style="margin:3px 0; line-height:1.4; font-size:12px;">
                                 {{ strtoupper($store->header) }} <br>
@@ -184,12 +182,6 @@
 
                         {{-- PERHATIAN --}}
                         <td style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
-                            @if($sale->sale_image)
-                                <div style="margin-bottom:10px;">
-                                    <img src="{{ $sale->sale_image_path }}" width="100">
-                                </div>
-                            @endif
-
                             <b style="font-size:12px;">PERHATIAN:</b><br><br>
 
                             <div style="font-size:11px; line-height:1.4;">
@@ -209,6 +201,13 @@
                                             {{ $sale->notes }}
                                         </td>
                                     </tr>
+                                    @if($sale->sale_image)
+                                        <tr>
+                                            <td style="font-size:12px; padding:5px 0;">
+                                                <img src="{{ $sale->sale_image_path }}" width="100">
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endif
                             </table>
                         </td>
