@@ -49,7 +49,7 @@ Route::middleware('auth')->group(function () {
                 Route::resource('payment-methods', PaymentMethodController::class)->except(['show', 'create', 'edit']);
                 Route::resource('item-types', ItemTypesController::class)->except(['show', 'create', 'edit']);
                 Route::resource('items', ItemsController::class)->except(['show', 'create', 'edit']);
-                Route::get('items/print-label', [ItemController::class , 'printLabel'])->name('items.print-label');
+                Route::get('items/print-label', [ItemsController::class , 'printLabel'])->name('items.print-label');
 
                 Route::prefix('stock-opnames')->name('stock-opnames.')->group(function () {
                     Route::get('/', [StockOpnameController::class , 'index'])->name('index');

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Input from '@/components/ui/input/Input.vue';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,7 +20,7 @@ import { useSearch } from '@/composables/useSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ItemForm from '@/pages/item/partial/ItemForm.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
+import { LoaderCircle, Printer } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -120,8 +121,8 @@ watch([status, item_type_id], applyFilters);
 
 const labelModal = ref(false);
 const printRange = ref({
-    start: null as number | null,
-    end: null as number | null,
+    start: '',
+    end: '',
 });
 
 const openPrintModal = () => {
@@ -342,18 +343,18 @@ const printBulkLabel = () => {
         <DialogContent class="max-w-md">
             <DialogHeader>
                 <DialogTitle>Cetak Label Item</DialogTitle>
-                <DialogDescription> Pilih rentang tanggal item yang ingin dicetak. </DialogDescription>
+                <DialogDescription> Pilih rentang item yang ingin dicetak. </DialogDescription>
             </DialogHeader>
 
             <div class="mt-4 space-y-4">
                 <div>
                     <Label>Dari urutan</Label>
-                    <Input type="number" v-model.number="printRange.start" placeholder="Contoh: 1" />
+                    <Input type="number" v-model="printRange.start" placeholder="Contoh: 1" />
                 </div>
 
                 <div>
                     <Label>Sampai urutan</Label>
-                    <Input type="number" v-model.number="printRange.end" placeholder="Contoh: 20" />
+                    <Input type="number" v-model="printRange.end" placeholder="Contoh: 20" />
                 </div>
             </div>
 
