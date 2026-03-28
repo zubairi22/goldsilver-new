@@ -160,13 +160,7 @@ class ItemsController extends Controller
         $pdf = Pdf::loadView('pdf.item-print-label', [
             'items' => $items
         ])
-            ->setPaper('a4', 'landscape')
-            ->setOptions([
-                'margin-top' => 0,
-                'margin-bottom' => 0,
-                'margin-left' => 0,
-                'margin-right' => 0,
-            ]);
+            ->setPaper('a4', 'landscape');
 
         return $pdf->stream('item-label.pdf');
     }

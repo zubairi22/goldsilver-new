@@ -29,7 +29,7 @@
         }
 
         .label {
-            width: 48%;
+            width: 40%;
             float: left;
             text-align: center;
         }
@@ -38,23 +38,29 @@
             float: right;
         }
 
+        .qr {
+            margin-bottom: 5px;
+        }
+
         .qr img {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
         }
 
         .name {
-            font-size: 10px;
-            font-weight: bold;
+            font-size: 8px;
         }
 
         .weight {
-            font-size: 9px;
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 3px;
         }
 
         .price {
-            font-size: 10px;
+            font-size: 8px;
             font-weight: bold;
+            margin-bottom: 3px;
         }
     </style>
 </head>
