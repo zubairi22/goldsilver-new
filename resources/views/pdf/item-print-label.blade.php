@@ -70,7 +70,6 @@
         @foreach($chunks as $row)
             <div class="row">
 
-                {{-- LEFT --}}
                 <div class="label">
                     @if($row[0]->qr_base64)
                         <div class="qr">
@@ -91,7 +90,6 @@
                     </div>
                 </div>
 
-                {{-- RIGHT --}}
                 @if(isset($row[1]))
                     <div class="label right">
                         @if($row[1]->qr_base64)

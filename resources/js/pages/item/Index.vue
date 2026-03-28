@@ -117,6 +117,30 @@ const applyFilters = () => {
 };
 
 watch([status, item_type_id], applyFilters);
+
+const labelModal = ref(false);
+const printRange = ref({
+    start: null as number | null,
+    end: null as number | null,
+});
+
+const openPrintModal = () => {
+    labelModal.value = true;
+};
+
+const printBulkLabel = () => {
+    if (!printRange.value.start || !printRange.value.end) return;
+
+    window.open(
+        route('store.items.print-label', {
+            start: printRange.value.start,
+            end: printRange.value.end,
+        }),
+        '_blank',
+    );
+
+    labelModal.value = false;
+};
 </script>
 
 <template>
@@ -124,12 +148,9 @@ watch([status, item_type_id], applyFilters);
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <!-- Bagian Atas -->
             <div class="mx-4 items-center space-y-4 md:flex md:justify-between md:space-y-0">
-                <!-- Heading -->
                 <Heading class="flex-1 md:mr-6" title="Barang" description="Kelola data barang emas dan perak" />
 
-                <!-- Cards -->
                 <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:w-96">
                     <Card class="gap-1 border-emerald-200 bg-emerald-50 py-4">
                         <CardHeader class="flex flex-row items-center justify-between">
@@ -153,7 +174,6 @@ watch([status, item_type_id], applyFilters);
                 </div>
             </div>
 
-            <!-- Card Tipe Barang -->
             <div class="grid gap-4 px-4 py-2 pb-6">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
                     <Card v-for="(total, itemTypeId) in itemTypeTotals" :key="itemTypeId" class="gap-1 border-blue-200 bg-blue-50 py-4">
@@ -168,12 +188,11 @@ watch([status, item_type_id], applyFilters);
                 </div>
             </div>
 
-            <!-- Tabel Utama -->
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-                        <div class="mt-2 mb-8 flex flex-wrap items-center justify-between gap-4">
-                            <div class="flex flex-wrap items-center gap-4">
+                        <div class="mt-2 mb-8 flex flex-wrap items-end justify-between gap-4">
+                            <div class="flex flex-wrap items-end gap-4">
                                 <div class="w-40">
                                     <Label class="mb-2">Status</Label>
                                     <Select v-model="status">
@@ -200,6 +219,13 @@ watch([status, item_type_id], applyFilters);
                                     </Select>
                                 </div>
                             </div>
+
+                            <div class="flex items-end">
+                                <Button variant="info" @click="openPrintModal">
+                                    <Printer class="mr-2 h-4 w-4" />
+                                    Cetak Label
+                                </Button>
+                            </div>
                         </div>
 
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
@@ -214,7 +240,6 @@ watch([status, item_type_id], applyFilters);
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Gambar</TableHead>
-                                        <TableHead>QR</TableHead>
                                         <TableHead>Kode</TableHead>
                                         <TableHead>Nama</TableHead>
                                         <TableHead>Tipe</TableHead>
@@ -234,16 +259,6 @@ watch([status, item_type_id], applyFilters);
                                                 v-if="item.image"
                                                 :src="item.image"
                                                 :filename="`item-${item.name.replace(/\s+/g, '_')}.png`"
-                                                trigger
-                                            />
-                                            <span v-else class="text-sm text-gray-400">Tidak ada</span>
-                                        </TableCell>
-
-                                        <TableCell class="py-1">
-                                            <ImageModal
-                                                v-if="item.qr_path"
-                                                :src="'/storage/' + item.qr_path"
-                                                :filename="`qr-${item.code}.png`"
                                                 trigger
                                             />
                                             <span v-else class="text-sm text-gray-400">Tidak ada</span>
@@ -320,6 +335,33 @@ watch([status, item_type_id], applyFilters);
                     Simpan
                 </Button>
             </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="labelModal" @update:open="(v) => (labelModal = v)">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Cetak Label Item</DialogTitle>
+                <DialogDescription> Pilih rentang tanggal item yang ingin dicetak. </DialogDescription>
+            </DialogHeader>
+
+            <div class="mt-4 space-y-4">
+                <div>
+                    <Label>Dari urutan</Label>
+                    <Input type="number" v-model.number="printRange.start" placeholder="Contoh: 1" />
+                </div>
+
+                <div>
+                    <Label>Sampai urutan</Label>
+                    <Input type="number" v-model.number="printRange.end" placeholder="Contoh: 20" />
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <Button variant="outline" @click="labelModal = false"> Batal </Button>
+
+                <Button :disabled="!printRange.start || !printRange.end" @click="printBulkLabel"> Tampilkan & Cetak </Button>
+            </div>
         </DialogContent>
     </Dialog>
 </template>
