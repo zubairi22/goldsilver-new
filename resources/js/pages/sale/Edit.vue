@@ -164,6 +164,10 @@ const updateModalItem = () => {
         onSuccess: () => {
             toast.success('Item berhasil diperbarui.');
             showAddItemModal.value = false;
+
+            router.reload({
+                only: ['sale'],
+            });
         },
         onFinish: () => (isAddingItem.value = false),
     });

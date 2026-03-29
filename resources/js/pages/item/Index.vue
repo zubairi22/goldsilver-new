@@ -282,7 +282,7 @@ const printSingleLabel = (id: number) => {
                                         </TableCell>
 
                                         <TableCell class="px-1">
-                                            <Button variant="outline" size="icon" class="h-8 w-8 text-blue-500 hover:bg-blue-50 hover:text-blue-700" @click="printSingleLabel(item.id)" title="Cetak Label">
+                                            <Button variant="outline" @click="printSingleLabel(item.id)" title="Cetak Label">
                                                 <Printer class="h-4 w-4" />
                                             </Button>
                                         </TableCell>

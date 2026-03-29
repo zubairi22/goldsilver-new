@@ -35,11 +35,10 @@
 
         .watermark {
             position: fixed;
-            top: 35%;
+            top: 20%;
             left: 50%;
             transform: translate(-50%, -50%);
-            opacity: 0.08;
-            z-index: -1;
+            opacity: 0.2;
         }
     </style>
 </head>

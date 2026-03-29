@@ -338,6 +338,7 @@ class SaleController extends Controller
         }
 
         if (!$sale->isEditable()) {
+            dd($sale);
             $this->flashError('Hanya penjualan berstatus Draft yang dapat diubah.');
             return back();
         }
