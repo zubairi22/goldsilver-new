@@ -163,4 +163,23 @@ class ItemsController extends Controller
 
         return $pdf->stream('item-label.pdf');
     }
+
+    public function printSingleLabel(Item $item)
+    {
+        if (!$item->qr_path) {
+            abort(404, 'QR Code belum di-generate');
+        }
+
+        $path = storage_path('app/public/' . $item->qr_path);
+
+        $item->qr_base64 = is_file($path)
+            ? base64_encode(file_get_contents($path))
+            : null;
+
+        $pdf = Pdf::loadView('pdf.item-print-label', [
+            'items' => collect([$item])
+        ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
+
+        return $pdf->stream('item-label-' . $item->code . '.pdf');
+    }
 }

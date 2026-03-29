@@ -153,7 +153,8 @@ class Sale extends Model implements HasMedia
     public static function generateInvoiceNo(): string
     {
         $prefix = 'INV-' . now()->format('Ymd') . '-';
-        $last = self::where('invoice_no', 'like', $prefix . '%')
+        $last = self::withTrashed()
+            ->where('invoice_no', 'like', $prefix . '%')
             ->orderByDesc('invoice_no')
             ->first();
 

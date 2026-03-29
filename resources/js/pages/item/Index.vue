@@ -142,6 +142,10 @@ const printBulkLabel = () => {
 
     labelModal.value = false;
 };
+
+const printSingleLabel = (id: number) => {
+    window.open(route('store.items.print-single-label', id), '_blank');
+};
 </script>
 
 <template>
@@ -250,6 +254,7 @@ const printBulkLabel = () => {
                                         <TableHead class="text-center">Status</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
+                                        <TableHead class="w-8" />
                                     </TableRow>
                                 </TableHeader>
 
@@ -277,6 +282,12 @@ const printBulkLabel = () => {
                                         </TableCell>
 
                                         <TableCell class="px-1">
+                                            <Button variant="outline" size="icon" class="h-8 w-8 text-blue-500 hover:bg-blue-50 hover:text-blue-700" @click="printSingleLabel(item.id)" title="Cetak Label">
+                                                <Printer class="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+
+                                        <TableCell class="px-1">
                                             <EditButton @click="editItem(item)" />
                                         </TableCell>
 
@@ -286,7 +297,7 @@ const printBulkLabel = () => {
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="9" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
+                                        <TableCell colspan="10" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

@@ -32,10 +32,25 @@
         .bold {
             font-weight: bold;
         }
+
+        .watermark {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.08;
+            z-index: -1;
+        }
     </style>
 </head>
 
 <body>
+
+    @if($store->logo_path)
+        <div class="watermark">
+            <img src="{{ $store->logo_path }}" width="400">
+        </div>
+    @endif
 
     {{-- ================= HEADER ================= --}}
 
@@ -47,7 +62,7 @@
                     <tr>
                         <td style="vertical-align:top;">
                             @if($store->logo_path)
-                                <img src="{{ $store->logo_path }}" width="200">
+                                <img src="{{ $store->logo_path }}" width="250">
                             @else
                                 <h1 style="margin:0; font-size:22px; font-weight:bold;">
                                     {{ strtoupper($store->store_name) }}
@@ -97,24 +112,27 @@
             <td style="width:90px; vertical-align:top; padding:0;">
                 <table style="width:100%; border-collapse: collapse;">
                     <thead>
-                    <tr>
-                        <th style="border:1px solid #ccc; text-align:center;">Foto</th>
-                    </tr>
+                        <tr>
+                            <th style="border:1px solid #ccc; text-align:center;">Foto</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @foreach ($sale->items as $item)
-                        <tr>
-                            <td style="border:1px solid #ccc; text-align:center; padding:4px;">
-                                @if ($item->manual_image_path)
-                                    <img src="{{ $item->manual_image_path }}" style="width:100px; height:100px; object-fit:cover;">
-                                @elseif (optional($item->item)->image_path)
-                                    <img src="{{ $item->item->image_path }}" style="width:100px; height:100px; object-fit:cover;">
-                                @else
-                                    <img src="{{ public_path('placeholder.webp') }}" style="width:100px; height:100px; object-fit:cover;">
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
+                        @foreach ($sale->items as $item)
+                            <tr>
+                                <td style="border:1px solid #ccc; text-align:center; padding:4px;">
+                                    @if ($item->manual_image_path)
+                                        <img src="{{ $item->manual_image_path }}"
+                                            style="width:80px; height:80px; object-fit:cover;">
+                                    @elseif (optional($item->item)->image_path)
+                                        <img src="{{ $item->item->image_path }}"
+                                            style="width:80px; height:80px; object-fit:cover;">
+                                    @else
+                                        <img src="{{ public_path('placeholder.webp') }}"
+                                            style="width:80px; height:80px; object-fit:cover;">
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </td>
@@ -123,65 +141,66 @@
             <td style="vertical-align:top; padding:0;">
                 <table style="width:100%; border-collapse: collapse;">
                     <thead>
-                    <tr>
-                        <th style="border:1px solid #ccc;">Nama Barang</th>
-                        <th style="border:1px solid #ccc;">Emas</th>
-                        <th style="border:1px solid #ccc; width:70px; text-align:center;">Berat</th>
-                        <th style="border:1px solid #ccc; width:110px; text-align:center;">Subtotal</th>
-                    </tr>
+                        <tr>
+                            <th style="border:1px solid #ccc;">Nama Barang</th>
+                            <th style="border:1px solid #ccc;">Emas</th>
+                            <th style="border:1px solid #ccc; width:70px; text-align:center;">Berat</th>
+                            <th style="border:1px solid #ccc; width:110px; text-align:center;">Subtotal</th>
+                        </tr>
                     </thead>
 
                     <tbody>
-                    @php
-                        $minRows = 5;
-                        $currentRows = count($sale->items);
-                        $emptyRows = $minRows - $currentRows;
-                    @endphp
-                    @foreach ($sale->items as $item)
+                        @php
+                            $minRows = 5;
+                            $currentRows = count($sale->items);
+                            $emptyRows = $minRows - $currentRows;
+                        @endphp
+                        @foreach ($sale->items as $item)
+                            <tr>
+                                <td style="border:1px solid #ccc; padding:6px;">
+                                    {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
+                                </td>
+
+                                <td style="border:1px solid #ccc; text-align:center;">
+                                </td>
+
+                                <td style="border:1px solid #ccc; text-align:center;">
+                                    {{ number_format($item->weight, 2, ',', '.') }} g
+                                </td>
+
+                                <td style="border:1px solid #ccc; text-align:right; font-weight:bold;">
+                                    Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        @if ($emptyRows > 0)
+                            @for ($i = 0; $i < $emptyRows; $i++)
+                                <tr>
+                                    <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                </tr>
+                            @endfor
+                        @endif
+
                         <tr>
-                            <td style="border:1px solid #ccc; padding:6px;">
-                                {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
+                            <td colspan="3" style="text-align:right; padding:6px; border:1px solid #ccc;">
+                                <b>Total:</b>
                             </td>
-
-                            <td style="border:1px solid #ccc; text-align:center;">
-                            </td>
-
-                            <td style="border:1px solid #ccc; text-align:center;">
-                                {{ number_format($item->weight, 2, ',', '.') }} g
-                            </td>
-
-                            <td style="border:1px solid #ccc; text-align:right; font-weight:bold;">
-                                Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                            <td style="text-align:right; padding:6px; border:1px solid #ccc;">
+                                <b>Rp {{ number_format($sale->total_price, 0, ',', '.') }}</b>
                             </td>
                         </tr>
-                    @endforeach
-
-                    @if ($emptyRows > 0)
-                        @for ($i = 0; $i < $emptyRows; $i++)
-                            <tr>
-                                <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
-                                <td style="border:1px solid #ccc;">&nbsp;</td>
-                                <td style="border:1px solid #ccc;">&nbsp;</td>
-                                <td style="border:1px solid #ccc;">&nbsp;</td>
-                            </tr>
-                        @endfor
-                    @endif
-
-                    <tr>
-                        <td colspan="3" style="text-align:right; padding:6px; border:1px solid #ccc;">
-                            <b>Total:</b>
-                        </td>
-                        <td style="text-align:right; padding:6px; border:1px solid #ccc;">
-                            <b>Rp {{ number_format($sale->total_price, 0, ',', '.') }}</b>
-                        </td>
-                    </tr>
                     </tbody>
                 </table>
                 <table style="width:100%; border-collapse: collapse;">
                     <tr>
 
                         {{-- PERHATIAN --}}
-                        <td style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
+                        <td
+                            style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
                             <b style="font-size:12px;">PERHATIAN:</b><br><br>
 
                             <div style="font-size:11px; line-height:1.4;">
@@ -204,7 +223,7 @@
                                     @if($sale->sale_image)
                                         <tr>
                                             <td style="font-size:12px; padding:5px 0;">
-                                                <img src="{{ $sale->sale_image_path }}" width="100">
+                                                <img src="{{ $sale->sale_image_path }}" width="150">
                                             </td>
                                         </tr>
                                     @endif

@@ -32,10 +32,25 @@
         .bold {
             font-weight: bold;
         }
+
+        .watermark {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.08;
+            z-index: -1;
+        }
     </style>
 </head>
 
 <body>
+
+    @if($store->logo_path)
+        <div class="watermark">
+            <img src="{{ $store->logo_path }}" width="400">
+        </div>
+    @endif
 
     {{-- ================= HEADER ================= --}}
 
@@ -47,7 +62,7 @@
                     <tr>
                         <td style="vertical-align:top;">
                             @if($store->logo_path)
-                                <img src="{{ $store->logo_path }}" width="200">
+                                <img src="{{ $store->logo_path }}" width="250">
                             @else
                                 <h1 style="margin:0; font-size:22px; font-weight:bold;">
                                     {{ strtoupper($store->store_name) }}
@@ -112,8 +127,7 @@
             @foreach ($sale->items as $index => $item)
                 <tr>
                     @if ($index === 0)
-                        <td rowspan="{{ $totalRows }}"
-                            style="border:1px solid #ccc; text-align:center; padding:6px;">
+                        <td rowspan="{{ $totalRows }}" style="border:1px solid #ccc; text-align:center; padding:6px;">
                             @if ($sale->sale_image_path)
                                 <img src="{{ $sale->sale_image_path }}" width="200">
                             @else
@@ -168,7 +182,8 @@
         <tr>
 
             {{-- PERHATIAN --}}
-            <td style="width:70%; vertical-align:top; padding:12px; background: {{ $store->invoice_color }}; border:1px solid #ccc;">
+            <td
+                style="width:70%; vertical-align:top; padding:12px; background: {{ $store->invoice_color }}; border:1px solid #ccc;">
                 <b style="font-size:12px;">PERHATIAN:</b><br><br>
 
                 <div style="font-size:11px; line-height:1.4;">
