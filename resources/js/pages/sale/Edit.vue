@@ -127,13 +127,6 @@ const removeItem = (index: number) => {
     }
 };
 
-watch(
-    () => [modalItem.value.weight, modalItem.value.price],
-    ([w, p]) => {
-        modalItem.value.subtotal = Math.round(Number(w) * Number(p));
-    },
-);
-
 const saveModalItem = () => {
     if (modalItem.value.mode === 'auto' && !modalItem.value.id) {
         toast.error('Silakan pilih barang dari stok.');
@@ -164,10 +157,6 @@ const updateModalItem = () => {
         onSuccess: () => {
             toast.success('Item berhasil diperbarui.');
             showAddItemModal.value = false;
-
-            router.reload({
-                only: ['sale'],
-            });
         },
         onFinish: () => (isAddingItem.value = false),
     });
@@ -489,6 +478,7 @@ const togglePasswordVisibility = () => {
                                     const it = items.find((p: any) => p.id === value);
                                     modalItem.price = it?.price_sell ?? 0;
                                     modalItem.weight = it?.weight ?? 0;
+                                    modalItem.subtotal = Math.round(Number(modalItem.weight) * Number(modalItem.price));
                                 }
                             "
                         />
