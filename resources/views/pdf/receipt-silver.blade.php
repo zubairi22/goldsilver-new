@@ -61,7 +61,7 @@
                     <tr>
                         <td style="vertical-align:top;">
                             @if($store->logo_path)
-                                <img src="{{ $store->logo_path }}" width="250">
+                                <img src="{{ $store->logo_path }}" width="210">
                             @else
                                 <h1 style="margin:0; font-size:22px; font-weight:bold;">
                                     {{ strtoupper($store->store_name) }}
