@@ -107,16 +107,32 @@
 
     {{-- ================= ITEM TABLE ================= --}}
 
-    <table style="width:100%; border-collapse: collapse;">
+    <table style="width:100%; border-collapse: collapse;  border-spacing:0;">
         <tr>
 
             {{-- FOTO (KIRI) --}}
             <td style="width:220px; vertical-align:top; border:1px solid #ccc; text-align:center; padding:10px;">
-                @if ($sale->sale_image_path)
-                    <img src="{{ $sale->sale_image_path }}" width="200">
-                @else
-                    <img src="{{ public_path('placeholder.webp') }}" width="200">
-                @endif
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="border:1px solid #ccc; text-align:center;">Foto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($sale->items as $item)
+                            <tr>
+                                <td style="border:1px solid #ccc; text-align:center; padding:4px;">
+                                    @if ($sale->sale_image_path)
+                                        <img src="{{ $sale->sale_image_path }}" width="200">
+                                    @else
+                                        <img src="{{ public_path('placeholder.webp') }}" width="200">
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
             </td>
 
             {{-- DATA (KANAN) --}}
