@@ -66,12 +66,12 @@
                             @if($store->logo_path)
                                 <img src="{{ $store->logo_path }}" width="210">
                             @else
-                                <h1 style="margin:0; font-size:22px; font-weight:bold;">
+                                <h1 style="margin:0; font-size:20px; font-weight:bold;">
                                     {{ strtoupper($store->store_name) }}
                                 </h1>
                             @endif
 
-                            <p style="margin:3px 0; line-height:1.4; font-size:12px;">
+                            <p style="margin:3px 0; line-height:1.4; font-size:11px;">
                                 {{ strtoupper($store->header) }} <br>
                                 <b>
                                     {{ $store->address ?? '' }} <br>
@@ -89,7 +89,7 @@
             {{-- RIGHT SIDE --}}
             <td style="width:30%; text-align:right; vertical-align:top; padding:10px;">
 
-                <div style="font-size:12px; margin-bottom:4px;">
+                <div style="font-size:11px; margin-bottom:4px;">
                     {{ now()->format('d-m-Y') }} <br>
                     {{ now()->format('H:i:s') }}
                 </div>
@@ -97,9 +97,11 @@
                 <img src="{{ public_path('storage/' . $sale->qr_path) }}" width="65"
                     style="margin: 5px auto; display:block;">
 
-                <b style="margin-top:4px; display:block;">Nota {{ $sale->invoice_no }}</b>
+                <b style="margin-top:3px; display:block;">Nota {{ $sale->invoice_no }}</b>
 
-                <b style="margin-top:4px; display:block;">{{ $sale->user->name }}</b>
+                <b style="margin-top:3px; display:block;">{{ $sale->user->name }}</b>
+
+                <b style="margin-top:3px; display:block;">{{ $sale->customer }}</b>
             </td>
         </tr>
     </table>

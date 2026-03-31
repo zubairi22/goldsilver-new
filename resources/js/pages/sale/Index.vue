@@ -266,7 +266,17 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                         @click="openSaleModal(sale)"
                                     >
                                         <TableCell>{{ formatDate(sale.created_at, 'dd MMM yyyy HH:mm') }}</TableCell>
-                                        <TableCell>{{ sale.invoice_no }}</TableCell>
+                                        <TableCell>
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="font-medium">
+                                                    {{ sale.invoice_no }}
+                                                </span>
+
+                                                <span v-if="sale.customer" class="text-xs text-gray-500">
+                                                    {{ sale.customer }}
+                                                </span>
+                                            </div>
+                                        </TableCell>
                                         <TableCell>{{ sale.sale_type === 'retail' ? 'Eceran' : 'Grosir' }}</TableCell>
                                         <TableCell class="text-right">{{ sale.total_weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
