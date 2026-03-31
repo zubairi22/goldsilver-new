@@ -121,7 +121,7 @@
                     <tbody>
                         @foreach ($sale->items as $item)
                             <tr>
-                                <td style="border:1px solid #ccc; text-align:center; padding:4px; height: 300px;">
+                                <td style="border:1px solid #ccc; text-align:center; padding:4px; min-height: 200px;">
                                     @if ($sale->sale_image_path)
                                         <img src="{{ $sale->sale_image_path }}" width="200">
                                     @else
