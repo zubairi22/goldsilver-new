@@ -71,6 +71,7 @@ const showAddItemModal = ref(false);
 const editIndex = ref<number | null>(null);
 const isAddingItem = ref(false);
 const isRemovingItem = ref(false);
+const isDirty = ref(false);
 
 const modalItem = ref<any>({
     id: null,
@@ -93,6 +94,7 @@ const addItem = () => {
         image: undefined,
         sale_item_id: null,
     };
+    isDirty.value = false;
     editIndex.value = null;
     showAddItemModal.value = true;
 };
@@ -109,6 +111,7 @@ const editItem = (index: number) => {
         image: it.image,
         sale_item_id: it.sale_item_id,
     };
+    isDirty.value = false;
     editIndex.value = index;
     showAddItemModal.value = true;
 };
@@ -170,8 +173,6 @@ const change = computed(() => {
     const raw = Number(form.paid_amount) - totalPrice.value;
     return raw < 0 ? 0 : Math.round(raw);
 });
-
-const isDirty = ref(false);
 
 watch(
     () => [modalItem.value.weight, modalItem.value.price],

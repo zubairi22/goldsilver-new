@@ -5,11 +5,6 @@
     <meta charset="utf-8">
     <style>
         @page {
-            size: 80mm 24mm;
-            margin: 0;
-        }
-
-        * {
             margin: 0;
             padding: 0;
         }
@@ -56,9 +51,10 @@
 
         /* QR */
         .qr img {
-            width: 28px;
-            height: 28px;
-            margin-bottom: 1px;
+            width: 30px;
+            height: 30px;
+            margin-bottom: 2px;
+            margin-top: 3px;
         }
 
         /* TEXT */
@@ -104,6 +100,8 @@
                             </div>
                         @endif
                     </td>
+
+                    <td class="spacer"></td>
 
                     {{-- LABEL KANAN --}}
                     <td>

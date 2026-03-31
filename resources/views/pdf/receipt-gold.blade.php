@@ -56,7 +56,7 @@
 
     {{-- ================= HEADER ================= --}}
 
-    <table style="width:100%; background: {{ $store->invoice_color }}; padding:5px 10px; border-collapse: collapse;">
+    <table style="width:100%; background: {{ $store->invoice_color }}; padding:2px 5px; border-collapse: collapse;">
         <tr>
             {{-- LEFT SIDE --}}
             <td style="width:70%; padding:10px; vertical-align:top;">
