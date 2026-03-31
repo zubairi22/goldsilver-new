@@ -120,17 +120,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($sale->items as $item)
-                                <tr>
-                                    <td style="border:1px solid #ccc; text-align:center; padding:4px; height:235px;">
-                                        @if ($sale->sale_image_path)
-                                            <img src="{{ $sale->sale_image_path }}" width="200">
-                                        @else
-                                            <img src="{{ public_path('placeholder.webp') }}" width="200">
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
+                            <tr>
+                                <td style="border:1px solid #ccc; text-align:center; padding:4px; height:235px;">
+                                    @if ($sale->sale_image_path)
+                                        <img src="{{ $sale->sale_image_path }}" width="200">
+                                    @else
+                                        <img src="{{ public_path('placeholder.webp') }}" width="200">
+                                    @endif
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </td>

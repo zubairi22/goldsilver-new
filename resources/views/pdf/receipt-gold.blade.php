@@ -110,40 +110,48 @@
     <table style="width:100%; border-collapse: collapse; border-spacing:0;">
         <tr>
 
-            {{-- FOTO (KIRI) --}}
-            <td style="width:90px; vertical-align:top; padding:0;">
-                <table style="width:100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="border:1px solid #ccc; text-align:center;">Foto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($sale->items as $item)
+            {{-- FOTO (HANYA RETAIL) --}}
+            @if ($sale->sale_type !== 'wholesale')
+                <td style="width:90px; vertical-align:top; padding:0;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
                             <tr>
-                                <td style="border:1px solid #ccc; text-align:center; padding:4px;">
-                                    @if ($item->manual_image_path)
-                                        <img src="{{ $item->manual_image_path }}"
-                                            style="width:60px; height:60px; object-fit:cover;">
-                                    @elseif (optional($item->item)->image_path)
-                                        <img src="{{ $item->item->image_path }}"
-                                            style="width:60px; height:60px; object-fit:cover;">
-                                    @else
-                                        <img src="{{ public_path('placeholder.webp') }}"
-                                            style="width:60px; height:60px; object-fit:cover;">
-                                    @endif
-                                </td>
+                                <th style="border:1px solid #ccc; text-align:center;">Foto</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </td>
+                        </thead>
+                        <tbody>
+                            @foreach ($sale->items as $item)
+                                <tr>
+                                    <td style="border:1px solid #ccc; text-align:center; padding:4px;">
+                                        @if ($item->manual_image_path)
+                                            <img src="{{ $item->manual_image_path }}"
+                                                style="width:60px; height:60px; object-fit:cover;">
+                                        @elseif (optional($item->item)->image_path)
+                                            <img src="{{ $item->item->image_path }}"
+                                                style="width:60px; height:60px; object-fit:cover;">
+                                        @else
+                                            <img src="{{ public_path('placeholder.webp') }}"
+                                                style="width:60px; height:60px; object-fit:cover;">
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </td>
+            @endif
 
-            {{-- ITEM (KANAN) --}}
+            {{-- DATA --}}
             <td style="vertical-align:top; padding:0;">
                 <table style="width:100%; border-collapse: collapse;">
                     <thead>
                         <tr>
+
+                            {{-- NOMOR (HANYA WHOLESALE) --}}
+                            @if ($sale->sale_type === 'wholesale')
+                                <th style="border:1px solid #ccc; width:40px; text-align:center;">No</th>
+                            @endif
+
                             <th style="border:1px solid #ccc;">Nama Barang</th>
                             <th style="border:1px solid #ccc;">Emas</th>
                             <th style="border:1px solid #ccc; width:70px; text-align:center;">Berat</th>
@@ -157,14 +165,22 @@
                             $currentRows = count($sale->items);
                             $emptyRows = $minRows - $currentRows;
                         @endphp
-                        @foreach ($sale->items as $item)
+
+                        @foreach ($sale->items as $index => $item)
                             <tr>
+
+                                {{-- NOMOR --}}
+                                @if ($sale->sale_type === 'wholesale')
+                                    <td style="border:1px solid #ccc; text-align:center;">
+                                        {{ $index + 1 }}
+                                    </td>
+                                @endif
+
                                 <td style="border:1px solid #ccc; padding:6px;">
                                     {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
                                 </td>
 
-                                <td style="border:1px solid #ccc; text-align:center;">
-                                </td>
+                                <td style="border:1px solid #ccc; text-align:center;"></td>
 
                                 <td style="border:1px solid #ccc; text-align:center;">
                                     {{ number_format($item->weight, 2, ',', '.') }} g
@@ -176,10 +192,16 @@
                             </tr>
                         @endforeach
 
+                        {{-- EMPTY ROW --}}
                         @if ($emptyRows > 0)
                             @for ($i = 0; $i < $emptyRows; $i++)
                                 <tr>
-                                    <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
+
+                                    @if ($sale->sale_type === 'wholesale')
+                                        <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    @endif
+
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
                                     <td style="border:1px solid #ccc;">&nbsp;</td>
                                     <td style="border:1px solid #ccc;">&nbsp;</td>
                                     <td style="border:1px solid #ccc;">&nbsp;</td>
@@ -187,8 +209,10 @@
                             @endfor
                         @endif
 
+                        {{-- TOTAL --}}
                         <tr>
-                            <td colspan="3" style="text-align:right; padding:6px; border:1px solid #ccc;">
+                            <td colspan="{{ $sale->sale_type === 'wholesale' ? 4 : 3 }}"
+                                style="text-align:right; padding:6px; border:1px solid #ccc;">
                                 <b>Total:</b>
                             </td>
                             <td style="text-align:right; padding:6px; border:1px solid #ccc;">
@@ -197,10 +221,11 @@
                         </tr>
                     </tbody>
                 </table>
+
+                {{-- FOOTER --}}
                 <table style="width:100%; border-collapse: collapse;">
                     <tr>
 
-                        {{-- PERHATIAN --}}
                         <td
                             style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
                             <b style="font-size:12px;">PERHATIAN:</b><br><br>
@@ -210,7 +235,6 @@
                             </div>
                         </td>
 
-                        {{-- KETERANGAN --}}
                         <td style="width:30%; vertical-align:top; padding:12px; border:1px solid #ccc;">
                             <table style="width:100%; border-collapse: collapse;">
                                 @if ($sale->notes)
@@ -222,7 +246,9 @@
                                             {{ $sale->notes }}
                                         </td>
                                     </tr>
-                                    @if($sale->sale_image)
+
+                                    {{-- GAMBAR HANYA RETAIL --}}
+                                    @if($sale->sale_image && $sale->sale_type !== 'wholesale')
                                         <tr>
                                             <td style="font-size:12px; padding:5px 0;">
                                                 <img src="{{ $sale->sale_image_path }}" width="150">
@@ -235,11 +261,11 @@
 
                     </tr>
                 </table>
+
             </td>
 
         </tr>
     </table>
-
 </body>
 
 </html>
