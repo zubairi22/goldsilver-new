@@ -76,7 +76,7 @@
                                 <b>
                                     {{ $store->address ?? '' }} <br>
                                     HP/WA: {{ $store->phone }}
-                                    @if ($store->instagram)
+                                    @if($store->instagram)
                                         — Instagram: {{ $store->instagram }}
                                     @endif
                                 </b>
@@ -107,11 +107,11 @@
 
     {{-- ================= ITEM TABLE ================= --}}
 
-    <table style="width:100%; border-collapse: collapse;  border-spacing:0;">
+    <table style="width:100%; border-collapse: collapse; border-spacing:0;">
         <tr>
 
             {{-- FOTO (KIRI) --}}
-            <td style="width:220px; vertical-align:top; border:1px solid #ccc; text-align:center; padding:10px;">
+            <td style="width:90px; vertical-align:top; padding:0;">
                 <table style="width:100%; border-collapse: collapse;">
                     <thead>
                         <tr>
@@ -132,19 +132,17 @@
                         @endforeach
                     </tbody>
                 </table>
-
             </td>
 
-            {{-- DATA (KANAN) --}}
-            <td style="vertical-align:top; padding-left:10px;">
-
-                <table style="width:100%; border:1px solid #ccc; border-collapse: collapse;">
+            {{-- ITEM (KANAN) --}}
+            <td style="vertical-align:top; padding:0;">
+                <table style="width:100%; border-collapse: collapse;">
                     <thead>
                         <tr>
-                            <th>Nama Barang</th>
-                            <th style="width:70px; text-align:center;">Perak</th>
-                            <th style="width:70px; text-align:center;">Berat</th>
-                            <th style="width:110px; text-align:center;">Subtotal</th>
+                            <th style="border:1px solid #ccc;">Nama Barang</th>
+                            <th style="border:1px solid #ccc;">Perak</th>
+                            <th style="border:1px solid #ccc; width:70px; text-align:center;">Berat</th>
+                            <th style="border:1px solid #ccc; width:110px; text-align:center;">Subtotal</th>
                         </tr>
                     </thead>
 
@@ -154,11 +152,10 @@
                             $currentRows = count($sale->items);
                             $emptyRows = $minRows - $currentRows;
                         @endphp
-
                         @foreach ($sale->items as $item)
                             <tr>
-                                <td style="border:1px solid #ccc;">
-                                    {{ $item->manual_name ?? (optional($item->item)->name ?? '-') }}
+                                <td style="border:1px solid #ccc; padding:6px;">
+                                    {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
                                 </td>
 
                                 <td style="border:1px solid #ccc; text-align:center;">
@@ -177,7 +174,7 @@
                         @if ($emptyRows > 0)
                             @for ($i = 0; $i < $emptyRows; $i++)
                                 <tr>
-                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc; padding:6px;">&nbsp;</td>
                                     <td style="border:1px solid #ccc;">&nbsp;</td>
                                     <td style="border:1px solid #ccc;">&nbsp;</td>
                                     <td style="border:1px solid #ccc;">&nbsp;</td>
@@ -186,22 +183,21 @@
                         @endif
 
                         <tr>
-                            <td colspan="3" style="text-align:right; border:1px solid #ccc;">
+                            <td colspan="3" style="text-align:right; padding:6px; border:1px solid #ccc;">
                                 <b>Total:</b>
                             </td>
-                            <td style="text-align:right; border:1px solid #ccc;">
+                            <td style="text-align:right; padding:6px; border:1px solid #ccc;">
                                 <b>Rp {{ number_format($sale->total_price, 0, ',', '.') }}</b>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-
                 <table style="width:100%; border-collapse: collapse;">
                     <tr>
 
                         {{-- PERHATIAN --}}
                         <td
-                            style="width:70%; vertical-align:top; padding:12px; background: {{ $store->invoice_color }}; border:1px solid #ccc;">
+                            style="width:70%; vertical-align:top; padding:12px; background:#FFF7C2; border:1px solid #E5D389;">
                             <b style="font-size:12px;">PERHATIAN:</b><br><br>
 
                             <div style="font-size:11px; line-height:1.4;">
@@ -221,13 +217,19 @@
                                             {{ $sale->notes }}
                                         </td>
                                     </tr>
+                                    @if($sale->sale_image)
+                                        <tr>
+                                            <td style="font-size:12px; padding:5px 0;">
+                                                <img src="{{ $sale->sale_image_path }}" width="150">
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endif
                             </table>
                         </td>
 
                     </tr>
                 </table>
-
             </td>
 
         </tr>
