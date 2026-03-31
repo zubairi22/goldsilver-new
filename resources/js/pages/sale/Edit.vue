@@ -171,6 +171,16 @@ const change = computed(() => {
     return raw < 0 ? 0 : Math.round(raw);
 });
 
+const isDirty = ref(false);
+
+watch(
+    () => [modalItem.value.weight, modalItem.value.price],
+    ([w, p]) => {
+        if (!isDirty.value) return;
+        modalItem.value.subtotal = Math.round(Number(w) * Number(p));
+    },
+);
+
 const setExactPayment = () => {
     form.paid_amount = totalPrice.value;
 };
@@ -496,12 +506,12 @@ const togglePasswordVisibility = () => {
 
                     <div>
                         <Label>Berat (g)</Label>
-                        <Input type="number" v-model.number="modalItem.weight" />
+                        <Input type="number" v-model.number="modalItem.weight" @input="isDirty = true" />
                     </div>
 
                     <div>
                         <Label>Harga</Label>
-                        <Input type="number" v-model.number="modalItem.price" />
+                        <Input type="number" v-model.number="modalItem.price" @input="isDirty = true" />
                     </div>
 
                     <div>

@@ -7,8 +7,8 @@
 
     <style>
         @page {
-            margin: 12;
-            padding: 12;
+            margin: 10;
+            padding: 10;
         }
 
         body {
@@ -124,13 +124,13 @@
                                 <td style="border:1px solid #ccc; text-align:center; padding:4px;">
                                     @if ($item->manual_image_path)
                                         <img src="{{ $item->manual_image_path }}"
-                                            style="width:80px; height:80px; object-fit:cover;">
+                                            style="width:60px; height:60px; object-fit:cover;">
                                     @elseif (optional($item->item)->image_path)
                                         <img src="{{ $item->item->image_path }}"
-                                            style="width:80px; height:80px; object-fit:cover;">
+                                            style="width:60px; height:60px; object-fit:cover;">
                                     @else
                                         <img src="{{ public_path('placeholder.webp') }}"
-                                            style="width:80px; height:80px; object-fit:cover;">
+                                            style="width:60px; height:60px; object-fit:cover;">
                                     @endif
                                 </td>
                             </tr>

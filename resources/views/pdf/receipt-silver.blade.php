@@ -7,8 +7,8 @@
 
     <style>
         @page {
-            margin: 12;
-            padding: 12;
+            margin: 10;
+            padding: 10;
         }
 
         body {
