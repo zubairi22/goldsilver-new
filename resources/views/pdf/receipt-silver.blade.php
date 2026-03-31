@@ -107,106 +107,111 @@
 
     {{-- ================= ITEM TABLE ================= --}}
 
-    <table style="border: 1px solid #ccc; border-collapse: collapse; ">
-        <thead>
-            <tr>
-                <th style="width:90px; text-align:center;">Foto</th>
-                <th>Nama Barang</th>
-                <th style="width:70px; text-align:center;">Perak</th>
-                <th style="width:70px; text-align:center;">Berat</th>
-                <th style="width:110px; text-align:center;">Subtotal</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @php
-                $minRows = 5;
-                $currentRows = count($sale->items);
-                $emptyRows = $minRows - $currentRows;
-                $totalRows = max($minRows, $currentRows);
-            @endphp
-
-            @foreach ($sale->items as $index => $item)
-                <tr>
-                    @if ($index === 0)
-                        <td rowspan="{{ $totalRows }}" style="border:1px solid #ccc; text-align:center; padding:6px;">
-                            @if ($sale->sale_image_path)
-                                <img src="{{ $sale->sale_image_path }}" width="200">
-                            @else
-                                <img src="{{ public_path('placeholder.webp') }}" width="200">
-                            @endif
-                        </td>
-                    @endif
-
-                    <td style="border:1px solid #ccc; padding:6px; font-size:12px;">
-                        {{ $item->manual_name ?? (optional($item->item)->name ?? '-') }}
-                    </td>
-
-                    <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
-                    </td>
-
-                    <td style="border:1px solid #ccc; text-align:center; padding:6px; font-size:12px;">
-                        {{ number_format($item->weight, 2, ',', '.') }} g
-                    </td>
-
-                    <td style="border:1px solid #ccc; text-align:right; padding:6px; font-weight:bold; font-size:12px;">
-                        Rp {{ number_format($item->subtotal, 0, ',', '.') }}
-                    </td>
-                </tr>
-            @endforeach
-
-            @if ($emptyRows > 0)
-                @for ($i = 0; $i < $emptyRows; $i++)
-                    <tr>
-                        <td style="border:1px solid #ccc;">&nbsp;</td>
-                        <td style="border:1px solid #ccc;">&nbsp;</td>
-                        <td style="border:1px solid #ccc;">&nbsp;</td>
-                        <td style="border:1px solid #ccc;">&nbsp;</td>
-                    </tr>
-                @endfor
-            @endif
-
-            <tr>
-                <td colspan="4" style="text-align:right; padding:6px; border:1px solid #ccc;">
-                    <b>Total:</b>
-                </td>
-                <td style="text-align:right; padding:6px; border:1px solid #ccc;">
-                    <b>Rp {{ number_format($sale->total_price, 0, ',', '.') }}</b>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-
-    {{-- ================= FOOTER ================= --}}
-
     <table style="width:100%; border-collapse: collapse;">
         <tr>
 
-            {{-- PERHATIAN --}}
-            <td
-                style="width:70%; vertical-align:top; padding:12px; background: {{ $store->invoice_color }}; border:1px solid #ccc;">
-                <b style="font-size:12px;">PERHATIAN:</b><br><br>
-
-                <div style="font-size:11px; line-height:1.4;">
-                    {!! nl2br($sale->sale_type === 'wholesale' ? $store->footer_wholesale : $store->footer_retail) !!}
-                </div>
+            {{-- FOTO (KIRI) --}}
+            <td style="width:220px; vertical-align:top; border:1px solid #ccc; text-align:center; padding:10px;">
+                @if ($sale->sale_image_path)
+                    <img src="{{ $sale->sale_image_path }}" width="200">
+                @else
+                    <img src="{{ public_path('placeholder.webp') }}" width="200">
+                @endif
             </td>
 
-            {{-- KETERANGAN --}}
-            <td style="width:30%; vertical-align:top; padding:12px; border:1px solid #ccc;">
-                <table style="width:100%; border-collapse: collapse;">
-                    @if ($sale->notes)
+            {{-- DATA (KANAN) --}}
+            <td style="vertical-align:top; padding-left:10px;">
+
+                <table style="width:100%; border:1px solid #ccc; border-collapse: collapse;">
+                    <thead>
                         <tr>
-                            <td class="bold" style="font-size:12px; padding:5px 0;">Keterangan:</td>
+                            <th>Nama Barang</th>
+                            <th style="width:70px; text-align:center;">Perak</th>
+                            <th style="width:70px; text-align:center;">Berat</th>
+                            <th style="width:110px; text-align:center;">Subtotal</th>
                         </tr>
+                    </thead>
+
+                    <tbody>
+                        @php
+                            $minRows = 5;
+                            $currentRows = count($sale->items);
+                            $emptyRows = $minRows - $currentRows;
+                        @endphp
+
+                        @foreach ($sale->items as $item)
+                            <tr>
+                                <td style="border:1px solid #ccc;">
+                                    {{ $item->manual_name ?? (optional($item->item)->name ?? '-') }}
+                                </td>
+
+                                <td style="border:1px solid #ccc; text-align:center;">
+                                </td>
+
+                                <td style="border:1px solid #ccc; text-align:center;">
+                                    {{ number_format($item->weight, 2, ',', '.') }} g
+                                </td>
+
+                                <td style="border:1px solid #ccc; text-align:right; font-weight:bold;">
+                                    Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        @if ($emptyRows > 0)
+                            @for ($i = 0; $i < $emptyRows; $i++)
+                                <tr>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                    <td style="border:1px solid #ccc;">&nbsp;</td>
+                                </tr>
+                            @endfor
+                        @endif
+
                         <tr>
-                            <td style="font-size:12px; padding:5px 0;">
-                                {{ $sale->notes }}
+                            <td colspan="3" style="text-align:right; border:1px solid #ccc;">
+                                <b>Total:</b>
+                            </td>
+                            <td style="text-align:right; border:1px solid #ccc;">
+                                <b>Rp {{ number_format($sale->total_price, 0, ',', '.') }}</b>
                             </td>
                         </tr>
-                    @endif
+                    </tbody>
                 </table>
+
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr>
+
+                        {{-- PERHATIAN --}}
+                        <td
+                            style="width:70%; vertical-align:top; padding:12px; background: {{ $store->invoice_color }}; border:1px solid #ccc;">
+                            <b style="font-size:12px;">PERHATIAN:</b><br><br>
+
+                            <div style="font-size:11px; line-height:1.4;">
+                                {!! nl2br($sale->sale_type === 'wholesale' ? $store->footer_wholesale : $store->footer_retail) !!}
+                            </div>
+                        </td>
+
+                        {{-- KETERANGAN --}}
+                        <td style="width:30%; vertical-align:top; padding:12px; border:1px solid #ccc;">
+                            <table style="width:100%; border-collapse: collapse;">
+                                @if ($sale->notes)
+                                    <tr>
+                                        <td class="bold" style="font-size:12px; padding:5px 0;">Keterangan:</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-size:12px; padding:5px 0;">
+                                            {{ $sale->notes }}
+                                        </td>
+                                    </tr>
+                                @endif
+                            </table>
+                        </td>
+
+                    </tr>
+                </table>
+
             </td>
 
         </tr>
