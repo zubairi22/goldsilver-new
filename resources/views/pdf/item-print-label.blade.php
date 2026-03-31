@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <style>
         @page {
+            size: 80mm 24mm;
             margin: 0;
         }
 
@@ -17,27 +18,50 @@
             font-family: DejaVu Sans, sans-serif;
         }
 
+        /* TABLE UTAMA */
+        table {
+            width: 80mm;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        /* CELL LABEL */
         td {
-            width: 32mm;
-            height: 22mm;
+            height: 24mm;
+            vertical-align: top;
             text-align: center;
-            vertical-align: middle;
         }
 
-        td:first-child {
-            padding-right: 7mm;
+        /* LABEL KIRI */
+        .left {
+            width: 24mm;
+            padding-top: 2mm;
+            /* jarak atas */
+            padding-left: 2mm;
+            padding-right: 0;
         }
 
-        td:last-child {
-            padding-left: 7mm;
+        /* SPACING TENGAH */
+        .spacer {
+            width: 32mm;
         }
 
+        /* LABEL KANAN */
+        .right {
+            width: 24mm;
+            padding-top: 2mm;
+            padding-left: 0;
+            padding-right: 2mm;
+        }
+
+        /* QR */
         .qr img {
             width: 28px;
             height: 28px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
+        /* TEXT */
         .name {
             font-size: 7px;
             line-height: 1.1;

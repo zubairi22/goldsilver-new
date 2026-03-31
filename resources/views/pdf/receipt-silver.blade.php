@@ -6,11 +6,14 @@
     <title>Nota Penjualan</title>
 
     <style>
+        @page {
+            margin: 12;
+            padding: 12;
+        }
+
         body {
             font-family: sans-serif;
             font-size: 11px;
-            margin: 0;
-            padding: 0;
         }
 
         table {
