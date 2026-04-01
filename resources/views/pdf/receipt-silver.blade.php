@@ -148,7 +148,9 @@
                             @endif
 
                             <th style="border:1px solid #ccc;">Nama Barang</th>
-                            <th style="border:1px solid #ccc;">Perak</th>
+                            <th style="border:1px solid #ccc;">
+                                {{ $sale->sale_type === 'wholesale' ? 'Harga' : 'Perak' }}
+                            </th>
                             <th style="border:1px solid #ccc; width:70px; text-align:center;">Berat</th>
                             <th style="border:1px solid #ccc; width:110px; text-align:center;">Subtotal</th>
                         </tr>
@@ -175,7 +177,11 @@
                                     {{ $item->manual_name ?? optional($item->item)->name ?? '-' }}
                                 </td>
 
-                                <td style="border:1px solid #ccc; text-align:center;"></td>
+                                <td style="border:1px solid #ccc; text-align:center;">
+                                    @if ($sale->sale_type === 'wholesale')
+                                        Rp {{ number_format($item->price, 0, ',', '.') }}
+                                    @endif
+                                </td>
 
                                 <td style="border:1px solid #ccc; text-align:center;">
                                     {{ number_format($item->weight, 2, ',', '.') }} g

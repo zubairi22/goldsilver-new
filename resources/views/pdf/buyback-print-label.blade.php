@@ -55,9 +55,9 @@
         <div class="page">
             <table>
                 <colgroup>
-                    <col style="width: 22mm;">
-                    <col style="width: 36mm;">
-                    <col style="width: 22mm;">
+                    <col style="width: 21mm;">
+                    <col style="width: 38mm;">
+                    <col style="width: 21mm;">
                 </colgroup>
                 <tr>
                     <td>
