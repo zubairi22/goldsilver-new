@@ -28,7 +28,7 @@
         }
 
         .left {
-            width: 24mm;
+            width: 22mm;
             padding-top: 2mm;
             padding-left: 2mm;
             padding-right: 0;
@@ -41,7 +41,7 @@
 
         /* LABEL KANAN */
         .right {
-            width: 24mm;
+            width: 22mm;
             padding-top: 2mm;
             padding-left: 0;
             padding-right: 2mm;
@@ -49,21 +49,21 @@
 
         /* QR */
         .qr img {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             margin-bottom: 2px;
             margin-top: 5px;
         }
 
         /* TEXT */
         .name {
-            font-size: 7px;
+            font-size: 6px;
             line-height: 1.1;
         }
 
         .weight,
         .price {
-            font-size: 7px;
+            font-size: 6px;
             font-weight: bold;
         }
     </style>

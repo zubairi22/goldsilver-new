@@ -26,7 +26,7 @@
         }
 
         .left {
-            width: 24mm;
+            width: 22mm;
             padding-top: 2mm;
             padding-left: 2mm;
             padding-right: 0;
@@ -37,27 +37,27 @@
         }
 
         .right {
-            width: 24mm;
+            width: 22mm;
             padding-top: 2mm;
             padding-left: 0;
             padding-right: 2mm;
         }
 
         .qr img {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             margin-bottom: 2px;
             margin-top: 5px;
         }
 
         .name {
-            font-size: 7px;
+            font-size: 6px;
             line-height: 1.1;
         }
 
         .weight,
         .price {
-            font-size: 7px;
+            font-size: 6px;
             font-weight: bold;
         }
     </style>
@@ -74,9 +74,9 @@
             <table>
                 <tr>
                     <td class="left">
-                        @if(isset($row[0]) && $row[0]->qr)
+                        @if(isset($row[0]) && $row[0]->qr_base64)
                             <div class="qr">
-                                <img src="data:image/png;base64,{{ $row[0]->qr }}">
+                                <img src="data:image/png;base64,{{ $row[0]->qr_base64 }}">
                             </div>
                         @endif
 
@@ -96,9 +96,9 @@
                     <td class="spacer"></td>
 
                     <td class="right">
-                        @if(isset($row[1]) && $row[1]->qr)
+                        @if(isset($row[1]) && $row[1]->qr_base64)
                             <div class="qr">
-                                <img src="data:image/png;base64,{{ $row[1]->qr }}">
+                                <img src="data:image/png;base64,{{ $row[1]->qr_base64 }}">
                             </div>
                         @endif
 
