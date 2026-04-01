@@ -217,22 +217,20 @@ class BuybackController extends Controller
     {
         $buybackItem->load('item');
 
-        $qrBase64 = null;
+        $buybackItem->qr_base64 = null;
 
         if ($buybackItem->item?->qr_path) {
+            $path = storage_path('app/public/' . $buybackItem->item->qr_path);
 
-            $qrFullPath = storage_path('app/public/' . $buybackItem->item->qr_path);
-
-            if (file_exists($qrFullPath)) {
-                $qrBase64 = base64_encode(file_get_contents($qrFullPath));
-            }
+            $buybackItem->qr_base64 = is_file($path)
+                ? base64_encode(file_get_contents($path))
+                : null;
         }
 
         try {
 
             $pdf = Pdf::loadView('pdf.buyback-print-label', [
-                'item' => $buybackItem,
-                'qr' => $qrBase64
+                'items' => collect([$buybackItem])
             ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
 
             if (!$buybackItem->label_printed_at) {
@@ -279,7 +277,7 @@ class BuybackController extends Controller
         }
 
         try {
-            $pdf = Pdf::loadView('pdf.buyback-print-bulk-label', [
+            $pdf = Pdf::loadView('pdf.buyback-print-label', [
                 'items' => $items
             ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
 

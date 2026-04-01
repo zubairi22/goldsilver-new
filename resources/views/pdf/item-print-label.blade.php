@@ -22,16 +22,14 @@
 
         /* CELL LABEL */
         td {
-            height: 24mm;
+            height: 22mm;
             vertical-align: top;
             text-align: center;
         }
 
-        /* LABEL KIRI */
         .left {
             width: 24mm;
             padding-top: 2mm;
-            /* jarak atas */
             padding-left: 2mm;
             padding-right: 0;
         }
@@ -54,7 +52,7 @@
             width: 30px;
             height: 30px;
             margin-bottom: 2px;
-            margin-top: 3px;
+            margin-top: 5px;
         }
 
         /* TEXT */

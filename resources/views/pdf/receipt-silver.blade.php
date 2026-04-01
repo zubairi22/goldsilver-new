@@ -241,14 +241,6 @@
                                             {{ $sale->notes }}
                                         </td>
                                     </tr>
-
-                                    @if($sale->sale_image && $sale->sale_type !== 'wholesale')
-                                        <tr>
-                                            <td style="font-size:12px; padding:5px 0;">
-                                                <img src="{{ $sale->sale_image_path }}" width="150">
-                                            </td>
-                                        </tr>
-                                    @endif
                                 @endif
                             </table>
                         </td>

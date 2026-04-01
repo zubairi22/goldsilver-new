@@ -272,9 +272,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                                     {{ sale.invoice_no }}
                                                 </span>
 
-                                                <span v-if="sale.customer" class="text-xs text-gray-500">
-                                                    {{ sale.customer }}
-                                                </span>
+                                                <span v-if="sale.customer" class="text-xs text-gray-500"> Pelanggan: {{ sale.customer }} </span>
                                             </div>
                                         </TableCell>
                                         <TableCell>{{ sale.sale_type === 'retail' ? 'Eceran' : 'Grosir' }}</TableCell>
