@@ -27,26 +27,6 @@
             text-align: center;
         }
 
-        .left {
-            width: 22mm;
-            padding-top: 2mm;
-            padding-left: 2mm;
-            padding-right: 0;
-        }
-
-        /* SPACING TENGAH */
-        .spacer {
-            width: 36mm;
-        }
-
-        /* LABEL KANAN */
-        .right {
-            width: 22mm;
-            padding-top: 2mm;
-            padding-left: 0;
-            padding-right: 2mm;
-        }
-
         /* QR */
         .qr img {
             width: 28px;
@@ -79,6 +59,11 @@
         <div class="page">
 
             <table>
+                <colgroup>
+                    <col style="width: 22mm;">
+                    <col style="width: 36mm;">
+                    <col style="width: 22mm;">
+                </colgroup>
                 <tr>
                     {{-- LABEL KIRI --}}
                     <td>
@@ -99,7 +84,7 @@
                         @endif
                     </td>
 
-                    <td class="spacer"></td>
+                    <td></td>
 
                     {{-- LABEL KANAN --}}
                     <td>
