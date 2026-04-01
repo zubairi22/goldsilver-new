@@ -36,7 +36,7 @@
 
         /* SPACING TENGAH */
         .spacer {
-            width: 32mm;
+            width: 36mm;
         }
 
         /* LABEL KANAN */
