@@ -15,23 +15,38 @@
 
         table {
             width: 80mm;
-            table-layout: fixed;
             border-collapse: collapse;
         }
 
         td {
-            height: 22mm;
+            height: 20mm;
             vertical-align: top;
             text-align: center;
         }
 
+        .left {
+            width: 20mm;
+            padding-top: 2mm;
+        }
+
+        .spacer {
+            width: 38mm;
+        }
+
+        .right {
+            width: 20mm;
+            padding-top: 2mm;
+        }
+
+        /* QR */
         .qr img {
             width: 28px;
             height: 28px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             margin-top: 5px;
         }
 
+        /* TEXT */
         .name {
             font-size: 6px;
             line-height: 1.1;
@@ -54,13 +69,8 @@
     @foreach($chunks as $row)
         <div class="page">
             <table>
-                <colgroup>
-                    <col style="width: 20mm;">
-                    <col style="width: 40mm;">
-                    <col style="width: 20mm;">
-                </colgroup>
                 <tr>
-                    <td>
+                    <td class="left">
                         @if(isset($row[0]) && $row[0]->qr_base64)
                             <div class="qr">
                                 <img src="data:image/png;base64,{{ $row[0]->qr_base64 }}">
@@ -80,9 +90,9 @@
                         @endif
                     </td>
 
-                    <td></td>
+                    <td class="spacer"></td>
 
-                    <td>
+                    <td class="right">
                         @if(isset($row[1]) && $row[1]->qr_base64)
                             <div class="qr">
                                 <img src="data:image/png;base64,{{ $row[1]->qr_base64 }}">
