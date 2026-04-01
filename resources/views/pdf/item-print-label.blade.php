@@ -31,7 +31,7 @@
         .qr img {
             width: 28px;
             height: 28px;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             margin-top: 5px;
         }
 
@@ -60,9 +60,9 @@
 
             <table>
                 <colgroup>
-                    <col style="width: 21mm;">
-                    <col style="width: 38mm;">
-                    <col style="width: 21mm;">
+                    <col style="width: 20mm;">
+                    <col style="width: 40mm;">
+                    <col style="width: 20mm;">
                 </colgroup>
                 <tr>
                     {{-- LABEL KIRI --}}
