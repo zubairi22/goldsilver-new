@@ -30,7 +30,7 @@
         }
 
         .spacer {
-            width: 30mm;
+            width: 32mm;
         }
 
         .right {
