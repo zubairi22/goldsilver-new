@@ -14,7 +14,7 @@
         }
 
         table {
-            width: 88mm;
+            width: 80mm;
             border-collapse: collapse;
         }
 
@@ -25,16 +25,16 @@
         }
 
         .left {
-            width: 20mm;
+            width: 22mm;
             padding-top: 2mm;
         }
 
         .spacer {
-            width: 38mm;
+            width: 30mm;
         }
 
         .right {
-            width: 20mm;
+            width: 22mm;
             padding-top: 2mm;
         }
 
