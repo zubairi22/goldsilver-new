@@ -231,7 +231,7 @@ class BuybackController extends Controller
 
             $pdf = Pdf::loadView('pdf.buyback-print-label', [
                 'items' => collect([$buybackItem])
-            ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
+            ])->setPaper('a4', 'portrait');
 
             if (!$buybackItem->label_printed_at) {
                 $buybackItem->update([
@@ -279,7 +279,7 @@ class BuybackController extends Controller
         try {
             $pdf = Pdf::loadView('pdf.buyback-print-label', [
                 'items' => $items
-            ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
+            ])->setPaper('a4', 'portrait');
 
             BuybackItem::whereIn('id', $items->pluck('id'))
                 ->update([
