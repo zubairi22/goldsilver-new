@@ -25,16 +25,16 @@
         }
 
         .left {
-            width: 20mm;
+            width: 22mm;
             padding-top: 2mm;
         }
 
         .spacer {
-            width: 38mm;
+            width: 32mm;
         }
 
         .right {
-            width: 20mm;
+            width: 22mm;
             padding-top: 2mm;
         }
 
@@ -42,7 +42,7 @@
         .qr img {
             width: 28px;
             height: 28px;
-            margin-bottom: 3px;
+            margin-bottom: 8px;
             margin-top: 5px;
         }
 
