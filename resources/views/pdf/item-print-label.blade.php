@@ -14,7 +14,7 @@
         }
 
         table {
-            width: 80mm;
+            width: 88mm;
             border-collapse: collapse;
         }
 

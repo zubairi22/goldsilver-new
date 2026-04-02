@@ -159,7 +159,7 @@ class ItemsController extends Controller
 
         $pdf = Pdf::loadView('pdf.item-print-label', [
             'items' => $items
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper([0, 0, 249, 74], 'portrait');
 
         return $pdf->stream('item-label.pdf');
     }
@@ -178,7 +178,7 @@ class ItemsController extends Controller
 
         $pdf = Pdf::loadView('pdf.item-print-label', [
             'items' => collect([$item])
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper([0, 0, 249, 74], 'portrait');
 
         return $pdf->stream('item-label-' . $item->code . '.pdf');
     }
