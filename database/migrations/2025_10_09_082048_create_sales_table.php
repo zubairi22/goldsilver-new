@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string('legacy_hash')->nullable()->index();
             $table->enum('category', ['gold', 'silver'])->default('gold');
             $table->enum('sale_type', ['retail', 'wholesale'])->default('retail');
-            $table->foreignId('customer')->nullable();
+            $table->string('customer')->nullable();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('total_weight', 10, 2)->default(0);
             $table->integer('total_price')->default(0);

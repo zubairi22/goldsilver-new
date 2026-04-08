@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -21,6 +20,7 @@ return new class extends Migration
             $table->decimal('subtotal', 15, 2);
             $table->timestamp('buybacked_at')->nullable();
             $table->unsignedInteger('old_barang_id')->nullable()->index();
+            $table->string('source')->nullable();
             $table->timestamps();
         });
     }

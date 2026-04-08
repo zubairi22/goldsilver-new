@@ -13,15 +13,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-//            MenuRolePermissionSeeder::class,
-//            StoreSettingSeeder::class,
-//            ItemTypeSeeder::class,
-//            PaymentMethodSeeder::class,
-//            CustomerSeeder::class,
-//            MigrateBarangToItemsSeeder::class,
-//            MigratePenjualanSeeder::class,
-            MigrateBuybackSeeder::class,
-//            MigrateImagesSeeder::class,
+                // MenuRolePermissionSeeder::class,
+                // StoreSettingSeeder::class,
+                // ItemTypeSeeder::class,
+                // PaymentMethodSeeder::class,
+                // MigrateBarangToItemsSeeder::class,
+                // MigratePenjualanSeeder::class,
+                // MigrateBuybackSeeder::class,
+            MigrateImagesSeeder::class,
         ]);
     }
 }

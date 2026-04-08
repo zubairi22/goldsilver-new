@@ -35,7 +35,7 @@ class MigratePenjualanSeeder extends Seeder
                 }
             });
 
-        Log::info("=== MULAI MIGRASI BUYBACK (penjualan_retur) ===");
+        Log::info("=== SELESAI MIGRASI SALE ===");
     }
 
     /* =====================================================
@@ -67,16 +67,15 @@ class MigratePenjualanSeeder extends Seeder
             default => 1,
         };
 
-        // ========== DOWNLOAD QR LAMA ==========
+        // ========== DOWNLOAD & DECODE QR LAMA ==========
         $qrUrl = "https://karina-goldsilver.com/siperak/assets/generated/qr/penjualan/{$row->idpenjualan}.png";
         $qrPath = null;
         $legacyHash = null;
 
         try {
-            $resp = Http::timeout(15)->get($qrUrl);
+            $resp = Http::timeout(30)->get($qrUrl);
 
             if ($resp->successful()) {
-
                 $folder = 'qrcodes/sales';
                 if (!Storage::disk('public')->exists($folder)) {
                     Storage::disk('public')->makeDirectory($folder);
@@ -84,24 +83,31 @@ class MigratePenjualanSeeder extends Seeder
 
                 $filename = 'oldqr_' . $row->idpenjualan . '_' . Str::random(10) . '.png';
                 Storage::disk('public')->put($folder . '/' . $filename, $resp->body());
-
                 $qrPath = $folder . '/' . $filename;
-
                 $absolutePath = storage_path('app/public/' . $qrPath);
 
-                $qrcode = new QrReader($absolutePath);
-                $text = $qrcode->text();
+                sleep(1);
+                clearstatcache();
 
-                if ($text) {
-                    $legacyHash = trim($text);
+                try {
+                    $qrcode = new QrReader($absolutePath);
+                    $text = $qrcode->text();
+
+                    if ($text) {
+                        $legacyHash = trim($text);
+                    }
+                } catch (\Throwable $e) {
+                    $this->command->error("\nFATAL ERROR: Gagal men-decode QR Code.");
                 }
             } else {
-                Log::warning("Gagal download QR: ID {$row->idpenjualan}");
+                Log::warning("Gagal download QR (HTTP {$resp->status()}): ID {$row->idpenjualan}");
             }
         } catch (\Exception $e) {
-            Log::warning("Error download QR: ID {$row->idpenjualan}");
+            // Berhenti jika ada error koneksi/HTTP yang tidak terduga
+            $this->command->error("\nFATAL ERROR: Masalah koneksi saat download.");
         }
 
+        // ========== SIMPAN DATA SALE ==========
         $sale = Sale::createQuietly([
             'invoice_no' => 'PJ-' . $row->idpenjualan,
             'qr_path' => $qrPath,
@@ -122,6 +128,7 @@ class MigratePenjualanSeeder extends Seeder
             'updated_at' => $row->datecreated,
         ]);
 
+        // ========== LOGIK PEMBAYARAN ==========
         if ($paymentMethodId === 4) {
             if ($row->splittunai > 0) {
                 $sale->addPayment([
@@ -144,20 +151,27 @@ class MigratePenjualanSeeder extends Seeder
             }
         }
 
+        if ($paymentMethodId !== 4 && $paidAmount > 0) {
+            $sale->addPayment([
+                'amount' => $paidAmount,
+                'payment_method_id' => $paymentMethodId,
+                'note' => 'Migrasi pembayaran',
+                'user_id' => 1,
+                'created_at' => $row->datecreated,
+            ]);
+        }
+
+        // ========== DETAIL BARANG ==========
         $details = DB::connection('old_mysql')
             ->table('penjualan_detail as pd')
             ->leftJoin('barang as b', 'b.idbarang', '=', 'pd.idbarang')
             ->where('pd.idpenjualan', $row->idpenjualan)
-            ->select([
-                'pd.*',
-                'b.namabarang',
-            ])
+            ->select(['pd.*', 'b.namabarang'])
             ->get();
 
         $saleSource = ((int) $row->is_manual === 1) ? 'manual' : 'stock';
 
         foreach ($details as $d) {
-
             $code = str_pad((string) $d->idbarang, 6, '0', STR_PAD_LEFT);
             $item = Item::where('code', $code)->first();
 
