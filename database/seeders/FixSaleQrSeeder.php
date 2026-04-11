@@ -94,6 +94,8 @@ class FixSaleQrSeeder extends Seeder
                 $qrcode = new QrReader($absolutePath);
                 $text = $qrcode->text();
 
+                $this->command->info("RAW RESULT: " . var_export($text, true));
+
                 if ($text) {
                     $legacyHash = trim($text);
 
