@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\Buyback;
+use App\Models\CashierSession;
 use App\Models\PaymentMethod;
 use App\Models\Sale;
 use App\Models\SalePayment;
@@ -72,6 +73,9 @@ class SalesSummaryReportController extends Controller
 
         $grandTotalCash = $totalCashIn - $buybackNominal;
 
+        $initialCash = CashierSession::whereBetween('opened_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->sum($category === 'gold' ? 'gold_initial_cash' : 'silver_initial_cash');
+
         return inertia('reports/sales/Summary', [
             'category' => $category,
             'filters' => [
@@ -88,7 +92,9 @@ class SalesSummaryReportController extends Controller
                 'weight' => $buybackWeight,
                 'nominal' => $buybackNominal,
             ],
-            'grandTotalCash' => collect([$grandTotalCash])->flatten()->first(), // ensure float
+            'grandTotalCash' => $grandTotalCash,
+            'initialCash' => (float) $initialCash,
+            'grandTotalCashWithModal' => $grandTotalCash + $initialCash,
         ]);
     }
 }

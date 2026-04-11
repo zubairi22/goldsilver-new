@@ -78,6 +78,38 @@ class CashierController extends Controller
     }
 
     /**
+     * Tambah modal kasir (saat session aktif)
+     */
+    public function addCash(Request $request)
+    {
+        $data = $request->validate([
+            'gold_additional_cash' => 'nullable|numeric|min:0',
+            'silver_additional_cash' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            $session = CashierSession::current();
+            if (!$session) {
+                throw new \Exception('Tidak ada kasir aktif.');
+            }
+
+            if ($data['gold_additional_cash'] > 0) {
+                $session->increment('gold_initial_cash', $data['gold_additional_cash']);
+            }
+
+            if ($data['silver_additional_cash'] > 0) {
+                $session->increment('silver_initial_cash', $data['silver_additional_cash']);
+            }
+
+            $this->flashSuccess('Modal kasir berhasil ditambahkan.');
+        } catch (\Throwable $e) {
+            $this->flashError($e->getMessage());
+        }
+
+        return back();
+    }
+
+    /**
      * Proses scan QR atau kode manual
      */
     public function submitScan(Request $request)

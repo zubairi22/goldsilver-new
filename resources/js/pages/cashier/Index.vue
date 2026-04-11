@@ -6,9 +6,11 @@ import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const { session } = defineProps<{
     session: any | null;
@@ -29,12 +31,29 @@ const closeForm = useForm({
     silver_closing_cash: 0,
 });
 
+const addCashForm = useForm({
+    gold_additional_cash: 0,
+    silver_additional_cash: 0,
+});
+
+const addCashModal = ref(false);
+
 const submitOpen = () => {
     openForm.post(route('cashier.open'), { preserveScroll: true });
 };
 
 const submitClose = () => {
     closeForm.post(route('cashier.close'), { preserveScroll: true });
+};
+
+const submitAddCash = () => {
+    addCashForm.post(route('cashier.add-cash'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            addCashModal.value = false;
+            addCashForm.reset();
+        },
+    });
 };
 </script>
 
@@ -146,9 +165,15 @@ const submitClose = () => {
                             <div v-else class="space-y-6">
                                 <p class="text-lg font-semibold">Ringkasan Hari Ini</p>
 
-                                <div class="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
-                                    <p class="text-gray-600">Status operasional kasir:</p>
-                                    <p class="font-semibold text-blue-800">Kasir aktif & siap digunakan</p>
+                                <div class="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-600">Status operasional kasir:</p>
+                                        <p class="font-semibold text-blue-800">Kasir aktif & siap digunakan</p>
+                                    </div>
+                                    <Button size="sm" variant="outline" @click="addCashModal = true" class="border-blue-300 bg-white hover:bg-blue-50">
+                                        <Icon name="plus" class="mr-2 h-4 w-4" />
+                                        Tambah Modal
+                                    </Button>
                                 </div>
 
                                 <p class="text-xs text-gray-500">*Panel ini bisa diisi total transaksi, total penjualan, pembelian, dll.</p>
@@ -161,4 +186,31 @@ const submitClose = () => {
             </div>
         </div>
     </AppLayout>
+
+    <!-- MODAL: TAMBAH MODAL -->
+    <Dialog v-model:open="addCashModal">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Tambah Modal Kasir</DialogTitle>
+                <DialogDescription>Masukkan nominal tambahan modal untuk sesi aktif hari ini.</DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-4 py-4">
+                <div class="space-y-2">
+                    <Label for="gold_add">Tambahan Modal Emas</Label>
+                    <CurrencyInput id="gold_add" v-model="addCashForm.gold_additional_cash" />
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="silver_add">Tambahan Modal Perak</Label>
+                    <CurrencyInput id="silver_add" v-model="addCashForm.silver_additional_cash" />
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" @click="addCashModal = false">Batal</Button>
+                <Button :disabled="addCashForm.processing" @click="submitAddCash"> Tambah </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

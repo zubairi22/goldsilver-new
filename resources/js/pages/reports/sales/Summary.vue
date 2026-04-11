@@ -22,6 +22,8 @@ const props = defineProps<{
     wholesalePayments: { method: string; total: number }[];
     buybacks: { weight: number; nominal: number };
     grandTotalCash: number;
+    initialCash: number;
+    grandTotalCashWithModal: number;
 }>();
 
 const categoryLabel = computed(() => {
@@ -208,17 +210,27 @@ const formatWeight = (value: number) => {
 
                             <!-- Total Hasil Akhir Kas Tunai -->
                             <div class="mt-8 border-t pt-4">
-                                <h3 class="mb-4 text-lg font-medium text-gray-800">Total Hasil Akhir Kas Tunai (Tunai - Buyback)</h3>
-                                <div class="overflow-hidden rounded-md border bg-gray-600">
+                                <h3 class="mb-4 text-lg font-medium text-gray-800">Total Ringkasan Kas Tunai</h3>
+                                <div class="overflow-hidden rounded-md border border-slate-200 shadow-sm">
                                     <Table>
                                         <TableBody>
-                                            <TableRow class="border-b-0 hover:bg-transparent">
-                                                <TableCell class="border-r border-gray-700 py-4 text-lg font-bold text-white"
-                                                    >Grand Total Nominal</TableCell
-                                                >
-                                                <TableCell class="w-[250px] py-4 text-right text-lg font-bold text-white">{{
-                                                    formatRupiah(grandTotalCash)
-                                                }}</TableCell>
+                                            <TableRow class="hover:bg-transparent">
+                                                <TableCell class="py-4 font-medium text-slate-600">Total Tunai (Penjualan - Buyback)</TableCell>
+                                                <TableCell class="w-[250px] py-4 text-right font-semibold text-slate-900">
+                                                    {{ formatRupiah(grandTotalCash) }}
+                                                </TableCell>
+                                            </TableRow>
+                                            <TableRow class="hover:bg-transparent">
+                                                <TableCell class="py-4 font-medium text-slate-600">Total Modal Kasir</TableCell>
+                                                <TableCell class="w-[250px] py-4 text-right font-semibold text-slate-900">
+                                                    {{ formatRupiah(initialCash) }}
+                                                </TableCell>
+                                            </TableRow>
+                                            <TableRow class="bg-gray-600 hover:bg-gray-600">
+                                                <TableCell class="py-4 text-lg font-bold text-white">Total Hasil Akhir Kas Tunai</TableCell>
+                                                <TableCell class="w-[250px] py-4 text-right text-lg font-bold text-white">
+                                                    {{ formatRupiah(grandTotalCashWithModal) }}
+                                                </TableCell>
                                             </TableRow>
                                         </TableBody>
                                     </Table>

@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::get('cashier/scan', [CashierController::class, 'scanView'])->name('cashier.scan.view');
     Route::post('cashier/open', [CashierController::class, 'open'])->name('cashier.open');
     Route::post('cashier/close', [CashierController::class, 'close'])->name('cashier.close');
+    Route::post('cashier/add-cash', [CashierController::class, 'addCash'])->name('cashier.add-cash');
     Route::post('cashier/scan', [CashierController::class, 'submitScan'])->name('cashier.scan.submit');
 
     Route::middleware('role:super-admin')->prefix('store')->name('store.')->group(
