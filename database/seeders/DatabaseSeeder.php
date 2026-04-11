@@ -19,8 +19,9 @@ class DatabaseSeeder extends Seeder
                 // PaymentMethodSeeder::class,
                 // MigrateBarangToItemsSeeder::class,
                 // MigratePenjualanSeeder::class,
-                // MigrateBuybackSeeder::class,
-            MigrateImagesSeeder::class,
+            FixSaleQrSeeder::class,
+            // MigrateBuybackSeeder::class,
+            // MigrateImagesSeeder::class,
         ]);
     }
 }

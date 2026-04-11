@@ -17,7 +17,6 @@ class MigrateBuybackSeeder extends Seeder
         DB::connection('old_mysql')
             ->table('penjualan_retur')
             ->where('beratretur', '>', 0)
-            ->where('cetakqrcode', 0)
             ->orderBy('idreturjual')
             ->chunk(500, function ($rows) {
                 foreach ($rows as $row) {

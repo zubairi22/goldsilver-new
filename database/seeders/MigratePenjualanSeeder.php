@@ -73,7 +73,7 @@ class MigratePenjualanSeeder extends Seeder
         $legacyHash = null;
 
         try {
-            $resp = Http::timeout(30)->get($qrUrl);
+            $resp = Http::timeout(15)->get($qrUrl);
 
             if ($resp->successful()) {
                 $folder = 'qrcodes/sales';
@@ -85,9 +85,6 @@ class MigratePenjualanSeeder extends Seeder
                 Storage::disk('public')->put($folder . '/' . $filename, $resp->body());
                 $qrPath = $folder . '/' . $filename;
                 $absolutePath = storage_path('app/public/' . $qrPath);
-
-                sleep(1);
-                clearstatcache();
 
                 try {
                     $qrcode = new QrReader($absolutePath);

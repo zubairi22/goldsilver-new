@@ -107,18 +107,18 @@ class MenuRolePermissionSeeder extends Seeder
 
             ['id' => 23, 'title' => 'Stok Opname', 'url' => 'store.stock-opnames.index', 'param' => null, 'parent_id' => 5, 'icon' => 'ShoppingBag', 'sort' => 4],
             ['id' => 24, 'title' => 'Laporan', 'url' => 'reports', 'param' => null, 'parent_id' => null, 'icon' => 'Newspaper', 'sort' => 9],
-            ['id' => 25, 'title' => 'Nota Penjualan', 'url' => 'reports.sales.note', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 1],
-            ['id' => 26, 'title' => 'Penjualan Barang', 'url' => 'reports.sales.item', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 2],
-            ['id' => 27, 'title' => 'Stok', 'url' => 'reports.stock.index', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 7],
+            ['id' => 25, 'title' => 'Nota Penjualan', 'url' => 'reports.sales.note', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 1],
+            ['id' => 26, 'title' => 'Penjualan Barang', 'url' => 'reports.sales.item', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 2],
+            ['id' => 27, 'title' => 'Stok', 'url' => 'reports.stock.index', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 7],
 
             ['id' => 28, 'title' => 'Penjualan Partai', 'url' => 'sales.create.wholesale', 'param' => 'gold', 'parent_id' => 7, 'icon' => 'Store', 'sort' => 3],
             ['id' => 29, 'title' => 'Penjualan Partai', 'url' => 'sales.create.wholesale', 'param' => 'silver', 'parent_id' => 17, 'icon' => 'Store', 'sort' => 3],
 
-            ['id' => 30, 'title' => 'Penjualan Emas Eceran', 'url' => 'reports.sales.item.gold.retail', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 3],
-            ['id' => 31, 'title' => 'Penjualan Emas Partai', 'url' => 'reports.sales.item.gold.wholesale', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 4],
-            ['id' => 32, 'title' => 'Penjualan Perak Eceran', 'url' => 'reports.sales.item.silver.retail', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 5],
-            ['id' => 33, 'title' => 'Penjualan Perak Partai', 'url' => 'reports.sales.item.silver.wholesale', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 6],
-            ['id' => 34, 'title' => 'Performa Karyawan', 'url' => 'reports.sales.employee', 'param' => null, 'parent_id' => 23, 'icon' => 'FileText', 'sort' => 8],
+            ['id' => 30, 'title' => 'Penjualan Emas Eceran', 'url' => 'reports.sales.item.gold.retail', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 3],
+            ['id' => 31, 'title' => 'Penjualan Emas Partai', 'url' => 'reports.sales.item.gold.wholesale', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 4],
+            ['id' => 32, 'title' => 'Penjualan Perak Eceran', 'url' => 'reports.sales.item.silver.retail', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 5],
+            ['id' => 33, 'title' => 'Penjualan Perak Partai', 'url' => 'reports.sales.item.silver.wholesale', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 6],
+            ['id' => 34, 'title' => 'Performa Karyawan', 'url' => 'reports.sales.employee', 'param' => null, 'parent_id' => 24, 'icon' => 'FileText', 'sort' => 8],
             ['id' => 35, 'title' => 'Emas', 'url' => 'reports.sales.summary', 'param' => 'gold', 'parent_id' => 37, 'icon' => 'TrendingUp', 'sort' => 9],
             ['id' => 36, 'title' => 'Perak', 'url' => 'reports.sales.summary', 'param' => 'silver', 'parent_id' => 37, 'icon' => 'TrendingUp', 'sort' => 10],
 

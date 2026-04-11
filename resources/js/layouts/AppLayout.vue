@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
-import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.vue';
 import type { BreadcrumbItemType } from '@/types';
 import { Toaster } from '@/components/ui/sonner';
 import 'vue-sonner/style.css';
 import { usePage } from '@inertiajs/vue3';
-import { computed, watchEffect } from 'vue';
+import { watchEffect } from 'vue';
 import { toast } from 'vue-sonner';
 
 interface Props {
@@ -15,10 +14,6 @@ interface Props {
 withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
-
-const isAdmin = usePage().props.auth.isAdmin
-
-const Layout = computed(() => (isAdmin ? AppSidebarLayout : AppHeaderLayout));
 
 watchEffect(() => {
     const flash = usePage().props.flash as any;
@@ -33,8 +28,8 @@ watchEffect(() => {
 </script>
 
 <template>
-    <Layout :breadcrumbs="breadcrumbs">
+    <AppSidebarLayout :breadcrumbs="breadcrumbs">
         <Toaster position="top-right" richColors closeButton :duration="3000" />
         <slot />
-    </Layout>
+    </AppSidebarLayout>
 </template>
