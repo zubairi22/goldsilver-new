@@ -215,7 +215,6 @@ class SaleController extends Controller
             if (isset($data['sale_item_id'])) {
                 $saleItem = $sale->items()->findOrFail($data['sale_item_id']);
 
-                // If the stock item changed, revert the old one
                 if ($saleItem->item_id && $saleItem->item_id != $data['id']) {
                     Item::where('id', $saleItem->item_id)->update(['status' => 'ready']);
                 }

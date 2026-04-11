@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { useBarcodeScanner } from '@/composables/useBarcodeScanner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import QrScanner from '@/components/QrScanner.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -17,6 +19,13 @@ const breadcrumbs = [
 const scanForm = useForm({
     code: '',
 });
+
+const scanModal = ref(false);
+
+const onScanned = (code: string) => {
+    scanForm.code = code;
+    submitScan();
+};
 
 useBarcodeScanner((barcode: string) => {
     scanForm.code = barcode;
@@ -70,6 +79,11 @@ const submitScan = () => {
                                         <Icon name="search" class="mr-2" />
                                         Cari
                                     </Button>
+
+                                    <Button type="button" variant="secondary" @click="scanModal = true">
+                                        <Icon name="camera" class="mr-2 h-4 w-4" />
+                                        Scan Nota
+                                    </Button>
                                 </div>
 
                                 <InputError :message="scanForm.errors.code" />
@@ -80,4 +94,6 @@ const submitScan = () => {
             </div>
         </div>
     </AppLayout>
+
+    <QrScanner v-model:open="scanModal" @scanned="onScanned" />
 </template>

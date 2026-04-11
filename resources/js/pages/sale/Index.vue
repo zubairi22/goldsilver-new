@@ -294,7 +294,12 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                             <EditButton v-if="sale.status === 'draft'" @click.stop="editSale(sale)" />
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <Button v-if="sale.status !== 'draft' && !sale.deleted_at" class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
+                                            <Button
+                                                v-if="sale.status !== 'draft' && !sale.deleted_at"
+                                                class="p-3"
+                                                variant="destructive"
+                                                @click.stop="deleteSale(sale)"
+                                            >
                                                 <Trash />
                                             </Button>
                                         </TableCell>
@@ -442,7 +447,9 @@ watch([sale_type, payment_method_id, date], applyFilters);
                     <Icon name="printer" />
                 </Button>
 
-                <Button v-if="selectedSale && selectedSale.status === 'paid'" @click="goToBuyback()"> Proses Buyback </Button>
+                <Button v-if="selectedSale && selectedSale.status === 'paid' && !selectedSale.deleted_at" @click="goToBuyback()">
+                    Proses Buyback
+                </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

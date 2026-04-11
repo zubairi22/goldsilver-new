@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
+import { Eye, EyeOff, LoaderCircle } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 defineProps<{
@@ -16,8 +16,8 @@ defineProps<{
 }>();
 
 const form = useForm({
-    email: 'admin@temantekno.com',
-    password: 'password',
+    email: '',
+    password: '',
     remember: true,
 });
 
@@ -36,7 +36,7 @@ const submit = () => {
 
 <template>
     <AuthBase title="Masuk ke Akun Anda" description="Masukkan email dan kata sandi Anda untuk masuk">
-        <Head title="Masuk"/>
+        <Head title="Masuk" />
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
@@ -79,11 +79,11 @@ const submit = () => {
                         <button
                             type="button"
                             @click="togglePasswordVisibility"
-                            class="absolute right-2 top-2 text-sm"
+                            class="absolute top-2 right-2 text-sm"
                             :aria-label="isPasswordVisible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
                         >
-                            <EyeOff class="size-5" v-if="isPasswordVisible"/>
-                            <Eye class="size-5" v-else/>
+                            <EyeOff class="size-5" v-if="isPasswordVisible" />
+                            <Eye class="size-5" v-else />
                         </button>
                     </div>
                     <InputError :message="form.errors.password" />
@@ -101,7 +101,6 @@ const submit = () => {
                     Masuk
                 </Button>
             </div>
-
         </form>
     </AuthBase>
 </template>

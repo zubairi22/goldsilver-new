@@ -113,6 +113,7 @@ class Sale extends Model implements HasMedia
             $q->where(function ($qq) use ($search) {
                 $qq->where('invoice_no', 'like', "%{$search}%")
                     ->orWhere('customer', 'like', "%{$search}%")
+                    ->orWhere('legacy_hash', 'like', "%{$search}%")
                     ->orWhereHas(
                         'user',
                         fn($u) => $u->where('name', 'like', "%{$search}%")

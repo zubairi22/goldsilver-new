@@ -135,10 +135,6 @@ const saveModalItem = () => {
         toast.error('Silakan pilih barang dari stok.');
         return;
     }
-    if (modalItem.value.mode === 'manual' && !modalItem.value.manual_name) {
-        toast.error('Nama barang harus diisi.');
-        return;
-    }
     if (modalItem.value.subtotal <= 0) {
         toast.error('Subtotal harus valid.');
         return;
