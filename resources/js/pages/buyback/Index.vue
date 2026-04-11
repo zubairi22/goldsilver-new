@@ -93,19 +93,22 @@ const openPrintModal = () => {
     labelModal.value = true;
 };
 
-const printBulkLabel = () => {
+const printBulkLabel = (preview = false) => {
     if (!labelDateRange.value) return;
 
     const [start, end] = labelDateRange.value;
 
-    window.open(
-        route('buyback.bulk.print-label', {
-            category: props.category,
-            start_date: start,
-            end_date: end,
-        }),
-        '_blank',
-    );
+    let url = route('buyback.bulk.print-label', {
+        category: props.category,
+        start_date: start,
+        end_date: end,
+    });
+
+    if (preview) {
+        url += '&preview=1';
+    }
+
+    window.open(url, '_blank');
 
     labelModal.value = false;
 };
@@ -354,8 +357,8 @@ watch([payment_type, date, qc_status], applyFilters);
 
             <div class="mt-6 flex justify-end gap-2">
                 <Button variant="outline" @click="labelModal = false"> Batal </Button>
-
-                <Button :disabled="!labelDateRange" @click="printBulkLabel"> Tampilkan & Cetak </Button>
+                <Button variant="secondary" :disabled="!labelDateRange" @click="printBulkLabel(true)"> Preview Label </Button>
+                <Button :disabled="!labelDateRange" @click="printBulkLabel(false)"> Tampilkan & Cetak </Button>
             </div>
         </DialogContent>
     </Dialog>

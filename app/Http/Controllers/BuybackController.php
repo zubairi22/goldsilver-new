@@ -213,7 +213,7 @@ class BuybackController extends Controller
         ]);
     }
 
-    public function printLabel($category, BuybackItem $buybackItem)
+    public function printLabel(Request $request, $category, BuybackItem $buybackItem)
     {
         $buybackItem->load('item');
 
@@ -232,7 +232,7 @@ class BuybackController extends Controller
                 'items' => collect([$buybackItem])
             ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
 
-            if (!$buybackItem->label_printed_at) {
+            if (!$buybackItem->label_printed_at && !$request->has('preview')) {
                 BuybackItem::where('id', $buybackItem->id)
                     ->update([
                         'label_printed_at' => now()
@@ -281,10 +281,12 @@ class BuybackController extends Controller
                 'items' => $items
             ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
 
-            BuybackItem::whereIn('id', $items->pluck('id'))
-                ->update([
-                    'label_printed_at' => now()
-                ]);
+            if (!$request->has('preview')) {
+                BuybackItem::whereIn('id', $items->pluck('id'))
+                    ->update([
+                        'label_printed_at' => now()
+                    ]);
+            }
 
             return $pdf->stream('bulk-label.pdf');
 
