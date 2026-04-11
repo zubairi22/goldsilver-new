@@ -256,6 +256,13 @@ watch(successModal, (val) => {
     }
 });
 
+const itemsWithWeight = computed(() => {
+    return props.items.map((it: any) => ({
+        ...it,
+        label: `${it.name} (${it.weight} gr)`,
+    }));
+});
+
 const onBarcodeScanned = (code: string) => {
     const item = props.items.find((i: any) => i.code === code);
     if (item) {
@@ -473,9 +480,9 @@ useBarcodeScanner(onBarcodeScanned);
                         <Label>Barang dari Stok</Label>
                         <Multiselect
                             v-model="modalItem.id"
-                            :options="items"
+                            :options="itemsWithWeight"
                             value-prop="id"
-                            label="name"
+                            label="label"
                             searchable
                             placeholder="Pilih barang"
                             @change="

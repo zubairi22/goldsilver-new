@@ -64,6 +64,18 @@ const { formatRupiah, formatDate } = useFormat();
 const sale_type = ref(props.filters.sale_type);
 const payment_method_id = ref(props.filters.payment_method_id);
 const date = ref(props.filters.date ?? null);
+const sortBy = ref(props.filters.sort || 'created_at');
+const sortDirection = ref(props.filters.direction || 'desc');
+
+const toggleSort = (column: string) => {
+    if (sortBy.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDirection.value = 'desc';
+    }
+    applyFilters();
+};
 
 const saleModal = ref(false);
 const selectedSale = ref<any>(null);
@@ -163,6 +175,8 @@ const applyFilters = () => {
         params.payment_method_id = payment_method_id.value;
     }
     if (date.value) params.date = date.value;
+    params.sort = sortBy.value;
+    params.direction = sortDirection.value;
 
     router.get(route('sales.index', { category: props.category }), params, {
         preserveScroll: true,
@@ -244,11 +258,20 @@ watch([sale_type, payment_method_id, date], applyFilters);
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('created_at')">
+                                            Tanggal
+                                            <Icon :name="sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown'" class="ml-1 inline-block" />
+                                        </TableHead>
                                         <TableHead>Nota</TableHead>
                                         <TableHead>Jenis</TableHead>
-                                        <TableHead class="text-right">Berat</TableHead>
-                                        <TableHead class="text-right">Total</TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('total_weight')">
+                                            Berat
+                                            <Icon :name="sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown'" class="ml-1 inline-block" />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('total_price')">
+                                            Total
+                                            <Icon :name="sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown'" class="ml-1 inline-block" />
+                                        </TableHead>
                                         <TableHead class="text-right">Dibayar</TableHead>
                                         <TableHead class="text-right">Sisa</TableHead>
                                         <TableHead class="text-center">Status</TableHead>

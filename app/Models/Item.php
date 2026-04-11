@@ -106,6 +106,7 @@ class Item extends Model implements HasMedia
             $q->where(fn($x) =>
                 $x->where('name', 'like', "%{$search}%")
                     ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('weight', 'like', "%{$search}%")
                 );
         });
 

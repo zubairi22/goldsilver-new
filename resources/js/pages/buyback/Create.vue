@@ -102,16 +102,9 @@ const goBack = () => {
     router.get(route('sales.index', { category: props.category }));
 };
 
-watch(
-    () => form.items.map((it) => [it.buyback_weight, it.buyback_price, it.selected]),
-    () => {
-        form.items.forEach((it) => {
-            if (it.selected && !it.is_buyback) {
-                it.buyback_subtotal = Math.round(Number(it.buyback_weight) * Number(it.buyback_price));
-            }
-        });
-    },
-);
+const updateSubtotal = (item: any) => {
+    item.buyback_subtotal = Math.round(Number(item.buyback_weight || 0) * Number(item.buyback_price || 0));
+};
 </script>
 
 <template>
@@ -231,6 +224,7 @@ watch(
                                                 class="w-24 text-right"
                                                 v-model.number="it.buyback_weight"
                                                 :disabled="!it.selected || it.is_buyback"
+                                                @input="updateSubtotal(it)"
                                             />
                                         </TableCell>
 
@@ -241,21 +235,17 @@ watch(
                                                 class="w-28 text-right"
                                                 v-model.number="it.buyback_price"
                                                 :disabled="!it.selected || it.is_buyback"
+                                                @input="updateSubtotal(it)"
                                             />
                                         </TableCell>
 
                                         <TableCell class="text-right font-semibold">
-                                            <span v-if="it.is_buyback">
-                                                {{ formatRupiah(it.buyback_subtotal) }}
-                                            </span>
                                             <Input
-                                                v-else-if="it.selected"
                                                 type="number"
                                                 class="w-32 text-right"
                                                 v-model.number="it.buyback_subtotal"
                                                 :disabled="!it.selected || it.is_buyback"
                                             />
-                                            <span v-else>-</span>
                                         </TableCell>
 
                                         <TableCell>

@@ -25,6 +25,8 @@ class SaleController extends Controller
             'payment_method_id' => request('payment_method_id'),
             'date' => request('date', now()->toDateString()),
             'category' => $category,
+            'sort' => request('sort', 'created_at'),
+            'direction' => request('direction', 'desc'),
         ];
 
         return inertia('sale/Index', [
@@ -37,7 +39,11 @@ class SaleController extends Controller
                     'paymentMethod',
                 ])
                 ->filters($filters)
-                ->latest()
+                ->when(in_array($filters['sort'], ['total_weight', 'total_price', 'created_at']), function ($q) use ($filters) {
+                    $q->orderBy($filters['sort'], $filters['direction']);
+                }, function ($q) {
+                    $q->latest();
+                })
                 ->paginate(20)
                 ->withQueryString(),
             'paymentMethods' => PaymentMethod::active()->get(),

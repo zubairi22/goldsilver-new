@@ -12,7 +12,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle, Plus, Trash2 } from 'lucide-vue-next';
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps<{
     category: 'gold' | 'silver';
@@ -77,14 +77,9 @@ const submit = () => {
     });
 };
 
-watch(
-    () => form.items.map((it) => [it.buyback_weight, it.buyback_price]),
-    () => {
-        form.items.forEach((it) => {
-            it.buyback_subtotal = Math.round(Number(it.buyback_weight) * Number(it.buyback_price));
-        });
-    },
-);
+const updateSubtotal = (item: any) => {
+    item.buyback_subtotal = Math.round(Number(item.buyback_weight || 0) * Number(item.buyback_price || 0));
+};
 </script>
 
 <template>
@@ -98,7 +93,7 @@ watch(
                 <Button variant="outline" @click="router.get(route('buyback.index', { category: props.category }))"> Kembali </Button>
             </div>
 
-            <div class="mx-auto max-w-6xl space-y-8">
+            <div class="max-w-8xl mx-auto space-y-8">
                 <Card class="md:mx-4">
                     <CardHeader>
                         <p class="mb-4 font-semibold">Detail Item Buyback Manual</p>
@@ -126,15 +121,27 @@ watch(
                                         </TableCell>
 
                                         <TableCell class="text-right">
-                                            <Input type="number" step="0.01" class="text-right" v-model.number="it.buyback_weight" />
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                class="text-right"
+                                                v-model.number="it.buyback_weight"
+                                                @input="updateSubtotal(it)"
+                                            />
                                         </TableCell>
 
                                         <TableCell class="text-right">
-                                            <Input type="number" step="100" class="text-right" v-model.number="it.buyback_price" />
+                                            <Input
+                                                type="number"
+                                                step="100"
+                                                class="text-right"
+                                                v-model.number="it.buyback_price"
+                                                @input="updateSubtotal(it)"
+                                            />
                                         </TableCell>
 
                                         <TableCell class="text-right font-semibold">
-                                            {{ formatRupiah(it.buyback_subtotal) }}
+                                            <Input type="number" class="text-right" v-model.number="it.buyback_subtotal" />
                                         </TableCell>
 
                                         <TableCell class="text-center">
