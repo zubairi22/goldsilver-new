@@ -108,6 +108,34 @@ class FixSaleQrSeeder extends Seeder
                     Log::warning("Decode gagal (kosong) ID {$oldId}");
                 }
 
+                if (!$text) {
+                    $this->command->warn("Fallback to API: {$sale->invoice_no}");
+
+                    $response = Http::attach(
+                        'file',
+                        file_get_contents($absolutePath),
+                        'qr.png'
+                    )->post('https://api.qrserver.com/v1/read-qr-code/');
+
+                    $data = $response->json();
+
+                    $text = $data[0]['symbol'][0]['data'] ?? null;
+
+                    $this->command->info("API RESULT: " . var_export($text, true));
+
+                    if ($text) {
+                        $legacyHash = trim($text);
+
+                        $sale->updateQuietly([
+                            'legacy_hash' => $legacyHash
+                        ]);
+
+                        $this->command->info("Decoded via API: {$sale->invoice_no}");
+                    } else {
+                        $this->command->warn("Decode API gagal: {$sale->invoice_no}");
+                    }
+                }
+
             } catch (\Throwable $e) {
                 Log::error("Error decode QR ID {$oldId}: " . $e->getMessage());
             }
