@@ -85,7 +85,7 @@
                                 {{ number_format($row[0]->weight, 2) }} gr.
                             </div>
                             <div class="price">
-                                Rp {{ number_format($row[0]->price_sell ?? 0, 0, ',', '.') }}
+                                Rp {{ number_format(($row[0]->price_sell ?? 0) * ($row[0]->weight ?? 0), 0, ',', '.') }}
                             </div>
                         @endif
                     </td>
@@ -106,7 +106,8 @@
                                 {{ number_format($row[1]->weight, 2) }} gr.
                             </div>
                             <div class="price">
-                                Rp {{ number_format($row[1]->price_sell ?? 0, 0, ',', '.') }}
+                                Rp
+                                {{ number_format(($row[1]->price_sell ?? 0) * ($row[1]->weight ?? 0), 0, ',', '.') }}
                             </div>
                         @endif
                     </td>

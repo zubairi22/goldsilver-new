@@ -12,6 +12,7 @@ class UserCreateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')],
+            'password' => ['required', 'string', 'min:8'],
             'role' => ['required']
         ];
     }

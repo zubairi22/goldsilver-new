@@ -44,6 +44,12 @@ defineProps<{
                 </Select>
                 <InputError class="mt-2" :message="form.errors.role" />
             </div>
+
+            <div class="mt-4">
+                <Label for="password">Password <span v-if="form.id" class="text-xs text-muted-foreground">(Biarkan kosong jika tidak ingin mengubah)</span></Label>
+                <Input id="password" type="password" class="mt-1 block w-full" v-model="form.password" autocomplete="new-password" />
+                <InputError class="mt-2" :message="form.errors.password" />
+            </div>
         </form>
     </div>
 </template>

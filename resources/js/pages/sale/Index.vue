@@ -281,7 +281,8 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.remaining_amount) }}</TableCell>
                                         <TableCell class="text-center">
-                                            <Badge v-if="sale.status === 'paid'" variant="success">Selesai</Badge>
+                                            <Badge v-if="sale.deleted_at" variant="destructive">Batal</Badge>
+                                            <Badge v-else-if="sale.status === 'paid'" variant="success">Selesai</Badge>
                                             <Badge v-else-if="sale.status === 'partial'" variant="warning">Sebagian</Badge>
                                             <Badge v-else-if="sale.status === 'unpaid'" variant="destructive">Belum Bayar</Badge>
                                             <Badge v-else-if="sale.status === 'draft'" variant="secondary">Belum Selesai</Badge>
@@ -293,7 +294,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                             <EditButton v-if="sale.status === 'draft'" @click.stop="editSale(sale)" />
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <Button v-if="sale.status !== 'draft'" class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
+                                            <Button v-if="sale.status !== 'draft' && !sale.deleted_at" class="p-3" variant="destructive" @click.stop="deleteSale(sale)">
                                                 <Trash />
                                             </Button>
                                         </TableCell>

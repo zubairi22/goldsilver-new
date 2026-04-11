@@ -82,10 +82,11 @@
                                 {{ $row[0]->manual_name ?? $row[0]->item?->name }}
                             </div>
                             <div class="weight">
-                                {{ number_format($row[0]->weight, 2) }} gr.
+                                {{ number_format($row[0]->item?->weight, 2) }} gr.
                             </div>
                             <div class="price">
-                                Rp {{ number_format($row[0]->item?->price_sell ?? 0, 0, ',', '.') }}
+                                Rp
+                                {{ number_format(($row[0]->item?->price_sell ?? 0) * ($row[0]->item?->weight ?? 0), 0, ',', '.') }}
                             </div>
                         @endif
                     </td>
@@ -104,10 +105,11 @@
                                 {{ $row[1]->manual_name ?? $row[1]->item?->name }}
                             </div>
                             <div class="weight">
-                                {{ number_format($row[1]->weight, 2) }} gr.
+                                {{ number_format($row[1]->item?->weight, 2) }} gr.
                             </div>
                             <div class="price">
-                                Rp {{ number_format($row[1]->item?->price_sell ?? 0, 0, ',', '.') }}
+                                Rp
+                                {{ number_format(($row[1]->item?->price_sell ?? 0) * ($row[1]->item?->weight ?? 0), 0, ',', '.') }}
                             </div>
                         @endif
                     </td>

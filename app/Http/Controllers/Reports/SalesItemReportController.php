@@ -80,8 +80,8 @@ class SalesItemReportController extends Controller
                 )
             );
 
-        $totalWeight = (clone $baseQuery)->sum('weight');
-        $totalAmount = (clone $baseQuery)->sum('subtotal');
+        $totalWeight = (float) (clone $baseQuery)->sum('weight');
+        $totalAmount = (float) (clone $baseQuery)->sum('subtotal');
 
         $items = $baseQuery
             ->with(['sale', 'item'])

@@ -28,7 +28,7 @@ defineProps(['users', 'roles']);
 const { search } = useSearch('master.users.index', route().params.search, ['users']);
 
 const defaultForm = () => ({
-    name: '', email: '', role: ''
+    name: '', email: '', role: '', password: ''
 });
 
 const addForm = useForm(defaultForm());
@@ -40,6 +40,7 @@ const editUserModal = ref(false);
 const editUser = (user: any) => {
     Object.assign(editForm, user);
     editForm.role = user.roles[0].id;
+    editForm.password = ''; // Always empty on edit start
     editUserModal.value = true;
 };
 

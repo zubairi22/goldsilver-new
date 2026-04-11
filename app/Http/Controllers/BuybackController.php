@@ -228,15 +228,15 @@ class BuybackController extends Controller
         }
 
         try {
-
             $pdf = Pdf::loadView('pdf.buyback-print-label', [
                 'items' => collect([$buybackItem])
             ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
 
             if (!$buybackItem->label_printed_at) {
-                $buybackItem->update([
-                    'label_printed_at' => now()
-                ]);
+                BuybackItem::where('id', $buybackItem->id)
+                    ->update([
+                        'label_printed_at' => now()
+                    ]);
             }
 
             return $pdf->stream('label-' . $buybackItem->id . '.pdf');

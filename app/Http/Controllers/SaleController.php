@@ -29,12 +29,13 @@ class SaleController extends Controller
 
         return inertia('sale/Index', [
             'category' => $category,
-            'sales' => Sale::with([
-                'items.item',
-                'payments',
-                'user',
-                'paymentMethod',
-            ])
+            'sales' => Sale::withTrashed()
+                ->with([
+                    'items.item',
+                    'payments',
+                    'user',
+                    'paymentMethod',
+                ])
                 ->filters($filters)
                 ->latest()
                 ->paginate(20)

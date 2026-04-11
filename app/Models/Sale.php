@@ -94,6 +94,10 @@ class Sale extends Model implements HasMedia
 
     public function getStatusLabelAttribute(): string
     {
+        if ($this->trashed()) {
+            return 'Batal';
+        }
+
         return match ($this->status) {
             'paid' => 'Selesai',
             'partial' => 'Sebagian',

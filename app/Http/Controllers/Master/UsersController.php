@@ -25,7 +25,7 @@ class UsersController extends Controller
 
     public function store(UserCreateRequest $request): RedirectResponse
     {
-        $user = User::create($request->validated() + ['password' => 'password']);
+        $user = User::create($request->validated());
         $user->assignRole(Role::findById($request->input('role')));
 
         $this->flashSuccess('Tambah Pengguna Berhasil.');
@@ -34,7 +34,7 @@ class UsersController extends Controller
 
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
-        $user->update($request->only('name', 'email'));
+        $user->update($request->safe()->except('password') + ($request->filled('password') ? ['password' => $request->password] : []));
         $user->syncRoles(Role::findById($request->input('role')));
 
         $this->flashSuccess('Update Pengguna Berhasil.');
