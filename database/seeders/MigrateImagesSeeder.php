@@ -26,6 +26,8 @@ class MigrateImagesSeeder extends Seeder
      * ===================================================== */
     protected function migrateItemImages(): void
     {
+        $this->command->info("=== MIGRATE ITEM IMAGES ===");
+
         Item::whereDoesntHave('media', function ($q) {
             $q->where('collection_name', 'initial');
         })
@@ -37,15 +39,27 @@ class MigrateImagesSeeder extends Seeder
                     $baseUrl = 'https://karina-goldsilver.com/siperak/assets/upload/barang/';
                     $extensions = ['jpg', 'jpeg', 'png'];
 
+                    $found = false;
+
                     foreach ($extensions as $ext) {
                         try {
-                            $resp = Http::timeout(10)->get("{$baseUrl}{$code}.{$ext}");
-                            if (!$resp->successful())
+                            $url = "{$baseUrl}{$code}.{$ext}";
+
+                            $this->command->info("Checking: {$url}");
+
+                            $resp = Http::timeout(10)->get($url);
+
+                            if (!$resp->successful()) {
                                 continue;
+                            }
+
+                            $this->command->info("Found image: {$code}.{$ext}");
 
                             $media = $item->addMediaFromString($resp->body())
                                 ->usingFileName("{$code}.{$ext}")
                                 ->toMediaCollection('initial');
+
+                            $this->command->info("Saved image: Item ID {$item->id}");
 
                             $originalPath = $media->getPath();
                             if (file_exists($originalPath)) {
@@ -53,16 +67,25 @@ class MigrateImagesSeeder extends Seeder
                             }
 
                             Log::info("ITEM IMAGE OK {$item->id}");
+
+                            $found = true;
                             break;
 
                         } catch (\Throwable $e) {
                             Log::warning("ITEM IMAGE ERROR {$code}");
+                            $this->command->error("Error: {$code}.{$ext}");
                         }
+                    }
+
+                    if (!$found) {
+                        $this->command->warn("Image not found: Item ID {$item->id} (code: {$code})");
                     }
                 }
 
-                echo "Processed item image batch...\n";
+                $this->command->info("=== BATCH DONE ===");
             });
+
+        $this->command->info("=== DONE MIGRATE ITEM IMAGES ===");
     }
 
     /* =====================================================
