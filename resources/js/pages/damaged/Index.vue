@@ -86,6 +86,7 @@ function submitRestore() {
                                     <TableRow>
                                         <TableHead>Kode</TableHead>
                                         <TableHead>Nama Produk</TableHead>
+                                        <TableHead>Sumber Buyback</TableHead>
                                         <TableHead class="text-right">Berat (gr)</TableHead>
                                         <TableHead class="text-right">Harga Jual</TableHead>
                                         <TableHead class="text-center">Aksi</TableHead>
@@ -96,6 +97,13 @@ function submitRestore() {
                                     <TableRow v-for="it in items.data" :key="it.id">
                                         <TableCell>{{ it.code }}</TableCell>
                                         <TableCell>{{ it.name }}</TableCell>
+                                        <TableCell>
+                                            <div v-if="it.latest_buyback_item?.buyback" class="flex flex-col">
+                                                <span class="font-semibold text-xs">{{ it.latest_buyback_item.buyback.buyback_no }}</span>
+                                                <span class="text-[10px] text-gray-500">{{ it.latest_buyback_item.buyback.customer || 'Tanpa Pelanggan' }}</span>
+                                            </div>
+                                            <span v-else class="text-[10px] text-gray-400">Manual / Migrasi</span>
+                                        </TableCell>
                                         <TableCell class="text-right">{{ it.weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(it.price_sell) }}</TableCell>
                                         <TableCell class="text-center">
@@ -104,7 +112,7 @@ function submitRestore() {
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="5" class="py-4 text-center"> Tidak ada data </TableCell>
+                                        <TableCell colspan="6" class="py-4 text-center text-gray-500"> Tidak ada data produk rusak ditemukan. </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

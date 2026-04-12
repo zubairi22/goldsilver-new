@@ -18,9 +18,13 @@ class DamagedController extends Controller
             'category' => $category,
             'items' => Item::where('category', $category)
                 ->where('status', 'damaged')
-                ->when($filters['search'], fn ($q, $v) =>
-                $q->where('name', 'like', "%{$v}%")
-                )
+                ->with(['latestBuybackItem.buyback', 'type'])
+                ->when($filters['search'], function ($q, $v) {
+                    $q->where(function ($sub) use ($v) {
+                        $sub->where('name', 'like', "%{$v}%")
+                            ->orWhere('code', 'like', "%{$v}%");
+                    });
+                })
                 ->orderByDesc('id')
                 ->paginate(20)
                 ->withQueryString(),

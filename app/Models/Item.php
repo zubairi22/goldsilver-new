@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\GeneratesQrCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
@@ -117,5 +118,10 @@ class Item extends Model implements HasMedia
         $query->when(($filters['item_type_id'] ?? 'all') !== 'all', fn($q) =>
             $q->where('item_type_id', $filters['item_type_id'])
         );
+    }
+
+    public function latestBuybackItem(): HasOne
+    {
+        return $this->hasOne(BuybackItem::class, 'item_id')->latestOfMany();
     }
 }

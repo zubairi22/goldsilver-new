@@ -260,17 +260,44 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                     <TableRow>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('created_at')">
                                             Tanggal
-                                            <Icon :name="sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown'" class="ml-1 inline-block" />
+                                            <Icon
+                                                :name="
+                                                    sortBy === 'created_at'
+                                                        ? sortDirection === 'asc'
+                                                            ? 'ChevronUp'
+                                                            : 'ChevronDown'
+                                                        : 'ChevronsUpDown'
+                                                "
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead>Nota</TableHead>
                                         <TableHead>Jenis</TableHead>
                                         <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('total_weight')">
                                             Berat
-                                            <Icon :name="sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown'" class="ml-1 inline-block" />
+                                            <Icon
+                                                :name="
+                                                    sortBy === 'total_weight'
+                                                        ? sortDirection === 'asc'
+                                                            ? 'ChevronUp'
+                                                            : 'ChevronDown'
+                                                        : 'ChevronsUpDown'
+                                                "
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('total_price')">
                                             Total
-                                            <Icon :name="sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown'" class="ml-1 inline-block" />
+                                            <Icon
+                                                :name="
+                                                    sortBy === 'total_price'
+                                                        ? sortDirection === 'asc'
+                                                            ? 'ChevronUp'
+                                                            : 'ChevronDown'
+                                                        : 'ChevronsUpDown'
+                                                "
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead class="text-right">Dibayar</TableHead>
                                         <TableHead class="text-right">Sisa</TableHead>

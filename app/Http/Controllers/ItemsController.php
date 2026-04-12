@@ -21,6 +21,8 @@ class ItemsController extends Controller
             'search' => request('search'),
             'status' => request('status'),
             'item_type_id' => request('item_type_id'),
+            'sort' => request('sort', 'code'),
+            'direction' => request('direction', 'desc'),
         ];
 
         $totalWeight = (float) Item::where('category', 'gold')->filters($filters)->sum('weight');
@@ -43,7 +45,7 @@ class ItemsController extends Controller
         $items = Item::with('type')
             ->where('category', 'gold')
             ->filters($filters)
-            ->orderBy('code', 'desc')
+            ->orderBy($filters['sort'], $filters['direction'])
             ->paginate(10)
             ->onEachSide(1)
             ->withQueryString();

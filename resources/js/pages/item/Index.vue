@@ -49,6 +49,18 @@ const { formatRupiah } = useFormat();
 
 const status = ref(filters.status || 'all');
 const item_type_id = ref(filters.item_type_id || 'all');
+const sortBy = ref(filters.sort || 'code');
+const sortDirection = ref(filters.direction || 'desc');
+
+const toggleSort = (column: string) => {
+    if (sortBy.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDirection.value = 'desc';
+    }
+    applyFilters();
+};
 
 const defaultForm = () => ({
     name: '',
@@ -106,6 +118,8 @@ const applyFilters = () => {
     if (search.value) params.search = search.value;
     if (status.value !== 'all') params.status = status.value;
     if (item_type_id.value !== 'all') params.item_type_id = item_type_id.value;
+    params.sort = sortBy.value;
+    params.direction = sortDirection.value;
 
     router.get(
         route('store.items.index', params),
@@ -245,12 +259,27 @@ const printSingleLabel = (id: number) => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Gambar</TableHead>
-                                        <TableHead>Kode</TableHead>
-                                        <TableHead>Nama</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('code')">
+                                            Kode
+                                            <Icon :name="sortBy === 'code' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('name')">
+                                            Nama
+                                            <Icon :name="sortBy === 'name' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                        </TableHead>
                                         <TableHead>Tipe</TableHead>
-                                        <TableHead>Berat</TableHead>
-                                        <TableHead>Harga Beli</TableHead>
-                                        <TableHead>Harga Jual</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('weight')">
+                                            Berat
+                                            <Icon :name="sortBy === 'weight' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('price_buy')">
+                                            Harga Beli
+                                            <Icon :name="sortBy === 'price_buy' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('price_sell')">
+                                            Harga Jual
+                                            <Icon :name="sortBy === 'price_sell' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                        </TableHead>
                                         <TableHead class="text-center">Status</TableHead>
                                         <TableHead class="w-8" />
                                         <TableHead class="w-8" />
