@@ -146,7 +146,7 @@ Route::middleware('auth')->group(function () {
         }
     );
 
-    Route::middleware('role:super-admin')->prefix('master')->name('master.')->group(
+    Route::middleware('role:super-admin|admin gold|admin silver')->prefix('master')->name('master.')->group(
         function () {
             Route::resource('users', UsersController::class);
             Route::resource('menus', MenusController::class);
