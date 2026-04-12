@@ -65,7 +65,9 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
+            'cashiers' => User::role(['super-admin', "cashier {$category}"])
+                ->select('id', 'name', 'qr_token')
+                ->get(),
         ]);
     }
 
@@ -97,7 +99,7 @@ class SaleController extends Controller
         if ($data['is_draft'] ?? false) {
             $cashier = User::find($data['cashier_id']);
         } else {
-            $cashier = $this->verifyAuth($data);
+            $cashier = $this->verifyAuth($data, $category);
         }
 
         if (!$cashier) {
@@ -311,7 +313,9 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::byUser()->select('id', 'name', 'qr_token')->get(),
+            'cashiers' => User::role(['super-admin', "cashier {$category}"])
+                ->select('id', 'name', 'qr_token')
+                ->get(),
         ]);
     }
 
@@ -335,7 +339,7 @@ class SaleController extends Controller
             'qr_token' => 'nullable|string',
         ]);
 
-        $cashier = $this->verifyAuth($data);
+        $cashier = $this->verifyAuth($data, $category);
 
         if (!$cashier) {
             $this->flashError('Password atau QR admin tidak valid.');
@@ -423,7 +427,7 @@ class SaleController extends Controller
             'qr_token' => 'nullable|string',
         ]);
 
-        $user = $this->verifyAuth($data);
+        $user = $this->verifyAuth($data, $category);
 
         if (!$user || !$this->verifyAdminRole($user)) {
             $this->flashError('Hanya admin yang boleh menghapus penjualan.');
@@ -450,9 +454,13 @@ class SaleController extends Controller
         });
     }
 
-    private function verifyAuth(array $data)
+    private function verifyAuth(array $data, string $category)
     {
         $user = User::findOrFail($data['cashier_id']);
+
+        if (!$user->hasRole(['super-admin', "cashier {$category}"])) {
+            return null;
+        }
 
         $validByPassword = !empty($data['password'])
             && Hash::check($data['password'], $user->password);

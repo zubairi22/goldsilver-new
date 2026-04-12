@@ -65,6 +65,16 @@ const handleDeleteRole = (roleId: number) => {
     });
 };
 
+const groupPermissions = (permissions: any[]) => {
+    const groups: Record<string, any[]> = {};
+    permissions.forEach((p) => {
+        const menuTitle = p.menus?.[0]?.parent?.title || p.menus?.[0]?.title || 'Lainnya';
+        if (!groups[menuTitle]) groups[menuTitle] = [];
+        groups[menuTitle].push(p);
+    });
+    return groups;
+};
+
 </script>
 
 
@@ -97,10 +107,26 @@ const handleDeleteRole = (roleId: number) => {
                                     <TableRow v-for="role in roles.data" :key="role.id">
                                         <TableCell>{{ role.name }}</TableCell>
                                         <TableCell>{{ role.guard_name }}</TableCell>
-                                        <TableCell class="flex flex-wrap px-4 py-4">
-                                            <Badge class="m-1" v-for="(permission) in role.permissions" :key="permission.id">
-                                                {{ permission.name }}
-                                            </Badge>
+                                        <TableCell class="p-4">
+                                            <div class="flex flex-wrap gap-4">
+                                                <div
+                                                    v-for="(group, groupTitle) in groupPermissions(role.permissions)"
+                                                    :key="groupTitle"
+                                                    class="flex flex-col gap-1"
+                                                >
+                                                    <span class="text-[10px] font-bold uppercase text-gray-400">{{ groupTitle }}</span>
+                                                    <div class="flex flex-wrap gap-1">
+                                                        <Badge
+                                                            variant="secondary"
+                                                            class="text-[10px]"
+                                                            v-for="permission in group"
+                                                            :key="permission.id"
+                                                        >
+                                                            {{ permission.name }}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </TableCell>
                                         <TableCell class="px-1">
                                             <EditButton @click="editRole(role)" />

@@ -259,10 +259,6 @@ const printSingleLabel = (id: number) => {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Gambar</TableHead>
-                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('code')">
-                                            Kode
-                                            <Icon :name="sortBy === 'code' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
-                                        </TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('name')">
                                             Nama
                                             <Icon :name="sortBy === 'name' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
@@ -299,8 +295,7 @@ const printSingleLabel = (id: number) => {
                                             <span v-else class="text-sm text-gray-400">Tidak ada</span>
                                         </TableCell>
 
-                                        <TableCell>{{ item.code }}</TableCell>
-                                        <TableCell>{{ item.name }}</TableCell>
+                                         <TableCell>{{ item.name }}</TableCell>
                                         <TableCell>{{ item.type?.name || '-' }}</TableCell>
                                         <TableCell>{{ item.weight }} gr</TableCell>
                                         <TableCell>{{ formatRupiah(item.price_buy) }}</TableCell>
@@ -326,7 +321,7 @@ const printSingleLabel = (id: number) => {
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="10" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
+                                        <TableCell colspan="9" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

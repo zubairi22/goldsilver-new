@@ -23,6 +23,11 @@ class Menu extends Model
         return $this->hasMany(Menu::class, 'parent_id', 'id');
     }
 
+    public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Menu::class, 'parent_id', 'id');
+    }
+
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class, 'menu_has_permissions');

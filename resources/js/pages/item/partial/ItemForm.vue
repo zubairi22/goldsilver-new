@@ -4,16 +4,11 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import Multiselect from '@vueform/multiselect';
 import CurrencyInput from '@/components/CurrencyInput.vue';
+import CameraUploader from '@/components/CameraUploader.vue';
 
 defineProps(['itemTypes']);
 
 const form = defineModel<any>('form');
-
-const handleImageChange = (e: Event) => {
-    const target = e.target as HTMLInputElement | null;
-    if (!target?.files?.length) return;
-    form.value.image = target.files[0];
-};
 </script>
 
 <template>
@@ -70,15 +65,9 @@ const handleImageChange = (e: Event) => {
         </div>
 
         <div>
-            <Label for="image">Foto Item</Label>
+            <Label>Foto Item</Label>
 
-            <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                capture="environment"
-                @change="handleImageChange"
-            />
+            <CameraUploader v-model="form.image" />
 
             <InputError class="mt-1" :message="form.errors.image" />
         </div>

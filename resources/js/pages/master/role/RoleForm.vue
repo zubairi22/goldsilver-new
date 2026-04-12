@@ -54,6 +54,7 @@ defineProps<{
                     :options="permissions"
                     mode="tags"
                     searchable
+                    groups
                 />
                 <InputError class="mt-2" :message="form.errors.permissions" />
             </div>
