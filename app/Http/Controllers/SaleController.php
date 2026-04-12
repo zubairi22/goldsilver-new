@@ -65,7 +65,7 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::role(['super-admin', "cashier {$category}"])
+            'cashiers' => User::role(auth()->user()->hasRole('super-admin') ? ['super-admin', "cashier {$category}"] : ["cashier {$category}"])
                 ->select('id', 'name', 'qr_token')
                 ->get(),
         ]);
@@ -313,7 +313,7 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::role(['super-admin', "cashier {$category}"])
+            'cashiers' => User::role(auth()->user()->hasRole('super-admin') ? ['super-admin', "cashier {$category}"] : ["cashier {$category}"])
                 ->select('id', 'name', 'qr_token')
                 ->get(),
         ]);
