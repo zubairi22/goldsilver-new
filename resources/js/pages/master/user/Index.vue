@@ -23,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Pengguna', href: '#' },
 ];
 
-defineProps(['users', 'roles']);
+defineProps(['users', 'roles', 'can']);
 
 const { search } = useSearch('master.users.index', route().params.search, ['users']);
 
@@ -40,7 +40,7 @@ const editUserModal = ref(false);
 const editUser = (user: any) => {
     Object.assign(editForm, user);
     editForm.role = user.roles[0].id;
-    editForm.password = ''; // Always empty on edit start
+    editForm.password = '';
     editUserModal.value = true;
 };
 
@@ -134,7 +134,7 @@ const handleDeleteUser = (userId: number) => {
 
                                         <TableCell class="px-1">
                                             <DeleteButton
-                                                v-show="user.roles[0].name !== 'super-admin'"
+                                                v-show="can.delete && user.roles[0].name !== 'super-admin'"
                                                 @confirm="handleDeleteUser(user.id)"
                                             />
                                         </TableCell>

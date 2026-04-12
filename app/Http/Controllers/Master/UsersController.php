@@ -17,9 +17,25 @@ class UsersController extends Controller
 {
     public function index(): Response
     {
+        $user = auth()->user();
+        $query = User::filter(Request::only('search'))->with('roles');
+
+        if ($user->hasRole('admin gold')) {
+            $query->role('cashier gold');
+            $roles = Role::whereIn('name', ['cashier gold'])->get();
+        } elseif ($user->hasRole('admin silver')) {
+            $query->role('cashier silver');
+            $roles = Role::whereIn('name', ['cashier silver'])->get();
+        } else {
+            $roles = Role::all();
+        }
+
         return Inertia::render('master/user/Index', [
-            'users' => User::filter(Request::only('search'))->with('roles')->paginate(),
-            'roles' => Role::all()
+            'users' => $query->paginate(),
+            'roles' => $roles,
+            'can' => [
+                'delete' => $user->hasRole('super-admin'),
+            ]
         ]);
     }
 
@@ -43,6 +59,12 @@ class UsersController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        if (!auth()->user()->hasRole('super-admin')) {
+            $this->flashError('Anda tidak memiliki akses untuk menghapus pengguna.');
+
+            return back();
+        }
+
         $user->delete();
 
         $this->flashSuccess('Hapus Pengguna Berhasil.');
