@@ -20,7 +20,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { Printer } from 'lucide-vue-next';
+import { Eye, Printer } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -76,14 +76,15 @@ const submitQC = () => {
     );
 };
 
-const printLabel = (item: any) => {
-    window.open(
-        route('buyback.item.print-label', {
-            category: props.category,
-            buybackItem: item.id,
-        }),
-        '_blank',
-    );
+const printLabel = (item: any, preview = false) => {
+    const params: any = {
+        category: props.category,
+        buybackItem: item.id,
+    };
+
+    if (preview) params.preview = 1;
+
+    window.open(route('buyback.item.print-label', params), '_blank');
 };
 
 const labelModal = ref(false);
@@ -98,17 +99,15 @@ const printBulkLabel = (preview = false) => {
 
     const [start, end] = labelDateRange.value;
 
-    let url = route('buyback.bulk.print-label', {
+    const params: any = {
         category: props.category,
         start_date: start,
         end_date: end,
-    });
+    };
 
-    if (preview) {
-        url += '&preview=1';
-    }
+    if (preview) params.preview = 1;
 
-    window.open(url, '_blank');
+    window.open(route('buyback.bulk.print-label', params), '_blank');
 
     labelModal.value = false;
 };
@@ -267,14 +266,27 @@ watch([payment_type, date, qc_status], applyFilters);
                                                                     <Badge v-if="category === 'silver'"> Selesai </Badge>
 
                                                                     <template v-else>
-                                                                        <Button
-                                                                            variant="info"
+                                                                        <div
                                                                             v-if="it.condition === 'good'"
-                                                                            size="sm"
-                                                                            @click="printLabel(it)"
+                                                                            class="flex items-center justify-center gap-1"
                                                                         >
-                                                                            <Printer />
-                                                                        </Button>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                @click="printLabel(it, true)"
+                                                                                title="Preview Label"
+                                                                            >
+                                                                                <Eye class="h-4 w-4" />
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="info"
+                                                                                size="sm"
+                                                                                @click="printLabel(it)"
+                                                                                title="Cetak Label"
+                                                                            >
+                                                                                <Printer class="h-4 w-4" />
+                                                                            </Button>
+                                                                        </div>
 
                                                                         <Badge v-else-if="it.condition === 'broken'"> Rusak </Badge>
 

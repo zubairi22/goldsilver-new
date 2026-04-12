@@ -20,20 +20,20 @@ class Buyback extends Model
 
     public static function generateBuybackNumber(): string
     {
-        $prefix = 'BBY-'.now()->format('Ymd').'-';
+        $prefix = 'BBY-' . now()->format('Ymd') . '-';
 
-        $lastBuyback = self::where('buyback_no', 'like', $prefix.'%')
+        $lastBuyback = self::where('buyback_no', 'like', $prefix . '%')
             ->orderByDesc('buyback_no')
             ->first();
 
-        if (! $lastBuyback) {
-            return $prefix.'001';
+        if (!$lastBuyback) {
+            return $prefix . '001';
         }
 
         $lastNumber = (int) substr($lastBuyback->buyback_no, -3);
         $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
 
-        return $prefix.$newNumber;
+        return $prefix . $newNumber;
     }
 
     public function sale()
@@ -55,9 +55,17 @@ class Buyback extends Model
     {
         $query->whereHas('items', function ($item) {
             $item->where(function ($q) {
-                $q->whereNull('label_printed_at')
-                    ->orWhereNull('condition');
-            }
+                $q->whereNull('condition')
+                    ->orWhere('condition', 'good');
+            });
+        });
+
+        $query->whereHas('items', function ($item) {
+            $item->where(
+                function ($q) {
+                    $q->whereNull('label_printed_at')
+                        ->orWhereNull('condition');
+                }
             );
         });
 
@@ -87,13 +95,15 @@ class Buyback extends Model
 
         $query->when(
             empty($filters['search']) && ($filters['date'] ?? null),
-            fn ($q) => $q->whereDate('created_at', $filters['date'])
+            fn($q) => $q->whereDate('created_at', $filters['date'])
         );
 
         $query->when(($filters['qc_status'] ?? 'all') === 'pending', function ($q) {
-            $q->whereHas('items', function ($item) {
-                $item->whereNull('condition');
-            }
+            $q->whereHas(
+                'items',
+                function ($item) {
+                    $item->whereNull('condition');
+                }
             );
         });
     }
