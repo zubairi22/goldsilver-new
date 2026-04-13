@@ -40,7 +40,7 @@ class SalesEmployeeReportController extends Controller
             ->when(
                 $filters['category'],
                 fn($q) =>
-                $q->where('category', $filters['category'])
+                $q->where('sale_type', $filters['category'])
             )
             ->when(
                 $filters['search'],
@@ -48,18 +48,24 @@ class SalesEmployeeReportController extends Controller
                 $q->where('invoice_no', 'like', "%{$filters['search']}%")
             );
 
-        $totalWeight = (float) $baseQuery->clone()->sum('total_weight');
-        $totalAmount = (int) $baseQuery->clone()->sum('total_price');
+        $totalWeightWholesale = (float) $baseQuery->clone()->where('sale_type', 'wholesale')->sum('total_weight');
+        $totalWeightRetail = (float) $baseQuery->clone()->where('sale_type', 'retail')->sum('total_weight');
         $totalInvoice = (int) $baseQuery->clone()->count();
 
         $sales = $baseQuery
-            ->selectRaw('user_id, SUM(total_weight) as total_weight, SUM(total_price) as total_price, COUNT(*) as total_count')
+            ->selectRaw('
+                user_id, 
+                SUM(CASE WHEN sale_type = "wholesale" THEN total_weight ELSE 0 END) as weight_wholesale,
+                SUM(CASE WHEN sale_type = "retail" THEN total_weight ELSE 0 END) as weight_retail,
+                COUNT(*) as total_count
+            ')
             ->groupBy('user_id')
+            ->with('user')
             ->get()
             ->map(fn($row) => [
                 'employee' => $row->user?->name,
-                'total_weight' => (float) $row->total_weight,
-                'total_price' => (float) $row->total_price,
+                'weight_wholesale' => (float) $row->weight_wholesale,
+                'weight_retail' => (float) $row->weight_retail,
                 'total_count' => (int) $row->total_count,
             ]);
 
@@ -67,8 +73,8 @@ class SalesEmployeeReportController extends Controller
             'sales' => $sales,
             'filters' => $filters,
             'employees' => User::role(['cashier gold', 'cashier silver'])->get(['id', 'name']),
-            'totalWeight' => $totalWeight,
-            'totalAmount' => $totalAmount,
+            'totalWeightWholesale' => $totalWeightWholesale,
+            'totalWeightRetail' => $totalWeightRetail,
             'totalInvoice' => $totalInvoice,
         ]);
     }
