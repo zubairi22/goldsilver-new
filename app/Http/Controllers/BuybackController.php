@@ -18,7 +18,8 @@ class BuybackController extends Controller
         $filters = [
             'search' => request('search'),
             'payment_type' => request('payment_type'),
-            'date' => request('date', now()->toDateString()),
+            'start' => request('start', now()->toDateString()),
+            'end' => request('end', now()->toDateString()),
             'qc_status' => request('qc_status'),
             'category' => $category,
             'sort' => request('sort', 'created_at'),

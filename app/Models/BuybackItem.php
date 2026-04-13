@@ -100,9 +100,10 @@ class BuybackItem extends Model implements HasMedia
             });
         });
 
-        $query->when($filters['date'] ?? null, function ($q, $date) {
-            $q->whereHas('buyback', function ($bb) use ($date) {
-                $bb->whereDate('created_at', $date);
+        $query->when($filters['start'] ?? null, function ($q, $start) use ($filters) {
+            $end = $filters['end'] ?? $start;
+            $q->whereHas('buyback', function ($bb) use ($start, $end) {
+                $bb->whereBetween('created_at', [$start . ' 00:00:00', $end . ' 23:59:59']);
             });
         });
 

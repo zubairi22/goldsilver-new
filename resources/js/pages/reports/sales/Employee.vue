@@ -80,17 +80,15 @@ watch([user_id, category, date], applyFilters)
 const exportExcel = () => {
     const rows = sales.map((row: any, index: number) => ({
         No: index + 1,
-        'Nomor Nota': row.invoice,
-        'Tanggal Penjualan': row.date,
         'Nama Karyawan': row.employee,
-        Kategori: row.category,
-        'Total Berat': row.total_weight,
+        'Jumlah Transaksi': row.total_count,
+        'Total Berat (gr)': row.total_weight,
         Nominal: row.total_price,
     }))
 
     const worksheet = XLSX.utils.json_to_sheet(rows)
     XLSX.utils.sheet_add_aoa(worksheet, [
-        ['TOTAL', '', '', '', '', totalWeight, totalAmount]
+        ['TOTAL', '', totalInvoice, totalWeight, totalAmount]
     ], { origin: -1 })
 
     const workbook = XLSX.utils.book_new()
@@ -107,19 +105,17 @@ const exportPdf = (action: 'download' | 'stream') => {
     
     const tableData = sales.map((row: any, index: number) => [
         index + 1,
-        row.invoice,
-        row.date,
         row.employee,
-        row.category,
+        row.total_count,
         row.total_weight,
         formatRupiah(row.total_price)
     ])
 
     autoTable(doc, {
         startY: 20,
-        head: [['No', 'Nomor Nota', 'Tanggal', 'Karyawan', 'Kategori', 'Berat', 'Nominal']],
+        head: [['No', 'Karyawan', 'Jumlah Transaksi', 'Total Berat', 'Total Nominal']],
         body: tableData,
-        foot: [['', 'TOTAL', '', '', '', totalWeight.toFixed(2), formatRupiah(totalAmount)]],
+        foot: [['', 'TOTAL', totalInvoice, totalWeight.toFixed(2), formatRupiah(totalAmount)]],
         showFoot: 'lastPage',
         theme: 'striped',
         headStyles: { fillColor: [30, 41, 59] },
@@ -261,28 +257,22 @@ const exportPdf = (action: 'download' | 'stream') => {
                             <Table>
                                 <TableHeader class="sticky top-0 bg-background z-10">
                                     <TableRow>
-                                        <TableHead>Nota</TableHead>
-                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead class="w-12">No</TableHead>
                                         <TableHead>Karyawan</TableHead>
-                                        <TableHead>Jenis</TableHead>
-                                        <TableHead>Kategori</TableHead>
+                                        <TableHead class="text-center">Jumlah Transaksi</TableHead>
                                         <TableHead class="text-right">Total Berat (gr)</TableHead>
-                                        <TableHead class="text-right">Nominal</TableHead>
+                                        <TableHead class="text-right">Total Nominal</TableHead>
                                     </TableRow>
                                 </TableHeader>
 
                                 <TableBody>
                                     <TableRow
                                         v-for="(row, index) in sales"
-                                        :key="row.invoice"
+                                        :key="index"
                                     >
-                                        <TableCell class="font-medium">
-                                            {{ row.invoice }}
-                                        </TableCell>
-                                        <TableCell>{{ row.date }}</TableCell>
-                                        <TableCell>{{ row.employee }}</TableCell>
-                                        <TableCell>{{ row.sale_type }}</TableCell>
-                                        <TableCell>{{ row.category }}</TableCell>
+                                        <TableCell>{{ index + 1 }}</TableCell>
+                                        <TableCell class="font-medium">{{ row.employee }}</TableCell>
+                                        <TableCell class="text-center">{{ row.total_count }}</TableCell>
                                         <TableCell class="text-right">
                                             {{ row.total_weight }}
                                         </TableCell>
@@ -292,13 +282,14 @@ const exportPdf = (action: 'download' | 'stream') => {
                                     </TableRow>
 
                                     <TableRow v-if="sales.length" class="bg-muted/50 font-bold">
-                                        <TableCell colspan="5" class="text-right">TOTAL</TableCell>
+                                        <TableCell colspan="2" class="text-right">TOTAL</TableCell>
+                                        <TableCell class="text-center">{{ totalInvoice }}</TableCell>
                                         <TableCell class="text-right">{{ totalWeight.toFixed(2) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(totalAmount) }}</TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="!sales.length">
-                                        <TableCell colspan="7" class="text-center py-4">
+                                        <TableCell colspan="5" class="text-center py-4">
                                             Tidak ada data penjualan.
                                         </TableCell>
                                     </TableRow>

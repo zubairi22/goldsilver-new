@@ -44,7 +44,11 @@ useBarcodeScanner((code: string) => {
 });
 
 const payment_type = ref(props.filters.payment_type ?? 'all');
-const date = ref(props.filters.date ?? null);
+const date = ref(
+    props.filters.start && props.filters.end
+        ? [props.filters.start, props.filters.end]
+        : [props.filters.start || '', props.filters.end || '']
+);
 const qc_status = ref(props.filters.qc_status ?? 'all');
 const sortBy = ref(props.filters.sort || 'created_at');
 const sortDirection = ref(props.filters.direction || 'desc');
@@ -131,7 +135,10 @@ const applyFilters = () => {
     if (search.value) params.search = search.value;
     if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value;
     if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value;
-    if (date.value) params.date = date.value;
+    if (date.value && date.value[0] && date.value[1]) {
+        params.start = date.value[0];
+        params.end = date.value[1];
+    }
     params.sort = sortBy.value;
     params.direction = sortDirection.value;
 
@@ -201,10 +208,11 @@ watch([payment_type, date, qc_status], applyFilters);
                             <div class="w-full sm:w-auto lg:w-80">
                                 <VueDatePicker
                                     v-model="date"
+                                    range
                                     model-type="yyyy-MM-dd"
                                     :enable-time-picker="false"
                                     auto-apply
-                                    placeholder="Pilih tanggal"
+                                    placeholder="Pilih range tanggal"
                                 />
                             </div>
                         </div>
