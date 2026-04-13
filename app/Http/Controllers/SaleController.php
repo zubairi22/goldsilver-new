@@ -466,7 +466,7 @@ class SaleController extends Controller
             && Hash::check($data['password'], $user->password);
 
         $validByQr = !empty($data['qr_token'])
-            && $user->qr_token === $data['qr_token'];
+            && trim($user->qr_token) === trim($data['qr_token']);
 
         if (!$validByPassword && !$validByQr) {
             return null;
