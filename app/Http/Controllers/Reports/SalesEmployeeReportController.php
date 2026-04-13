@@ -21,25 +21,31 @@ class SalesEmployeeReportController extends Controller
             : now()->endOfDay();
 
         $filters = [
-            'search'   => $request->search,
-            'user_id'  => $request->user_id,
+            'search' => $request->search,
+            'user_id' => $request->user_id,
             'category' => $request->category,
-            'start'    => $start->toDateString(),
-            'end'      => $end->toDateString(),
+            'start' => $start->toDateString(),
+            'end' => $end->toDateString(),
         ];
 
         $baseQuery = Sale::query()
             ->with('user')
             ->whereBetween('created_at', [$start, $end])
-            ->whereHas('user', fn ($q) => $q->role('cashier'))
-            ->when($filters['user_id'], fn ($q) =>
-            $q->where('user_id', $filters['user_id'])
+            ->whereHas('user', fn($q) => $q->role(['cashier gold', 'cashier silver']))
+            ->when(
+                $filters['user_id'],
+                fn($q) =>
+                $q->where('user_id', $filters['user_id'])
             )
-            ->when($filters['category'], fn ($q) =>
-            $q->where('category', $filters['category'])
+            ->when(
+                $filters['category'],
+                fn($q) =>
+                $q->where('category', $filters['category'])
             )
-            ->when($filters['search'], fn ($q) =>
-            $q->where('invoice_no', 'like', "%{$filters['search']}%")
+            ->when(
+                $filters['search'],
+                fn($q) =>
+                $q->where('invoice_no', 'like', "%{$filters['search']}%")
             );
 
         $totalWeight = (float) $baseQuery->clone()->sum('total_weight');
@@ -49,22 +55,22 @@ class SalesEmployeeReportController extends Controller
         $sales = $baseQuery
             ->orderByDesc('invoice_no')
             ->get()
-            ->map(fn ($sale) => [
-                'invoice'      => $sale->invoice_no,
-                'date'         => $sale->created_at->format('d-m-Y'),
-                'employee'     => $sale->user?->name,
-                'sale_type'    => $sale->sale_type === 'wholesale' ? 'Grosir' : 'Retail',
-                'category'     => $sale->category === 'gold' ? 'Emas' : 'Perak',
+            ->map(fn($sale) => [
+                'invoice' => $sale->invoice_no,
+                'date' => $sale->created_at->format('d-m-Y'),
+                'employee' => $sale->user?->name,
+                'sale_type' => $sale->sale_type === 'wholesale' ? 'Grosir' : 'Retail',
+                'category' => $sale->category === 'gold' ? 'Emas' : 'Perak',
                 'total_weight' => $sale->total_weight,
-                'total_price'  => $sale->total_price,
+                'total_price' => $sale->total_price,
             ]);
 
         return inertia('reports/sales/Employee', [
-            'sales'        => $sales,
-            'filters'      => $filters,
-            'employees'    => User::role('cashier')->get(['id', 'name']),
-            'totalWeight'  => $totalWeight,
-            'totalAmount'  => $totalAmount,
+            'sales' => $sales,
+            'filters' => $filters,
+            'employees' => User::role(['cashier gold', 'cashier silver'])->get(['id', 'name']),
+            'totalWeight' => $totalWeight,
+            'totalAmount' => $totalAmount,
             'totalInvoice' => $totalInvoice,
         ]);
     }
