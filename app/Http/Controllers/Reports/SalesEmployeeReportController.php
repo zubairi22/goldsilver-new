@@ -53,16 +53,14 @@ class SalesEmployeeReportController extends Controller
         $totalInvoice = (int) $baseQuery->clone()->count();
 
         $sales = $baseQuery
-            ->orderByDesc('invoice_no')
+            ->selectRaw('user_id, SUM(total_weight) as total_weight, SUM(total_price) as total_price, COUNT(*) as total_count')
+            ->groupBy('user_id')
             ->get()
-            ->map(fn($sale) => [
-                'invoice' => $sale->invoice_no,
-                'date' => $sale->created_at->format('d-m-Y'),
-                'employee' => $sale->user?->name,
-                'sale_type' => $sale->sale_type === 'wholesale' ? 'Grosir' : 'Retail',
-                'category' => $sale->category === 'gold' ? 'Emas' : 'Perak',
-                'total_weight' => $sale->total_weight,
-                'total_price' => $sale->total_price,
+            ->map(fn($row) => [
+                'employee' => $row->user?->name,
+                'total_weight' => (float) $row->total_weight,
+                'total_price' => (float) $row->total_price,
+                'total_count' => (int) $row->total_count,
             ]);
 
         return inertia('reports/sales/Employee', [

@@ -117,7 +117,15 @@ class Sale extends Model implements HasMedia
                     ->orWhereHas(
                         'user',
                         fn($u) => $u->where('name', 'like', "%{$search}%")
-                    );
+                    )
+                    ->orWhereHas('items', function ($qi) use ($search) {
+                        $qi->where('manual_name', 'like', "%{$search}%")
+                            ->orWhere('weight', 'like', "%{$search}%")
+                            ->orWhereHas(
+                                'item',
+                                fn($qItem) => $qItem->where('name', 'like', "%{$search}%")
+                            );
+                    });
             });
         });
 
