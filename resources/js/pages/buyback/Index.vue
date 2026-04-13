@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import Heading from '@/components/Heading.vue';
+import Icon from '@/components/Icon.vue';
 import ImageModal from '@/components/ImageModal.vue';
 import PageNav from '@/components/PageNav.vue';
 import SearchInput from '@/components/SearchInput.vue';
@@ -45,6 +46,8 @@ useBarcodeScanner((code: string) => {
 const payment_type = ref(props.filters.payment_type ?? 'all');
 const date = ref(props.filters.date ?? null);
 const qc_status = ref(props.filters.qc_status ?? 'all');
+const sortBy = ref(props.filters.sort || 'created_at');
+const sortDirection = ref(props.filters.direction || 'desc');
 
 const qcModal = ref(false);
 const qcItem = ref<any>(null);
@@ -112,6 +115,16 @@ const printBulkLabel = (preview = false) => {
     labelModal.value = false;
 };
 
+const toggleSort = (column: string) => {
+    if (sortBy.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDirection.value = 'desc';
+    }
+    applyFilters();
+};
+
 const applyFilters = () => {
     const params: Record<string, any> = {};
 
@@ -119,6 +132,8 @@ const applyFilters = () => {
     if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value;
     if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value;
     if (date.value) params.date = date.value;
+    params.sort = sortBy.value;
+    params.direction = sortDirection.value;
 
     router.get(route('buyback.index', { category: props.category }), params, {
         preserveState: true,
@@ -203,100 +218,75 @@ watch([payment_type, date, qc_status], applyFilters);
 
                         <!-- TABLE -->
                         <div class="overflow-x-auto">
-                            <Table class="w-full">
+                            <Table class="w-full text-nowrap">
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>No Buyback</TableHead>
-                                        <TableHead>Pelanggan</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="toggleSort('created_at')">
+                                            No Buyback
+                                            <Icon
+                                                :name="sortBy === 'created_at' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead>Gambar</TableHead>
+                                        <TableHead>Nama Barang</TableHead>
                                         <TableHead>Kasir</TableHead>
-                                        <TableHead class="text-right">Total Berat</TableHead>
-                                        <TableHead class="text-right">Total Harga</TableHead>
-                                        <TableHead class="text-center">Pembayaran</TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('weight')">
+                                            Berat
+                                            <Icon
+                                                :name="sortBy === 'weight' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('price')">
+                                            Harga/g
+                                            <Icon
+                                                :name="sortBy === 'price' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('subtotal')">
+                                            Subtotal
+                                            <Icon
+                                                :name="sortBy === 'subtotal' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="text-center">Aksi</TableHead>
                                     </TableRow>
                                 </TableHeader>
-
                                 <TableBody>
-                                    <template v-for="bb in buybacks.data" :key="bb.id">
+                                    <template v-for="it in buybacks.data" :key="it.id">
                                         <TableRow>
                                             <TableCell>
-                                                <div class="font-semibold">
-                                                    {{ bb.buyback_no }}
-                                                </div>
-                                                <div class="text-xs text-muted-foreground">
-                                                    {{ formatDate(bb.created_at, 'dd MMM yyyy HH:mm') }}
-                                                </div>
+                                                <div class="font-semibold">{{ it.buyback?.buyback_no }}</div>
+                                                <div class="text-xs text-muted-foreground">{{ formatDate(it.buyback?.created_at, 'dd MMM yyyy HH:mm') }}</div>
+                                                <div class="text-xs text-muted-foreground italic">{{ it.buyback?.customer || '-' }}</div>
                                             </TableCell>
-                                            <TableCell>{{ bb.customer || '-' }}</TableCell>
-                                            <TableCell>{{ bb.user?.name || '-' }}</TableCell>
-                                            <TableCell class="text-right">{{ bb.total_weight }}</TableCell>
-                                            <TableCell class="text-right">{{ formatRupiah(bb.total_price) }}</TableCell>
-                                            <TableCell class="text-center capitalize">
-                                                <Badge> {{ bb.payment_type }} </Badge>
+                                            <TableCell>
+                                                <ImageModal v-if="it.image" :src="it.image" trigger />
                                             </TableCell>
-                                        </TableRow>
-
-                                        <TableRow class="bg-muted/30">
-                                            <TableCell colspan="7">
-                                                <div class="rounded border bg-white p-4">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                <TableHead>Gambar</TableHead>
-                                                                <TableHead>Nama</TableHead>
-                                                                <TableHead class="text-right">Subtotal</TableHead>
-                                                                <TableHead class="text-center">Aksi</TableHead>
-                                                            </TableRow>
-                                                        </TableHeader>
-
-                                                        <TableBody>
-                                                            <TableRow v-for="it in bb.items" :key="it.id">
-                                                                <TableCell>
-                                                                    <ImageModal v-if="it.image" :src="it.image" trigger />
-                                                                </TableCell>
-                                                                <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
-                                                                <TableCell class="text-right">
-                                                                    <div class="font-semibold">
-                                                                        {{ formatRupiah(it.subtotal) }}
-                                                                    </div>
-                                                                    <div class="text-xs text-muted-foreground">
-                                                                        {{ it.weight }} × {{ formatRupiah(it.price) }}
-                                                                    </div>
-                                                                </TableCell>
-                                                                <TableCell class="text-center">
-                                                                    <Badge v-if="category === 'silver'"> Selesai </Badge>
-
-                                                                    <template v-else>
-                                                                        <div
-                                                                            v-if="it.condition === 'good'"
-                                                                            class="flex items-center justify-center gap-1"
-                                                                        >
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                size="sm"
-                                                                                @click="printLabel(it, true)"
-                                                                                title="Preview Label"
-                                                                            >
-                                                                                <Eye class="h-4 w-4" />
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="info"
-                                                                                size="sm"
-                                                                                @click="printLabel(it)"
-                                                                                title="Cetak Label"
-                                                                            >
-                                                                                <Printer class="h-4 w-4" />
-                                                                            </Button>
-                                                                        </div>
-
-                                                                        <Badge v-else-if="it.condition === 'broken'"> Rusak </Badge>
-
-                                                                        <Button v-else @click="openQC(it)"> Proses QC </Button>
-                                                                    </template>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        </TableBody>
-                                                    </Table>
+                                            <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
+                                            <TableCell>{{ it.buyback?.user?.name || '-' }}</TableCell>
+                                            <TableCell class="text-right">{{ it.weight }} g</TableCell>
+                                            <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
+                                            <TableCell class="text-right font-semibold">{{ formatRupiah(it.subtotal) }}</TableCell>
+                                            <TableCell class="text-center">
+                                                <div v-if="category === 'silver'" class="flex items-center justify-center gap-2">
+                                                    <Badge> Selesai </Badge>
                                                 </div>
+                                                <template v-else>
+                                                    <div v-if="it.condition === 'good'" class="flex items-center justify-center gap-1">
+                                                        <Button variant="outline" size="sm" @click="printLabel(it, true)" title="Preview Label">
+                                                            <Eye class="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="info" size="sm" @click="printLabel(it)" title="Cetak Label">
+                                                            <Printer class="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <Badge v-else-if="it.condition === 'broken'"> Rusak </Badge>
+                                                    <Button v-else size="sm" @click="openQC(it)"> Proses QC </Button>
+                                                </template>
                                             </TableCell>
                                         </TableRow>
                                     </template>

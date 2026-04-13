@@ -21,13 +21,19 @@ class BuybackController extends Controller
             'date' => request('date', now()->toDateString()),
             'qc_status' => request('qc_status'),
             'category' => $category,
+            'sort' => request('sort', 'created_at'),
+            'direction' => request('direction', 'desc'),
         ];
 
         return inertia('buyback/Index', [
             'category' => $category,
-            'buybacks' => Buyback::with(['user', 'items.item'])
+            'buybacks' => BuybackItem::with(['buyback.user', 'item'])
                 ->filters($filters)
-                ->latest()
+                ->when(in_array($filters['sort'], ['weight', 'price', 'subtotal', 'created_at']), function ($q) use ($filters) {
+                    $q->orderBy($filters['sort'], $filters['direction']);
+                }, function ($q) {
+                    $q->latest();
+                })
                 ->paginate(20)
                 ->onEachSide(2)
                 ->withQueryString(),

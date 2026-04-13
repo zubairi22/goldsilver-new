@@ -79,4 +79,41 @@ class BuybackItem extends Model implements HasMedia
             ->quality(80)
             ->nonQueued();
     }
+    public function scopeFilters($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('manual_name', 'like', "%{$search}%")
+                    ->orWhereHas('item', function ($i) use ($search) {
+                        $i->where('name', 'like', "%{$search}%");
+                    })
+                ->orWhereHas('buyback', function ($bb) use ($search) {
+                    $bb->where('buyback_no', 'like', "%{$search}%")
+                        ->orWhere('customer', 'like', "%{$search}%");
+                });
+            });
+        });
+
+        $query->when(($filters['category'] ?? 'all') !== 'all', function ($q) use ($filters) {
+            $q->whereHas('buyback', function ($bb) use ($filters) {
+                $bb->where('category', $filters['category']);
+            });
+        });
+
+        $query->when($filters['date'] ?? null, function ($q, $date) {
+            $q->whereHas('buyback', function ($bb) use ($date) {
+                $bb->whereDate('created_at', $date);
+            });
+        });
+
+        $query->when(($filters['payment_type'] ?? 'all') !== 'all', function ($q) use ($filters) {
+            $q->whereHas('buyback', function ($bb) use ($filters) {
+                $bb->where('payment_type', $filters['payment_type']);
+            });
+        });
+
+        $query->when(($filters['qc_status'] ?? 'all') === 'pending', function ($q) {
+            $q->whereNull('condition');
+        });
+    }
 }
