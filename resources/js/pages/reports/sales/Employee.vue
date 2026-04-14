@@ -66,7 +66,7 @@ const exportExcel = () => {
         No: index + 1,
         'Nama Karyawan': row.employee,
         'Jumlah Transaksi': row.total_count,
-        'Grosir (gr)': row.weight_wholesale,
+        'Partai (gr)': row.weight_wholesale,
         'Eceran (gr)': row.weight_retail,
     }));
 
@@ -89,7 +89,7 @@ const exportPdf = (action: 'download' | 'stream') => {
 
     autoTable(doc, {
         startY: 20,
-        head: [['No', 'Karyawan', 'Jumlah Transaksi', 'Grosir (gr)', 'Eceran (gr)']],
+        head: [['No', 'Karyawan', 'Jumlah Transaksi', 'Partai (gr)', 'Eceran (gr)']],
         body: tableData,
         foot: [['', 'TOTAL', totalInvoice, totalWeightWholesale.toFixed(2), totalWeightRetail.toFixed(2)]],
         showFoot: 'lastPage',
@@ -129,7 +129,7 @@ const exportPdf = (action: 'download' | 'stream') => {
 
                     <Card class="gap-1 border-yellow-200 bg-yellow-50 py-4">
                         <CardHeader>
-                            <CardTitle class="text-sm font-medium text-yellow-700"> Total Grosir </CardTitle>
+                            <CardTitle class="text-sm font-medium text-yellow-700"> Total Partai </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p class="text-xl font-bold text-yellow-800">{{ totalWeightWholesale.toFixed(2) }} gr</p>
@@ -173,7 +173,7 @@ const exportPdf = (action: 'download' | 'stream') => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="wholesale">Grosir</SelectItem>
+                                            <SelectItem value="wholesale">Partai</SelectItem>
                                             <SelectItem value="retail">Eceran</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -204,7 +204,7 @@ const exportPdf = (action: 'download' | 'stream') => {
                                         <TableHead class="w-12">No</TableHead>
                                         <TableHead>Karyawan</TableHead>
                                         <TableHead class="text-center">Jumlah Transaksi</TableHead>
-                                        <TableHead class="text-right">Grosir (gr)</TableHead>
+                                        <TableHead class="text-right">Partai (gr)</TableHead>
                                         <TableHead class="text-right">Eceran (gr)</TableHead>
                                     </TableRow>
                                 </TableHeader>

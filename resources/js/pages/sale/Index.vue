@@ -325,7 +325,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                                 <span v-if="sale.customer" class="text-xs text-gray-500"> Pelanggan: {{ sale.customer }} </span>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{{ sale.sale_type === 'retail' ? 'Eceran' : 'Grosir' }}</TableCell>
+                                        <TableCell>{{ sale.sale_type === 'retail' ? 'Eceran' : 'Partai' }}</TableCell>
                                         <TableCell class="text-right">{{ sale.total_weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.total_price) }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(sale.paid_amount) }}</TableCell>

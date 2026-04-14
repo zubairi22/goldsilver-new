@@ -1,22 +1,22 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import {Head, router, useForm} from '@inertiajs/vue3';
-import {ref} from "vue";
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import DeleteButton from "@/components/DeleteButton.vue";
-import EditButton from "@/components/EditButton.vue";
-import SearchInput from '@/components/SearchInput.vue';
-import PageNav from '@/components/PageNav.vue';
+import DeleteButton from '@/components/DeleteButton.vue';
+import EditButton from '@/components/EditButton.vue';
 import Heading from '@/components/Heading.vue';
+import ImageModal from '@/components/ImageModal.vue'; // ⬅ Tambahkan ini
+import PageNav from '@/components/PageNav.vue';
+import SearchInput from '@/components/SearchInput.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useSearch } from '@/composables/useSearch';
+import AppLayout from '@/layouts/AppLayout.vue';
 import UserForm from '@/pages/master/user/UserForm.vue';
 import type { BreadcrumbItem } from '@/types';
-import { useSearch } from '@/composables/useSearch';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
-import ImageModal from '@/components/ImageModal.vue';   // ⬅ Tambahkan ini
+import { ref } from 'vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -28,11 +28,14 @@ defineProps(['users', 'roles', 'can']);
 const { search } = useSearch('master.users.index', route().params.search, ['users']);
 
 const defaultForm = () => ({
-    name: '', email: '', role: '', password: ''
+    name: '',
+    email: '',
+    role: '',
+    password: '',
 });
 
 const addForm = useForm(defaultForm());
-const editForm = useForm({id: '', ...defaultForm()});
+const editForm = useForm({ id: '', ...defaultForm() });
 
 const addUserModal = ref(false);
 const editUserModal = ref(false);
@@ -78,11 +81,10 @@ const handleDeleteUser = (userId: number) => {
         <div class="py-8">
             <Heading class="mx-4" title="Pengguna" description="Kelola pengguna di aplikasi Anda" />
 
-            <div class="mx-auto max-w-8xl">
+            <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-
-                        <div class="flex flex-col justify-between md:flex-row mb-2">
+                        <div class="mb-2 flex flex-col justify-between md:flex-row">
                             <div class="mb-3 md:mb-0">
                                 <Button @click="addUserModal = true">Tambah Pengguna</Button>
                             </div>
@@ -106,10 +108,7 @@ const handleDeleteUser = (userId: number) => {
                                 </TableHeader>
 
                                 <TableBody>
-                                    <TableRow
-                                        v-for="user in users.data"
-                                        :key="user.id"
-                                    >
+                                    <TableRow v-for="user in users.data" :key="user.id">
                                         <TableCell>{{ user.name }}</TableCell>
                                         <TableCell>{{ user.email }}</TableCell>
 
@@ -129,7 +128,7 @@ const handleDeleteUser = (userId: number) => {
                                         </TableCell>
 
                                         <TableCell class="px-1">
-                                            <EditButton @click="editUser(user)" />
+                                            <EditButton v-show="can.update && user.roles[0].name !== 'super-admin'" @click="editUser(user)" />
                                         </TableCell>
 
                                         <TableCell class="px-1">
@@ -140,21 +139,18 @@ const handleDeleteUser = (userId: number) => {
                                         </TableCell>
                                     </TableRow>
                                 </TableBody>
-
                             </Table>
 
                             <PageNav :data="users" />
                         </div>
-
                     </CardContent>
                 </Card>
             </div>
-
         </div>
     </AppLayout>
 
     <!-- Add User Modal -->
-    <Dialog :open="addUserModal" @update:open="(val) => addUserModal = val">
+    <Dialog :open="addUserModal" @update:open="(val) => (addUserModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Tambah Pengguna</DialogTitle>
@@ -165,10 +161,7 @@ const handleDeleteUser = (userId: number) => {
 
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="addUserModal = false">Batal</Button>
-                <Button
-                    :disabled="addForm.processing"
-                    @click="handleAddUser"
-                >
+                <Button :disabled="addForm.processing" @click="handleAddUser">
                     <LoaderCircle v-if="addForm.processing" class="h-4 w-4 animate-spin" />
                     Simpan
                 </Button>
@@ -177,7 +170,7 @@ const handleDeleteUser = (userId: number) => {
     </Dialog>
 
     <!-- Edit User Modal -->
-    <Dialog :open="editUserModal" @update:open="(val) => editUserModal = val">
+    <Dialog :open="editUserModal" @update:open="(val) => (editUserModal = val)">
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Edit Pengguna</DialogTitle>
@@ -188,10 +181,7 @@ const handleDeleteUser = (userId: number) => {
 
             <DialogFooter class="gap-2">
                 <Button variant="secondary" @click="editUserModal = false">Batal</Button>
-                <Button
-                    :disabled="editForm.processing"
-                    @click="handleEditUser"
-                >
+                <Button :disabled="editForm.processing" @click="handleEditUser">
                     <LoaderCircle v-if="editForm.processing" class="h-4 w-4 animate-spin" />
                     Simpan
                 </Button>

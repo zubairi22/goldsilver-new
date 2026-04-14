@@ -107,7 +107,7 @@ const submit = () => {
 
                     <!-- Footer Wholesale -->
                     <div class="grid gap-2">
-                        <Label>Footer Grosir</Label>
+                        <Label>Footer Partai</Label>
                         <Textarea v-model="form.footer_wholesale" rows="5" />
                         <InputError :message="form.errors.footer_wholesale" />
                     </div>

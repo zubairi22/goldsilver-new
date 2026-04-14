@@ -90,7 +90,7 @@ class SalesItemReportController extends Controller
             ->map(fn($row) => [
                 'invoice' => $row->sale->invoice_no,
                 'date' => $row->sale->created_at->format('d-m-Y'),
-                'sale_type' => $row->sale->sale_type === 'wholesale' ? 'Grosir' : 'Retail',
+                'sale_type' => $row->sale->sale_type === 'wholesale' ? 'Partai' : 'Retail',
                 'category' => $row->sale->category === 'gold' ? 'Emas' : 'Perak',
                 'item' => $row->manual_name ?? $row->item?->name ?? '-',
                 'weight' => $row->weight,

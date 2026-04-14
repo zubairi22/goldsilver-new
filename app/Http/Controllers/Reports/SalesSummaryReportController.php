@@ -84,7 +84,7 @@ class SalesSummaryReportController extends Controller
             ],
             'soldWeights' => [
                 ['type' => 'Eceran', 'total' => $retailWeight],
-                ['type' => 'Grosir', 'total' => $wholesaleWeight],
+                ['type' => 'Partai', 'total' => $wholesaleWeight],
             ],
             'retailPayments' => $retailPayments,
             'wholesalePayments' => $wholesalePayments,

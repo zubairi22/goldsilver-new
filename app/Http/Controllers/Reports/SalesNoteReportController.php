@@ -48,7 +48,7 @@ class SalesNoteReportController extends Controller
             ->map(fn ($sale) => [
                 'invoice'      => $sale->invoice_no,
                 'date'         => $sale->created_at->format('d-m-Y'),
-                'sale_type'    => $sale->sale_type === 'wholesale' ? 'Grosir' : 'Retail',
+                'sale_type'    => $sale->sale_type === 'wholesale' ? 'Partai' : 'Retail',
                 'category'     => $sale->category === 'gold' ? 'Emas' : 'Perak',
                 'total_weight' => $sale->total_weight,
                 'total_price'  => $sale->total_price,

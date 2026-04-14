@@ -62,7 +62,7 @@ const totalPenerimaan = () => {
     return props.retailPayments.reduce((acc, curr) => acc + curr.total, 0);
 };
 
-const totalPenerimaanGrosir = () => {
+const totalPenerimaanPartai = () => {
     return props.wholesalePayments.reduce((acc, curr) => acc + curr.total, 0);
 };
 
@@ -161,9 +161,9 @@ const formatWeight = (value: number) => {
                                 </div>
                             </div>
 
-                            <!-- Rekap Penerimaan Grosir -->
+                            <!-- Rekap Penerimaan Partai -->
                             <div>
-                                <h3 class="mb-4 text-lg font-semibold text-slate-800">Rekap Penerimaan Grosir</h3>
+                                <h3 class="mb-4 text-lg font-semibold text-slate-800">Rekap Penerimaan Partai</h3>
                                 <div class="overflow-x-auto rounded-md border">
                                     <Table>
                                         <TableHeader>
@@ -182,7 +182,7 @@ const formatWeight = (value: number) => {
                                             <!-- Grand Total -->
                                             <TableRow class="bg-gray-600 font-bold hover:bg-gray-600">
                                                 <TableCell colspan="2" class="text-center text-white">Grand Total</TableCell>
-                                                <TableCell class="text-right text-white">{{ formatRupiah(totalPenerimaanGrosir()) }}</TableCell>
+                                                <TableCell class="text-right text-white">{{ formatRupiah(totalPenerimaanPartai()) }}</TableCell>
                                             </TableRow>
                                         </TableBody>
                                     </Table>

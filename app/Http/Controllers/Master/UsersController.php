@@ -34,6 +34,7 @@ class UsersController extends Controller
             'users' => $query->paginate(),
             'roles' => $roles,
             'can' => [
+                'update' => $user->hasRole('super-admin'),
                 'delete' => $user->hasRole('super-admin'),
             ]
         ]);
@@ -50,6 +51,12 @@ class UsersController extends Controller
 
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
+        if (!auth()->user()->hasRole('super-admin')) {
+            $this->flashError('Anda tidak memiliki akses untuk mengubah pengguna.');
+
+            return back();
+        }
+
         $user->update($request->safe()->except('password') + ($request->filled('password') ? ['password' => $request->password] : []));
         $user->syncRoles(Role::findById($request->input('role')));
 
