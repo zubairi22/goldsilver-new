@@ -20,12 +20,20 @@ class UsersController extends Controller
         $user = auth()->user();
         $query = User::filter(Request::only('search'))->with('roles');
 
-        if ($user->hasRole('admin gold')) {
-            $query->role('cashier gold');
-            $roles = Role::whereIn('name', ['cashier gold'])->get();
-        } elseif ($user->hasRole('admin silver')) {
-            $query->role('cashier silver');
-            $roles = Role::whereIn('name', ['cashier silver'])->get();
+        if ($user->hasAnyRole(['admin gold', 'admin silver'])) {
+            $roles = collect();
+
+            if ($user->hasRole('admin gold')) {
+                $query->orWhereHas('roles', fn($q) => $q->where('name', 'cashier gold'));
+                $roles = $roles->merge(Role::where('name', 'cashier gold')->get());
+            }
+
+            if ($user->hasRole('admin silver')) {
+                $query->orWhereHas('roles', fn($q) => $q->where('name', 'cashier silver'));
+                $roles = $roles->merge(Role::where('name', 'cashier silver')->get());
+            }
+
+            $roles = $roles->unique('id');
         } else {
             $roles = Role::all();
         }

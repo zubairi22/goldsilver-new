@@ -27,7 +27,7 @@ import { toast } from 'vue-sonner';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Barang', href: '#' },
+    { title: 'Item', href: '#' },
 ];
 
 const { items, itemTypes, totalItems, totalWeight, itemTypeTotals, filters } = defineProps([
@@ -170,17 +170,17 @@ const onScanned = (code: string) => {
 </script>
 
 <template>
-    <Head title="Barang" />
+    <Head title="Item" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
             <div class="mx-4 items-center space-y-4 md:flex md:justify-between md:space-y-0">
-                <Heading class="flex-1 md:mr-6" title="Barang" description="Kelola data barang emas dan perak" />
+                <Heading class="flex-1 md:mr-6" title="Item" description="Kelola data item emas dan perak" />
 
                 <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:w-96">
                     <Card class="gap-1 border-emerald-200 bg-emerald-50 py-4">
                         <CardHeader class="flex flex-row items-center justify-between">
-                            <CardTitle class="text-sm font-medium text-emerald-700">Total Barang</CardTitle>
+                            <CardTitle class="text-sm font-medium text-emerald-700">Total item</CardTitle>
                             <Icon name="DollarSign" class="h-4 w-4 text-emerald-600" />
                         </CardHeader>
                         <CardContent>
@@ -235,7 +235,7 @@ const onScanned = (code: string) => {
                                 <div class="w-48">
                                     <Label class="mb-2">Tipe</Label>
                                     <Select v-model="item_type_id">
-                                        <SelectTrigger><SelectValue placeholder="Tipe Barang" /></SelectTrigger>
+                                        <SelectTrigger><SelectValue placeholder="Tipe Item" /></SelectTrigger>
                                         <SelectContent class="max-h-72 overflow-y-auto">
                                             <SelectItem value="all">Semua</SelectItem>
                                             <SelectItem v-for="(name, id) in itemTypes" :key="id" :value="id">
