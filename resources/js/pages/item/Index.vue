@@ -5,6 +5,7 @@ import Heading from '@/components/Heading.vue';
 import Icon from '@/components/Icon.vue';
 import ImageModal from '@/components/ImageModal.vue';
 import PageNav from '@/components/PageNav.vue';
+import QrScanner from '@/components/QrScanner.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -160,6 +161,12 @@ const printBulkLabel = () => {
 const printSingleLabel = (id: number) => {
     window.open(route('store.items.print-single-label', id), '_blank');
 };
+
+const scanModal = ref(false);
+const onScanned = (code: string) => {
+    search.value = code;
+    toast.success(`Scan berhasil: ${code}`);
+};
 </script>
 
 <template>
@@ -249,8 +256,11 @@ const printSingleLabel = (id: number) => {
 
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
                             <Button @click="addItem">Tambah Item</Button>
-                            <div class="mt-3 mb-3 md:mt-0 md:text-right">
+                            <div class="mt-3 mb-3 flex items-center gap-2 md:mt-0 md:text-right">
                                 <SearchInput v-model:search="search" />
+                                <Button variant="secondary" size="icon" @click="scanModal = true" title="Scan QR">
+                                    <Icon name="Camera" class="h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
 
@@ -261,20 +271,46 @@ const printSingleLabel = (id: number) => {
                                         <TableHead>Gambar</TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('name')">
                                             Nama
-                                            <Icon :name="sortBy === 'name' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                            <Icon
+                                                :name="sortBy === 'name' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead>Tipe</TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('weight')">
                                             Berat
-                                            <Icon :name="sortBy === 'weight' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                            <Icon
+                                                :name="
+                                                    sortBy === 'weight' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'
+                                                "
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('price_buy')">
                                             Harga Beli
-                                            <Icon :name="sortBy === 'price_buy' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                            <Icon
+                                                :name="
+                                                    sortBy === 'price_buy'
+                                                        ? sortDirection === 'asc'
+                                                            ? 'ChevronUp'
+                                                            : 'ChevronDown'
+                                                        : 'ChevronsUpDown'
+                                                "
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('price_sell')">
                                             Harga Jual
-                                            <Icon :name="sortBy === 'price_sell' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'" class="ml-1 inline-block h-3 w-3" />
+                                            <Icon
+                                                :name="
+                                                    sortBy === 'price_sell'
+                                                        ? sortDirection === 'asc'
+                                                            ? 'ChevronUp'
+                                                            : 'ChevronDown'
+                                                        : 'ChevronsUpDown'
+                                                "
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
                                         </TableHead>
                                         <TableHead class="text-center">Status</TableHead>
                                         <TableHead class="w-8" />
@@ -295,7 +331,7 @@ const printSingleLabel = (id: number) => {
                                             <span v-else class="text-sm text-gray-400">Tidak ada</span>
                                         </TableCell>
 
-                                         <TableCell>{{ item.name }}</TableCell>
+                                        <TableCell>{{ item.name }}</TableCell>
                                         <TableCell>{{ item.type?.name || '-' }}</TableCell>
                                         <TableCell>{{ item.weight }} gr</TableCell>
                                         <TableCell>{{ formatRupiah(item.price_buy) }}</TableCell>
@@ -400,4 +436,6 @@ const printSingleLabel = (id: number) => {
             </div>
         </DialogContent>
     </Dialog>
+
+    <QrScanner v-model:open="scanModal" @scanned="onScanned" />
 </template>

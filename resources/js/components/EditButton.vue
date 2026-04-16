@@ -14,10 +14,12 @@
 import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-vue-next'
 
-defineProps<{
-    disabled?: {
-        type: boolean,
-        default: false
+withDefaults(
+    defineProps<{
+        disabled?: boolean
+    }>(),
+    {
+        disabled: false
     }
-}>()
+)
 </script>

@@ -208,6 +208,11 @@ class SaleController extends Controller
 
     public function addItem(Request $request, string $category, Sale $sale)
     {
+        if ($sale->status !== 'draft' && $sale->category === 'gold') {
+            $this->flashError('Item tidak boleh ditambah pada transaksi emas yang sudah selesai.');
+            return back();
+        }
+
         $data = $request->validate([
             'sale_item_id' => 'nullable|exists:sale_items,id',
             'id' => 'nullable|exists:items,id',
@@ -270,6 +275,11 @@ class SaleController extends Controller
 
     public function removeItem(Request $request, string $category, Sale $sale)
     {
+        if ($sale->status !== 'draft' && $sale->category === 'gold') {
+            $this->flashError('Item tidak boleh dihapus pada transaksi emas yang sudah selesai.');
+            return back();
+        }
+
         $data = $request->validate([
             'sale_item_id' => 'required|exists:sale_items,id',
         ]);
@@ -344,12 +354,6 @@ class SaleController extends Controller
         if (!$cashier) {
             $this->flashError('Password atau QR admin tidak valid.');
 
-            return back();
-        }
-
-        if (!$sale->isEditable()) {
-            dd($sale);
-            $this->flashError('Hanya penjualan berstatus Draft yang dapat diubah.');
             return back();
         }
 
@@ -439,14 +443,7 @@ class SaleController extends Controller
                 ->whereNotNull('item_id')
                 ->pluck('item_id');
 
-            $usedAfter = SaleItem::whereIn('item_id', $itemIds)
-                ->where('sale_id', '>', $sale->id)
-                ->pluck('item_id')
-                ->unique();
-
-            $readyItemIds = $itemIds->diff($usedAfter);
-
-            Item::whereIn('id', $readyItemIds)->update(['status' => 'ready']);
+            Item::whereIn('id', $itemIds)->update(['status' => 'ready']);
 
             $sale->delete();
 

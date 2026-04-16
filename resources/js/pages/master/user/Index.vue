@@ -30,7 +30,7 @@ const { search } = useSearch('master.users.index', route().params.search, ['user
 const defaultForm = () => ({
     name: '',
     email: '',
-    role: '',
+    roles: [],
     password: '',
 });
 
@@ -42,7 +42,7 @@ const editUserModal = ref(false);
 
 const editUser = (user: any) => {
     Object.assign(editForm, user);
-    editForm.role = user.roles[0].id;
+    editForm.roles = user.roles.map((r: any) => r.id);
     editForm.password = '';
     editUserModal.value = true;
 };
@@ -113,7 +113,9 @@ const handleDeleteUser = (userId: number) => {
                                         <TableCell>{{ user.email }}</TableCell>
 
                                         <TableCell class="text-center">
-                                            <Badge>{{ user.roles[0].name }}</Badge>
+                                            <div class="flex flex-wrap justify-center gap-1">
+                                                <Badge v-for="role in user.roles" :key="role.id">{{ role.name }}</Badge>
+                                            </div>
                                         </TableCell>
 
                                         <TableCell>
@@ -128,12 +130,12 @@ const handleDeleteUser = (userId: number) => {
                                         </TableCell>
 
                                         <TableCell class="px-1">
-                                            <EditButton v-show="can.update && user.roles[0].name !== 'super-admin'" @click="editUser(user)" />
+                                            <EditButton :disabled="!can.update" @click="editUser(user)" />
                                         </TableCell>
 
                                         <TableCell class="px-1">
                                             <DeleteButton
-                                                v-show="can.delete && user.roles[0].name !== 'super-admin'"
+                                                :disabled="!can.delete || user.roles.some((r: any) => r.name === 'super-admin')"
                                                 @confirm="handleDeleteUser(user.id)"
                                             />
                                         </TableCell>

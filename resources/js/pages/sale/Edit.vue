@@ -183,6 +183,8 @@ const setExactPayment = () => {
 };
 
 const isLocked = computed(() => props.sale.status !== 'draft');
+const cannotModifyItems = computed(() => props.sale.status !== 'draft' && props.category === 'gold');
+
 
 const openVerifyModal = () => {
     if (!form.items.length) {
@@ -337,7 +339,7 @@ const togglePasswordVisibility = () => {
                     <CardHeader>
                         <div class="mb-1 flex items-center justify-between">
                             <CardTitle>Daftar Item</CardTitle>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2" v-if="!cannotModifyItems">
                                 <Button variant="secondary" @click="scanItemModal = true">
                                     <Icon name="camera" class="mr-2 h-4 w-4" />
                                     Scan Item
@@ -346,6 +348,7 @@ const togglePasswordVisibility = () => {
                             </div>
                         </div>
                         <hr />
+
                     </CardHeader>
 
                     <CardContent>
@@ -365,9 +368,10 @@ const togglePasswordVisibility = () => {
                                     <TableRow
                                         v-for="(item, index) in form.items"
                                         :key="index"
-                                        class="cursor-pointer hover:bg-muted/50"
-                                        @click="editItem(Number(index))"
+                                        :class="cannotModifyItems ? '' : 'cursor-pointer hover:bg-muted/50'"
+                                        @click="!cannotModifyItems && editItem(Number(index))"
                                     >
+
                                         <TableCell>
                                             <span v-if="item.mode === 'auto'">
                                                 {{ items.find((i: any) => Number(i.id) === Number(item.id))?.name ?? '-' }}
@@ -379,9 +383,10 @@ const togglePasswordVisibility = () => {
                                         <TableCell>{{ formatRupiah(Number(item.price)) }}</TableCell>
                                         <TableCell>{{ formatRupiah(Number(item.subtotal)) }}</TableCell>
 
-                                        <TableCell @click.stop>
+                                        <TableCell @click.stop v-if="!cannotModifyItems">
                                             <DeleteButton size="icon" @confirm="removeItem(Number(index))" />
                                         </TableCell>
+
                                     </TableRow>
 
                                     <TableRow v-if="!form.items.length">

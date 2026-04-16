@@ -341,7 +341,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                             {{ sale.payment_method?.name || '-' }}
                                         </TableCell>
                                         <TableCell class="px-1">
-                                            <EditButton v-if="sale.status === 'draft'" @click.stop="editSale(sale)" />
+                                            <EditButton @click.stop="editSale(sale)" />
                                         </TableCell>
                                         <TableCell class="px-1">
                                             <Button

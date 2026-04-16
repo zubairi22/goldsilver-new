@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Multiselect from '@vueform/multiselect';
 
 const form = defineModel<any>('form');
 
@@ -25,24 +25,17 @@ defineProps<{
                 <InputError class="mt-2" :message="form.errors.email"/>
             </div>
             <div class="mt-4">
-                <Label for="role">Role</Label>
-                <Select v-model="form.role">
-                    <SelectTrigger id="role" class="w-full">
-                        <SelectValue placeholder="Pilih Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectItem
-                                v-for="role in roles"
-                                :key="role.id"
-                                :value="role.id"
-                            >
-                                {{ role.name }}
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <InputError class="mt-2" :message="form.errors.role" />
+                <Label name="roles">Role</Label>
+               <Multiselect
+                    v-model="form.roles"
+                    mode="tags"
+                    :options="roles"
+                    value-prop="id"
+                    label="name"
+                    placeholder="Pilih Role"
+                    class="mt-1"
+                />
+                <InputError class="mt-2" :message="form.errors.roles" />
             </div>
 
             <div class="mt-4">
@@ -53,3 +46,5 @@ defineProps<{
         </form>
     </div>
 </template>
+
+<style src="@vueform/multiselect/themes/default.css" />
