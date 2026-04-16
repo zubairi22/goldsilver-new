@@ -45,9 +45,7 @@ useBarcodeScanner((code: string) => {
 
 const payment_type = ref(props.filters.payment_type ?? 'all');
 const date = ref(
-    props.filters.start && props.filters.end
-        ? [props.filters.start, props.filters.end]
-        : [props.filters.start || '', props.filters.end || '']
+    props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : [props.filters.start || '', props.filters.end || ''],
 );
 const qc_status = ref(props.filters.qc_status ?? 'all');
 const sortBy = ref(props.filters.sort || 'created_at');
@@ -79,7 +77,11 @@ const submitQC = () => {
             price_sell: qcItem.value.newSellPrice,
             condition: qcItem.value.newCondition,
         },
-        { onSuccess: () => (qcModal.value = false) },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => (qcModal.value = false),
+        },
     );
 };
 
@@ -232,7 +234,13 @@ watch([payment_type, date, qc_status], applyFilters);
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('created_at')">
                                             No Buyback
                                             <Icon
-                                                :name="sortBy === 'created_at' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                :name="
+                                                    sortBy === 'created_at'
+                                                        ? sortDirection === 'asc'
+                                                            ? 'ChevronUp'
+                                                            : 'ChevronDown'
+                                                        : 'ChevronsUpDown'
+                                                "
                                                 class="ml-1 inline-block h-3 w-3"
                                             />
                                         </TableHead>
@@ -242,21 +250,27 @@ watch([payment_type, date, qc_status], applyFilters);
                                         <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('weight')">
                                             Berat
                                             <Icon
-                                                :name="sortBy === 'weight' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                :name="
+                                                    sortBy === 'weight' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'
+                                                "
                                                 class="ml-1 inline-block h-3 w-3"
                                             />
                                         </TableHead>
                                         <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('price')">
                                             Harga/g
                                             <Icon
-                                                :name="sortBy === 'price' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                :name="
+                                                    sortBy === 'price' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'
+                                                "
                                                 class="ml-1 inline-block h-3 w-3"
                                             />
                                         </TableHead>
                                         <TableHead class="cursor-pointer text-right select-none" @click="toggleSort('subtotal')">
                                             Subtotal
                                             <Icon
-                                                :name="sortBy === 'subtotal' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                :name="
+                                                    sortBy === 'subtotal' ? (sortDirection === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'
+                                                "
                                                 class="ml-1 inline-block h-3 w-3"
                                             />
                                         </TableHead>
@@ -268,7 +282,9 @@ watch([payment_type, date, qc_status], applyFilters);
                                         <TableRow>
                                             <TableCell>
                                                 <div class="font-semibold">{{ it.buyback?.buyback_no }}</div>
-                                                <div class="text-xs text-muted-foreground">{{ formatDate(it.buyback?.created_at, 'dd MMM yyyy HH:mm') }}</div>
+                                                <div class="text-xs text-muted-foreground">
+                                                    {{ formatDate(it.buyback?.created_at, 'dd MMM yyyy HH:mm') }}
+                                                </div>
                                                 <div class="text-xs text-muted-foreground italic">{{ it.buyback?.customer || '-' }}</div>
                                             </TableCell>
                                             <TableCell>

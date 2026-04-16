@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
 
             Route::resource('payment-methods', PaymentMethodController::class)->except(['show', 'create', 'edit']);
             Route::resource('item-types', ItemTypesController::class)->except(['show', 'create', 'edit']);
+            Route::post('item-types/merge', [ItemTypesController::class, 'merge'])->name('item-types.merge');
             Route::resource('items', ItemsController::class)->except(['show', 'create', 'edit']);
             Route::get('items/print-label', [ItemsController::class, 'printLabel'])->name('items.print-label');
             Route::get('items/{item}/print-label', [ItemsController::class, 'printSingleLabel'])->name('items.print-single-label');

@@ -373,16 +373,14 @@ watch([sale_type, payment_method_id, date], applyFilters);
 
     <!-- MODAL DETAIL -->
     <Dialog :open="saleModal" @update:open="(val) => (saleModal = val)">
-        <DialogContent class="sm:max-w-2xl">
+        <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Detail Penjualan</DialogTitle>
                 <hr />
             </DialogHeader>
 
             <div v-if="selectedSale">
-                <!-- Info utama + QR -->
                 <div class="mb-4 grid grid-cols-3 gap-4 text-sm">
-                    <!-- Kiri (2 kolom): Detail -->
                     <div class="col-span-2 grid grid-cols-2 gap-4">
                         <div>
                             <p class="font-semibold">Invoice</p>
@@ -406,9 +404,7 @@ watch([sale_type, payment_method_id, date], applyFilters);
                         </div>
                     </div>
 
-                    <!-- Kanan (1 kolom): QR Code -->
                     <div class="flex flex-col items-center justify-center p-4 text-center">
-                        <!-- QR dari storage Laravel -->
                         <img :src="'/storage/' + selectedSale.qr_path" alt="QR" class="h-24 w-24 rounded object-contain shadow" />
 
                         <p class="text-md mt-4 font-semibold">
@@ -419,28 +415,51 @@ watch([sale_type, payment_method_id, date], applyFilters);
 
                 <hr class="mb-2" />
 
-                <!-- Tabs Section -->
                 <Tabs default-value="item">
                     <TabsList class="mb-4">
                         <TabsTrigger value="item">Item</TabsTrigger>
                         <TabsTrigger value="payment">Pembayaran</TabsTrigger>
                     </TabsList>
 
-                    <!-- TAB ITEM -->
                     <TabsContent value="item">
                         <h3 class="mb-2 font-semibold">Item</h3>
 
-                        <Table>
+                        <!-- SILVER TABULAR VIEW -->
+                        <div v-if="category === 'silver'" class="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead class="w-10">No</TableHead>
+                                        <TableHead>Barang</TableHead>
+                                        <TableHead class="text-right">Gram</TableHead>
+                                        <TableHead class="text-right">Harga /g</TableHead>
+                                        <TableHead class="text-right">Subtotal</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="(it, index) in selectedSale.items" :key="it.id">
+                                        <TableCell>{{ Number(index) + 1 }}</TableCell>
+                                        <TableCell>{{ it.manual_name ?? it.item?.name }}</TableCell>
+                                        <TableCell class="text-right">{{ it.weight }} gr</TableCell>
+                                        <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
+                                        <TableCell class="text-right font-semibold text-foreground">
+                                            {{ formatRupiah(it.subtotal) }}
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        <!-- DEFAULT VIEW (GOLD) -->
+                        <Table v-else>
                             <TableBody>
                                 <template v-for="it in selectedSale.items" :key="it.id">
-                                    <!-- NAMA ITEM -->
                                     <TableRow class="bg-muted/30">
                                         <TableCell colspan="3" class="font-medium">
                                             {{ it.manual_name ?? it.item?.name }}
                                         </TableCell>
                                     </TableRow>
 
-                                    <!-- DETAIL ITEM -->
                                     <TableRow>
                                         <TableCell class="text-xs text-muted-foreground">
                                             Berat
@@ -466,7 +485,6 @@ watch([sale_type, payment_method_id, date], applyFilters);
                         </Table>
                     </TabsContent>
 
-                    <!-- TAB PAYMENT -->
                     <TabsContent value="payment">
                         <h3 class="mb-2 font-semibold">Pembayaran</h3>
 

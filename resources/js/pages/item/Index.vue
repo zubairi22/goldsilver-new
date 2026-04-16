@@ -268,6 +268,7 @@ const onScanned = (code: string) => {
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead>No</TableHead>
                                         <TableHead>Gambar</TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('name')">
                                             Nama
@@ -321,6 +322,7 @@ const onScanned = (code: string) => {
 
                                 <TableBody>
                                     <TableRow v-for="item in items.data" :key="item.id">
+                                        <TableCell>{{ item.id }}</TableCell>
                                         <TableCell class="py-1">
                                             <ImageModal
                                                 v-if="item.image"

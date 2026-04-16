@@ -13,7 +13,7 @@ class ItemTypesController extends Controller
     public function index(): Response
     {
         return inertia('item-types/Index', [
-            'itemTypes' => ItemType::paginate(),
+            'itemTypes' => ItemType::all(),
         ]);
     }
 
@@ -38,6 +38,25 @@ class ItemTypesController extends Controller
         $itemType->update($validated);
 
         $this->flashSuccess('Update Item Type berhasil.');
+        return Redirect::back();
+    }
+
+    public function merge(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'source_id' => ['required', 'exists:item_types,id'],
+            'target_id' => ['required', 'exists:item_types,id', 'different:source_id'],
+        ]);
+
+        $source = ItemType::findOrFail($validated['source_id']);
+        $target = ItemType::findOrFail($validated['target_id']);
+
+        $count = $source->items()->update(['item_type_id' => $target->id]);
+
+        $source->delete();
+
+        $this->flashSuccess("Berhasil menggabungkan '{$source->name}' ke '{$target->name}'. {$count} item telah diperbarui.");
+
         return Redirect::back();
     }
 
