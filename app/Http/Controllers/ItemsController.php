@@ -146,9 +146,8 @@ class ItemsController extends Controller
         $limit = $end - $start + 1;
 
         $items = Item::whereNotNull('qr_path')
+            ->whereBetween('id', [$start, $end])
             ->orderBy('id')
-            ->skip($start - 1)
-            ->take($limit)
             ->get();
 
         foreach ($items as $item) {
