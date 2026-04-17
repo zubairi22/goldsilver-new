@@ -50,9 +50,9 @@ class HandleInertiaRequests extends Middleware
                 'isAdmin' => $request->user() ? $request->user()->hasRole('super-admin') : false,
             ],
             'flash' => [
-                'status' => fn () => $request->session()->get('status'),
-                'message' => fn () => $request->session()->get('message'),
-                'sale' => fn () => $request->session()->get('sale'),
+                'status' => fn() => $request->session()->get('status'),
+                'message' => fn() => $request->session()->get('message'),
+                'sale' => fn() => $request->session()->get('sale'),
             ],
             'og' => [
                 'title' => $appName,
@@ -67,11 +67,13 @@ class HandleInertiaRequests extends Middleware
                 ->whereHas('permissions', function ($query) use ($userPermissions) {
                     $query->whereIn('permissions.id', $userPermissions);
                 })
-                ->with(['children' => function ($query) use ($userPermissions) {
-                    $query->whereHas('permissions', function ($query) use ($userPermissions) {
-                        $query->whereIn('permissions.id', $userPermissions);
-                    })->orderBy('sort');
-                }])
+                ->with([
+                    'children' => function ($query) use ($userPermissions) {
+                        $query->whereHas('permissions', function ($query) use ($userPermissions) {
+                            $query->whereIn('permissions.id', $userPermissions);
+                        })->orderBy('sort');
+                    }
+                ])
                 ->orderBy('sort')
                 ->get();
 

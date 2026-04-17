@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Heading from '@/components/Heading.vue';
+import Icon from '@/components/Icon.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,11 +18,12 @@ import autoTable from 'jspdf-autotable';
 import { ref, watch } from 'vue';
 import * as XLSX from 'xlsx';
 
-const { sales, filters, totalWeight, totalAmount } = defineProps<{
+const { sales, filters, totalWeight, totalAmount, paymentMethods } = defineProps<{
     sales: any;
     filters: any;
     totalWeight: number;
     totalAmount: number;
+    paymentMethods: any[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -35,14 +37,32 @@ const { formatRupiah } = useFormat();
 
 const sale_type = ref(filters.sale_type ?? 'all');
 const category = ref(filters.category ?? 'all');
+const payment_method_id = ref(filters.payment_method_id ?? 'all');
+
+const sort = ref(filters.sort ?? 'created_at');
+const direction = ref(filters.direction ?? 'desc');
+
+const onSort = (column: string) => {
+    if (sort.value === column) {
+        direction.value = direction.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sort.value = column;
+        direction.value = 'asc';
+    }
+    applyFilters();
+};
 
 const date = ref(filters.start && filters.end ? [filters.start, filters.end] : []);
 
 const applyFilters = () => {
-    const params: Record<string, any> = {};
+    const params: Record<string, any> = {
+        sort: sort.value,
+        direction: direction.value,
+    };
 
     if (sale_type.value !== 'all') params.sale_type = sale_type.value;
     if (category.value !== 'all') params.category = category.value;
+    if (payment_method_id.value !== 'all') params.payment_method_id = payment_method_id.value;
 
     if (date.value?.[0] && date.value?.[1]) {
         params.start = date.value[0];
@@ -57,7 +77,7 @@ const applyFilters = () => {
     });
 };
 
-watch([sale_type, category, date], applyFilters);
+watch([sale_type, category, payment_method_id, date], applyFilters);
 
 const exportExcel = () => {
     const rows = sales.map((row: any, index: number) => ({
@@ -174,6 +194,18 @@ const exportPdf = (action: 'download' | 'stream') => {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                <div class="w-40">
+                                    <Select v-model="payment_method_id">
+                                        <SelectTrigger><SelectValue placeholder="Metode Bayar" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua Metode</SelectItem>
+                                            <SelectItem v-for="method in paymentMethods" :key="method.id" :value="method.id.toString()">
+                                                {{ method.name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             <div class="w-full sm:w-auto lg:w-80">
@@ -199,12 +231,36 @@ const exportPdf = (action: 'download' | 'stream') => {
                             <Table>
                                 <TableHeader class="sticky top-0 z-10 bg-background">
                                     <TableRow>
-                                        <TableHead>Nota</TableHead>
-                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="onSort('invoice_no')">
+                                            Nota
+                                            <Icon
+                                                :name="sort === 'invoice_no' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="onSort('created_at')">
+                                            Tanggal
+                                            <Icon
+                                                :name="sort === 'created_at' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
                                         <TableHead>Penjualan</TableHead>
                                         <TableHead>Kategori</TableHead>
-                                        <TableHead class="text-right">Total Berat (gr)</TableHead>
-                                        <TableHead class="text-right">Nominal</TableHead>
+                                        <TableHead class="cursor-pointer select-none text-right" @click="onSort('total_weight')">
+                                            Total Berat (gr)
+                                            <Icon
+                                                :name="sort === 'total_weight' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none text-right" @click="onSort('total_price')">
+                                            Nominal
+                                            <Icon
+                                                :name="sort === 'total_price' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
 

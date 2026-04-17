@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Jenis Item', href: '#' },
 ];
-// ... rest of script logic ...
+
 const defaultForm = () => ({
     name: '',
 });

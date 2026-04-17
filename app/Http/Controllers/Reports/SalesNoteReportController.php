@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -25,6 +26,9 @@ class SalesNoteReportController extends Controller
             'category'  => $request->category,
             'start'     => $start->toDateString(),
             'end'       => $end->toDateString(),
+            'payment_method_id' => $request->payment_method_id,
+            'sort'      => $request->input('sort', 'created_at'),
+            'direction' => $request->input('direction', 'desc'),
         ];
 
         $baseQuery = Sale::query()
@@ -33,7 +37,10 @@ class SalesNoteReportController extends Controller
             $q->where('category', $filters['category'])
             )
             ->when($filters['sale_type'], fn ($q) =>
-            $q->where('sale_type', $filters['sale_type'])
+                $q->where('sale_type', $filters['sale_type'])
+            )
+            ->when($filters['payment_method_id'] && $filters['payment_method_id'] !== 'all', fn ($q) =>
+                $q->where('payment_method_id', $filters['payment_method_id'])
             )
             ->when($filters['search'], fn ($q) =>
             $q->where('invoice_no', 'like', "%{$filters['search']}%")
@@ -43,7 +50,11 @@ class SalesNoteReportController extends Controller
         $totalAmount = (int) $baseQuery->clone()->sum('total_price');
 
         $sales = $baseQuery
-            ->orderByDesc('invoice_no')
+            ->when(in_array($filters['sort'], ['invoice_no', 'total_weight', 'total_price', 'created_at']), function ($q) use ($filters) {
+                $q->orderBy($filters['sort'], $filters['direction']);
+            }, function ($q) {
+                $q->latest();
+            })
             ->get()
             ->map(fn ($sale) => [
                 'invoice'      => $sale->invoice_no,
@@ -59,6 +70,7 @@ class SalesNoteReportController extends Controller
             'filters'      => $filters,
             'totalWeight'  => $totalWeight,
             'totalAmount' => $totalAmount,
+            'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
         ]);
     }
 }

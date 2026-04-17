@@ -18,6 +18,7 @@ import { useFormat } from '@/composables/useFormat';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import ImageModal from '@/components/ImageModal.vue';
 import Multiselect from '@vueform/multiselect';
 import { Eye, EyeOff } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
@@ -60,6 +61,7 @@ const form = useForm({
         price: i.price,
         subtotal: i.subtotal,
         mode: i.source === 'manual' ? 'manual' : 'auto',
+        image: i.manual_image,
     })),
 });
 
@@ -116,17 +118,79 @@ const editItem = (index: number) => {
     showAddItemModal.value = true;
 };
 
-const removeItem = (index: number) => {
-    const item = form.items[index];
-    if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
+const pendingAction = ref<{ type: string; payload?: any } | null>(null);
+
+const executePendingAction = () => {
+    if (!pendingAction.value) return;
+
+    const verificationData =
+        props.sale.status !== 'draft'
+            ? {
+                  cashier_id: form.cashier_id,
+                  password: form.password,
+                  qr_token: form.qr_token,
+              }
+            : {};
+
+    const { type, payload } = pendingAction.value;
+
+    if (type === 'addItem') {
+        isAddingItem.value = true;
+        router.post(
+            route('sales.addItem', { category: props.category, sale: props.sale.id }),
+            { ...payload, ...verificationData },
+            {
+                onSuccess: () => {
+                    toast.success('Item berhasil disimpan.');
+                    showAddItemModal.value = false;
+                    verifyModal.value = false;
+                    pendingAction.value = null;
+                    resetVerification();
+                },
+                onFinish: () => {
+                    isAddingItem.value = false;
+                },
+            },
+        );
+    } else if (type === 'removeItem') {
         isRemovingItem.value = true;
         router.delete(route('sales.removeItem', { category: props.category, sale: props.sale.id }), {
-            data: { sale_item_id: item.sale_item_id },
-            onFinish: () => (isRemovingItem.value = false),
+            data: { ...payload, ...verificationData },
+            onFinish: () => {
+                isRemovingItem.value = false;
+            },
             onSuccess: () => {
                 toast.success('Item berhasil dihapus.');
+                verifyModal.value = false;
+                pendingAction.value = null;
+                resetVerification();
             },
         });
+    } else if (type === 'updateSale') {
+        form.transform((data) => ({
+            ...data,
+            ...verificationData,
+            _method: 'PATCH',
+        })).post(route('sales.update', { category: props.category, sale: props.sale.id }), {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                savedSale.value = page.props.flash.sale;
+                verifyModal.value = false;
+                successModal.value = true;
+                pendingAction.value = null;
+                resetVerification();
+            },
+        });
+    }
+};
+
+const removeItem = (index: number) => {
+    const item = form.items[index];
+    pendingAction.value = { type: 'removeItem', payload: { sale_item_id: item.sale_item_id } };
+    if (props.sale.status !== 'draft') {
+        verifyModal.value = true;
+    } else {
+        executePendingAction();
     }
 };
 
@@ -140,25 +204,28 @@ const saveModalItem = () => {
         return;
     }
 
-    isAddingItem.value = true;
-    router.post(route('sales.addItem', { category: props.category, sale: props.sale.id }), modalItem.value, {
-        onSuccess: () => {
-            toast.success('Item berhasil ditambahkan.');
-            showAddItemModal.value = false;
-        },
-        onFinish: () => (isAddingItem.value = false),
-    });
+    pendingAction.value = { type: 'addItem', payload: modalItem.value };
+    if (props.sale.status !== 'draft') {
+        verifyModal.value = true;
+    } else {
+        executePendingAction();
+    }
 };
 
 const updateModalItem = () => {
-    isAddingItem.value = true;
-    router.post(route('sales.addItem', { category: props.category, sale: props.sale.id }), modalItem.value, {
-        onSuccess: () => {
-            toast.success('Item berhasil diperbarui.');
-            showAddItemModal.value = false;
-        },
-        onFinish: () => (isAddingItem.value = false),
-    });
+    pendingAction.value = { type: 'addItem', payload: modalItem.value };
+    if (props.sale.status !== 'draft') {
+        verifyModal.value = true;
+    } else {
+        executePendingAction();
+    }
+};
+
+const resetVerification = () => {
+    if (props.sale.status === 'draft') return;
+
+    form.password = '';
+    form.qr_token = '';
 };
 
 const totalPrice = computed(() => Math.round(form.items.reduce((sum: number, i: any) => sum + Number(i.subtotal || 0), 0)));
@@ -182,30 +249,19 @@ const setExactPayment = () => {
     form.paid_amount = totalPrice.value;
 };
 
-const isLocked = computed(() => props.sale.status !== 'draft');
 const cannotModifyItems = computed(() => props.sale.status !== 'draft' && props.category === 'gold');
-
 
 const openVerifyModal = () => {
     if (!form.items.length) {
         toast.error('Minimal 1 item harus ditambahkan.');
         return;
     }
+    pendingAction.value = { type: 'updateSale' };
     verifyModal.value = true;
 };
 
 const submitSaleFinal = () => {
-    form.transform((data) => ({
-        ...data,
-        _method: 'PATCH',
-    })).post(route('sales.update', { category: props.category, sale: props.sale.id }), {
-        preserveScroll: true,
-        onSuccess: (page) => {
-            savedSale.value = page.props.flash.sale;
-            verifyModal.value = false;
-            successModal.value = true;
-        },
-    });
+    executePendingAction();
 };
 
 const printReceipt = () => {
@@ -242,6 +298,7 @@ watch(
             weight: i.weight,
             price: i.price,
             subtotal: i.subtotal,
+            image: i.manual_image,
             mode: i.source === 'manual' ? 'manual' : 'auto',
         }));
     },
@@ -348,7 +405,6 @@ const togglePasswordVisibility = () => {
                             </div>
                         </div>
                         <hr />
-
                     </CardHeader>
 
                     <CardContent>
@@ -371,7 +427,6 @@ const togglePasswordVisibility = () => {
                                         :class="cannotModifyItems ? '' : 'cursor-pointer hover:bg-muted/50'"
                                         @click="!cannotModifyItems && editItem(Number(index))"
                                     >
-
                                         <TableCell>
                                             <span v-if="item.mode === 'auto'">
                                                 {{ items.find((i: any) => Number(i.id) === Number(item.id))?.name ?? '-' }}
@@ -386,7 +441,6 @@ const togglePasswordVisibility = () => {
                                         <TableCell @click.stop v-if="!cannotModifyItems">
                                             <DeleteButton size="icon" @confirm="removeItem(Number(index))" />
                                         </TableCell>
-
                                     </TableRow>
 
                                     <TableRow v-if="!form.items.length">
@@ -456,7 +510,10 @@ const togglePasswordVisibility = () => {
                                 </div>
                                 <div>
                                     <Label>Upload Foto</Label>
-                                    <CameraUploader v-model="form.image" />
+                                    <div class="flex items-center gap-2">
+                                        <CameraUploader v-model="form.image" />
+                                        <ImageModal v-if="sale.sale_image" :src="sale.sale_image" trigger filename="foto-transaksi.webp" />
+                                    </div>
                                 </div>
 
                                 <div>
@@ -467,9 +524,7 @@ const togglePasswordVisibility = () => {
                         </div>
 
                         <div class="flex justify-end gap-3 pt-4">
-                            <Button @click="openVerifyModal" class="px-6" :disabled="form.processing || isLocked">
-                                {{ isLocked ? 'Transaksi Selesai' : 'Simpan Transaksi' }}
-                            </Button>
+                            <Button @click="openVerifyModal" class="px-6" :disabled="form.processing"> Simpan Transaksi </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -509,7 +564,10 @@ const togglePasswordVisibility = () => {
 
                         <template v-if="category === 'gold'">
                             <Label class="mt-2">Foto Barang</Label>
-                            <CameraUploader v-model="modalItem.image" />
+                            <div class="flex items-center gap-2">
+                                <CameraUploader v-model="modalItem.image" />
+                                <ImageModal v-if="modalItem.image && typeof modalItem.image === 'string'" :src="modalItem.image" trigger filename="foto-barang.webp" />
+                            </div>
                         </template>
                     </div>
 

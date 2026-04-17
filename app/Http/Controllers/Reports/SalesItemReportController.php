@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\SaleItem;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -56,6 +57,9 @@ class SalesItemReportController extends Controller
             'sale_type' => $saleType,
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
+            'payment_method_id' => $request->payment_method_id,
+            'sort' => $request->input('sort', 'created_at'),
+            'direction' => $request->input('direction', 'desc'),
         ];
 
         $baseQuery = SaleItem::query()
@@ -65,10 +69,14 @@ class SalesItemReportController extends Controller
                         $filters['category'],
                         fn($qq) => $qq->where('category', $filters['category'])
                     )
-                    ->when(
-                        $filters['sale_type'],
-                        fn($qq) => $qq->where('sale_type', $filters['sale_type'])
-                    );
+                        ->when(
+                            $filters['sale_type'],
+                            fn($qq) => $qq->where('sale_type', $filters['sale_type'])
+                        )
+                        ->when(
+                            $filters['payment_method_id'] && $filters['payment_method_id'] !== 'all',
+                            fn($qq) => $qq->where('payment_method_id', $filters['payment_method_id'])
+                        );
             })
             ->when(
                 $filters['search'],
@@ -85,7 +93,17 @@ class SalesItemReportController extends Controller
 
         $items = $baseQuery
             ->with(['sale', 'item'])
-            ->latest()
+            ->select('sale_items.*')
+            ->leftJoin('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->when(in_array($filters['sort'], ['weight', 'price', 'subtotal']), function ($q) use ($filters) {
+                $q->orderBy("sale_items.{$filters['sort']}", $filters['direction']);
+            })
+            ->when(in_array($filters['sort'], ['invoice_no', 'created_at']), function ($q) use ($filters) {
+                $q->orderBy("sales.{$filters['sort']}", $filters['direction']);
+            })
+            ->when(!in_array($filters['sort'], ['weight', 'price', 'subtotal', 'invoice_no', 'created_at']), function ($q) {
+                $q->latest('sale_items.created_at');
+            })
             ->get()
             ->map(fn($row) => [
                 'invoice' => $row->sale->invoice_no,
@@ -105,6 +123,7 @@ class SalesItemReportController extends Controller
             'totalAmount' => $totalAmount,
             'category' => $category,
             'saleType' => $saleType,
+            'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
             'isSegmented' => $category !== null && $saleType !== null,
         ]);
     }

@@ -1,10 +1,9 @@
-import type { LucideIcon } from 'lucide-vue-next';
 import type { Config } from 'ziggy-js';
 
 export interface Auth {
     user: User;
-    can: string[]
-    isAdmin: boolean
+    can: string[];
+    isAdmin: boolean;
 }
 
 export interface BreadcrumbItem {
@@ -19,11 +18,11 @@ export interface NavItem {
     icon: string;
     isActive?: boolean;
     children?: {
-        title: string
-        url: string
+        title: string;
+        url: string;
         param: string;
-        icon: string
-    }[]
+        icon: string;
+    }[];
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {

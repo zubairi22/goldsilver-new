@@ -59,15 +59,9 @@ class SaleController extends Controller
         return inertia('sale/Create', [
             'category' => $category,
             'saleType' => $saleType,
-            'paymentMethods' => PaymentMethod::active()->select('id', 'name')->get(),
-            'items' => Item::where('category', $category)
-                ->where('status', 'ready')
-                ->select('id', 'code', 'name', 'price_sell', 'weight')
-                ->orderBy('name')
-                ->get(),
-            'cashiers' => User::role(auth()->user()->hasRole('super-admin') ? ['super-admin', "cashier {$category}"] : ["cashier {$category}"])
-                ->select('id', 'name', 'qr_token')
-                ->get(),
+            'paymentMethods' => [],
+            'items' => [],
+            'cashiers' => [],
         ]);
     }
 
@@ -208,9 +202,18 @@ class SaleController extends Controller
 
     public function addItem(Request $request, string $category, Sale $sale)
     {
-        if ($sale->status !== 'draft' && $sale->category === 'gold') {
-            $this->flashError('Item tidak boleh ditambah pada transaksi emas yang sudah selesai.');
-            return back();
+        if ($sale->status !== 'draft') {
+            $vData = $request->validate([
+                'cashier_id' => 'required|exists:users,id',
+                'password' => 'nullable|string',
+                'qr_token' => 'nullable|string',
+            ]);
+
+            $cashier = $this->verifyAuth($vData, $category);
+            if (!$cashier || !$cashier->hasRole('super-admin')) {
+                $this->flashError('Otorisasi Super Admin diperlukan untuk mengubah transaksi yang sudah selesai.');
+                return back();
+            }
         }
 
         $data = $request->validate([
@@ -275,9 +278,18 @@ class SaleController extends Controller
 
     public function removeItem(Request $request, string $category, Sale $sale)
     {
-        if ($sale->status !== 'draft' && $sale->category === 'gold') {
-            $this->flashError('Item tidak boleh dihapus pada transaksi emas yang sudah selesai.');
-            return back();
+        if ($sale->status !== 'draft') {
+            $vData = $request->validate([
+                'cashier_id' => 'required|exists:users,id',
+                'password' => 'nullable|string',
+                'qr_token' => 'nullable|string',
+            ]);
+
+            $cashier = $this->verifyAuth($vData, $category);
+            if (!$cashier || !$cashier->hasRole('super-admin')) {
+                $this->flashError('Otorisasi Super Admin diperlukan untuk mengubah transaksi yang sudah selesai.');
+                return back();
+            }
         }
 
         $data = $request->validate([
@@ -298,6 +310,8 @@ class SaleController extends Controller
                 'total_price' => $sale->items()->sum('subtotal'),
             ]);
 
+            $sale->refreshPaymentTotals();
+
             return back();
         });
     }
@@ -310,6 +324,8 @@ class SaleController extends Controller
         }
 
         $sale->load(['items.item', 'paymentMethod']);
+        $sale->append('sale_image');
+        $sale->items->each->append('manual_image');
 
         return inertia('sale/Edit', [
             'category' => $category,
@@ -323,7 +339,11 @@ class SaleController extends Controller
                 ->select('id', 'code', 'name', 'price_sell', 'weight')
                 ->orderBy('name')
                 ->get(),
-            'cashiers' => User::role(auth()->user()->hasRole('super-admin') ? ['super-admin', "cashier {$category}"] : ["cashier {$category}"])
+            'cashiers' => User::role(
+                $sale->status === 'draft'
+                ? (auth()->user()->hasRole('super-admin') ? ['super-admin', "cashier {$category}"] : ["cashier {$category}"])
+                : ['super-admin']
+            )
                 ->select('id', 'name', 'qr_token')
                 ->get(),
         ]);
@@ -367,45 +387,61 @@ class SaleController extends Controller
                 }
             }
 
+            $isDraft = ($sale->status === 'draft');
+            $oldPaidAmount = $sale->payments()->sum('amount');
+            $newPaidAmount = (float) $data['paid_amount'];
+
             $sale->update([
                 'sale_type' => $data['sale_type'],
                 'customer' => $data['customer'],
                 'user_id' => $cashier->id,
                 'payment_method_id' => $data['payment_method_id'],
-                'paid_amount' => $data['paid_amount'],
-                'status' => 'unpaid',
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $selectedMethod = PaymentMethod::find($data['payment_method_id']);
+            if ($isDraft) {
+                // First time finalization, handle payments like store
+                $selectedMethod = PaymentMethod::find($data['payment_method_id']);
 
-            if ($selectedMethod && $selectedMethod->name === 'Split') {
-                $tunaiMethod = PaymentMethod::where('name', 'Tunai')->first();
-                $nonTunaiMethod = PaymentMethod::where('name', 'Non Tunai')->first();
+                if ($selectedMethod && $selectedMethod->name === 'Split') {
+                    $tunaiMethod = PaymentMethod::where('name', 'Tunai')->first();
+                    $nonTunaiMethod = PaymentMethod::where('name', 'Non Tunai')->first();
 
-                $sale->payments()->create([
-                    'payment_method_id' => $tunaiMethod?->id,
-                    'amount' => $data['paid_amount'],
-                    'note' => 'Split (Tunai)',
-                    'user_id' => $cashier->id,
-                ]);
-
-                $remaining = $sale->total_price - $data['paid_amount'];
-                if ($remaining > 0) {
                     $sale->payments()->create([
-                        'payment_method_id' => $nonTunaiMethod?->id,
-                        'amount' => $remaining,
-                        'note' => 'Split (Non Tunai)',
+                        'payment_method_id' => $tunaiMethod?->id,
+                        'amount' => $data['paid_amount'],
+                        'note' => 'Split (Tunai)',
+                        'user_id' => $cashier->id,
+                    ]);
+
+                    $remaining = $sale->total_price - $data['paid_amount'];
+                    if ($remaining > 0) {
+                        $sale->payments()->create([
+                            'payment_method_id' => $nonTunaiMethod?->id,
+                            'amount' => $remaining,
+                            'note' => 'Split (Non Tunai)',
+                            'user_id' => $cashier->id,
+                        ]);
+                    }
+                } else {
+                    $sale->payments()->create([
+                        'payment_method_id' => $data['payment_method_id'],
+                        'amount' => $data['paid_amount'],
+                        'note' => 'Pembayaran',
                         'user_id' => $cashier->id,
                     ]);
                 }
             } else {
-                $sale->payments()->create([
-                    'payment_method_id' => $data['payment_method_id'],
-                    'amount' => $data['paid_amount'],
-                    'note' => 'Pembayaran',
-                    'user_id' => $cashier->id,
-                ]);
+                // Sale was already finalized, only record a new payment if the amount changed (adjustment)
+                $diff = $newPaidAmount - $oldPaidAmount;
+                if ($diff != 0) {
+                    $sale->addPayment([
+                        'amount' => $diff,
+                        'payment_method_id' => $data['payment_method_id'],
+                        'note' => 'Penyesuaian Pembayaran (Edit)',
+                        'user_id' => $cashier->id,
+                    ]);
+                }
             }
 
             $sale->refreshPaymentTotals();

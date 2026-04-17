@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Heading from '@/components/Heading.vue';
-import PageNav from '@/components/PageNav.vue';
+import Icon from '@/components/Icon.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,17 +13,18 @@ import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { ref, watch } from 'vue';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { ref, watch } from 'vue';
 import * as XLSX from 'xlsx';
 
-const { items, filters, totalWeight, totalAmount, isSegmented } = defineProps<{
+const { items, filters, totalWeight, totalAmount, isSegmented, paymentMethods } = defineProps<{
     items: any;
     filters: any;
     totalWeight: number;
     totalAmount: number;
     isSegmented?: boolean;
+    paymentMethods: any[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -35,12 +36,29 @@ const { search } = useSearch('reports.sales.item', filters.search, ['items']);
 
 const { formatRupiah } = useFormat();
 
+const sort = ref(filters.sort ?? 'created_at');
+const direction = ref(filters.direction ?? 'desc');
+
+const onSort = (column: string) => {
+    if (sort.value === column) {
+        direction.value = direction.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sort.value = column;
+        direction.value = 'asc';
+    }
+    applyFilters();
+};
+
 const category = ref(filters.category ?? 'all');
+const payment_method_id = ref(filters.payment_method_id ?? 'all');
 
 const date = ref(filters.start && filters.end ? [filters.start, filters.end] : []);
 
 const applyFilters = () => {
-    const params: Record<string, any> = {};
+    const params: Record<string, any> = {
+        sort: sort.value,
+        direction: direction.value,
+    };
 
     if (!isSegmented && category.value !== 'all') {
         params.category = category.value;
@@ -51,6 +69,10 @@ const applyFilters = () => {
         params.end = date.value[1];
     }
 
+    if (payment_method_id.value !== 'all') {
+        params.payment_method_id = payment_method_id.value;
+    }
+
     if (search.value) params.search = search.value;
 
     router.get(route('reports.sales.item'), params, {
@@ -59,7 +81,7 @@ const applyFilters = () => {
     });
 };
 
-watch([category, date], applyFilters);
+watch([category, date, payment_method_id], applyFilters);
 
 const exportExcel = () => {
     const rows = items.map((row: any, index: number) => ({
@@ -74,9 +96,7 @@ const exportExcel = () => {
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.sheet_add_aoa(worksheet, [
-        ['TOTAL', '', '', '', '', '', totalWeight, totalAmount]
-    ], { origin: -1 });
+    XLSX.utils.sheet_add_aoa(worksheet, [['TOTAL', '', '', '', '', '', totalWeight, totalAmount]], { origin: -1 });
 
     const workbook = XLSX.utils.book_new();
 
@@ -88,9 +108,9 @@ const exportExcel = () => {
 
 const exportPdf = (action: 'download' | 'stream') => {
     const doc = new jsPDF();
-    
+
     doc.text('Laporan Penjualan Per Item', 14, 15);
-    
+
     const tableData = items.map((row: any, index: number) => [
         index + 1,
         row.invoice,
@@ -99,7 +119,7 @@ const exportPdf = (action: 'download' | 'stream') => {
         row.category,
         row.item,
         row.weight,
-        formatRupiah(row.subtotal)
+        formatRupiah(row.subtotal),
     ]);
 
     autoTable(doc, {
@@ -111,7 +131,7 @@ const exportPdf = (action: 'download' | 'stream') => {
         theme: 'striped',
         headStyles: { fillColor: [30, 41, 59] },
         footStyles: { fillColor: [241, 245, 249], textColor: [0, 0, 0], fontStyle: 'bold' },
-        styles: { fontSize: 8 }
+        styles: { fontSize: 8 },
     });
 
     if (action === 'download') {
@@ -170,6 +190,18 @@ const exportPdf = (action: 'download' | 'stream') => {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                <div class="w-40">
+                                    <Select v-model="payment_method_id">
+                                        <SelectTrigger><SelectValue placeholder="Metode Bayar" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua Metode</SelectItem>
+                                            <SelectItem v-for="method in paymentMethods" :key="method.id" :value="method.id.toString()">
+                                                {{ method.name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             <div class="w-full sm:w-auto lg:w-80">
@@ -177,7 +209,6 @@ const exportPdf = (action: 'download' | 'stream') => {
                             </div>
                         </div>
 
-                        <!-- SEARCH + EXPORT -->
                         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                             <div class="w-full lg:w-80">
                                 <SearchInput v-model:search="search" />
@@ -195,13 +226,37 @@ const exportPdf = (action: 'download' | 'stream') => {
                             <Table>
                                 <TableHeader class="sticky top-0 z-10 bg-background">
                                     <TableRow>
-                                        <TableHead>Nota</TableHead>
-                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="onSort('invoice_no')">
+                                            Nota
+                                            <Icon
+                                                :name="sort === 'invoice_no' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="onSort('created_at')">
+                                            Tanggal
+                                            <Icon
+                                                :name="sort === 'created_at' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
                                         <TableHead>Jenis</TableHead>
                                         <TableHead>Kategori</TableHead>
                                         <TableHead>Item</TableHead>
-                                        <TableHead class="text-right">Berat</TableHead>
-                                        <TableHead class="text-right">Subtotal</TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="onSort('weight')">
+                                            Berat
+                                            <Icon
+                                                :name="sort === 'weight' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer text-right select-none" @click="onSort('subtotal')">
+                                            Subtotal
+                                            <Icon
+                                                :name="sort === 'subtotal' ? (direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'"
+                                                class="ml-1 inline-block h-3 w-3"
+                                            />
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
 
@@ -230,7 +285,6 @@ const exportPdf = (action: 'download' | 'stream') => {
                                 </TableBody>
                             </Table>
                         </div>
-
                     </CardContent>
                 </Card>
             </div>
