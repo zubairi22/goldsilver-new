@@ -3,6 +3,7 @@ import CameraUploader from '@/components/CameraUploader.vue';
 import CurrencyInput from '@/components/CurrencyInput.vue';
 import DeleteButton from '@/components/DeleteButton.vue';
 import Icon from '@/components/Icon.vue';
+import ImageModal from '@/components/ImageModal.vue';
 import InputError from '@/components/InputError.vue';
 import QrScanner from '@/components/QrScanner.vue';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,6 @@ import { useFormat } from '@/composables/useFormat';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import ImageModal from '@/components/ImageModal.vue';
 import Multiselect from '@vueform/multiselect';
 import { Eye, EyeOff } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
@@ -47,7 +47,7 @@ const form = useForm({
     mode: props.category === 'gold' ? 'auto' : 'manual',
     image: undefined as File | undefined,
     customer: props.sale.customer ?? '',
-    payment_method_id: props.sale.payment_method_id ?? 1,
+    payment_method_id: Number(props.sale.payment_method_id) ?? 1,
     paid_amount: props.sale.paid_amount,
     cashier_id: props.sale.user_id || props.cashiers?.[0]?.id,
     password: '',
@@ -566,7 +566,12 @@ const togglePasswordVisibility = () => {
                             <Label class="mt-2">Foto Barang</Label>
                             <div class="flex items-center gap-2">
                                 <CameraUploader v-model="modalItem.image" />
-                                <ImageModal v-if="modalItem.image && typeof modalItem.image === 'string'" :src="modalItem.image" trigger filename="foto-barang.webp" />
+                                <ImageModal
+                                    v-if="modalItem.image && typeof modalItem.image === 'string'"
+                                    :src="modalItem.image"
+                                    trigger
+                                    filename="foto-barang.webp"
+                                />
                             </div>
                         </template>
                     </div>

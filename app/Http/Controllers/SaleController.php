@@ -396,11 +396,11 @@ class SaleController extends Controller
                 'customer' => $data['customer'],
                 'user_id' => $cashier->id,
                 'payment_method_id' => $data['payment_method_id'],
+                'status' => $sale->status === 'draft' ? 'unpaid' : $sale->status,
                 'notes' => $data['notes'] ?? null,
             ]);
 
             if ($isDraft) {
-                // First time finalization, handle payments like store
                 $selectedMethod = PaymentMethod::find($data['payment_method_id']);
 
                 if ($selectedMethod && $selectedMethod->name === 'Split') {
@@ -432,7 +432,6 @@ class SaleController extends Controller
                     ]);
                 }
             } else {
-                // Sale was already finalized, only record a new payment if the amount changed (adjustment)
                 $diff = $newPaidAmount - $oldPaidAmount;
                 if ($diff != 0) {
                     $sale->addPayment([
