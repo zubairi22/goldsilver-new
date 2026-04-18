@@ -24,7 +24,6 @@ class DebtController extends Controller
             'category' => $category,
             'sales' => $sales,
             'paymentMethods' => PaymentMethod::active()
-                ->whereIn('name', ['Tunai', 'Non Tunai'])
                 ->orderBy('id')
                 ->get(),
         ]);

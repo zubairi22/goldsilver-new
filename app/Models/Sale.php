@@ -100,7 +100,7 @@ class Sale extends Model implements HasMedia
 
         return match ($this->status) {
             'paid' => 'Selesai',
-            'partial' => 'Sebagian',
+            'partial' => 'Kurang Bayar',
             'unpaid' => 'Belum Dibayar',
             'draft' => 'Draft',
             default => ucfirst($this->status),
