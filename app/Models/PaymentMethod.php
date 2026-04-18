@@ -9,6 +9,7 @@ class PaymentMethod extends Model
     protected $fillable = [
         'name',
         'is_active',
+        'is_debt',
     ];
 
     public function sales()

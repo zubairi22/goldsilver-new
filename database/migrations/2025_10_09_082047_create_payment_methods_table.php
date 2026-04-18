@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_debt')->default(false);
             $table->timestamps();
         });
     }

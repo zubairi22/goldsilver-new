@@ -377,6 +377,12 @@ class SaleController extends Controller
             return back();
         }
 
+        $selectedMethod = PaymentMethod::find($data['payment_method_id']);
+        if ($selectedMethod && !$selectedMethod->is_debt && $data['paid_amount'] < $sale->total_price) {
+            $this->flashError('Metode pembayaran ini tidak diperbolehkan untuk piutang. Total bayar harus mencukupi.');
+            return back();
+        }
+
         return DB::transaction(function () use ($request, $data, $category, $sale, $cashier) {
             if ($request->hasFile('image')) {
                 $media = $sale->addMediaFromRequest('image')->toMediaCollection('sale-image');

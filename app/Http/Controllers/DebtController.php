@@ -24,6 +24,7 @@ class DebtController extends Controller
             'category' => $category,
             'sales' => $sales,
             'paymentMethods' => PaymentMethod::active()
+                ->where('is_debt', false)
                 ->orderBy('id')
                 ->get(),
         ]);

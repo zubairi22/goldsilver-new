@@ -33,6 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const defaultForm = () => ({
     name: '',
     is_active: 1,
+    is_debt: 0,
 })
 
 const addForm = useForm(defaultForm())
@@ -44,7 +45,8 @@ const editModal = ref(false)
 const openEdit = (row: any) => {
     editForm.id = row.id
     editForm.name = row.name
-    editForm.is_active = row.is_active
+    editForm.is_active = row.is_active ? 1 : 0
+    editForm.is_debt = row.is_debt ? 1 : 0
     editModal.value = true
 }
 
@@ -96,6 +98,7 @@ const handleDelete = (paymentId: number) => {
                                         <TableRow>
                                             <TableHead>Nama</TableHead>
                                             <TableHead>Status</TableHead>
+                                            <TableHead>Piutang?</TableHead>
                                             <TableHead class="w-8" />
                                             <TableHead class="w-8" />
                                         </TableRow>
@@ -112,6 +115,17 @@ const handleDelete = (paymentId: number) => {
                                                 >
                                                     {{ pm.is_active ? 'Aktif' : 'Nonaktif' }}
                                                 </Badge>
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <Badge
+                                                    v-if="pm.is_debt"
+                                                    variant="secondary"
+                                                    class="capitalize"
+                                                >
+                                                    Ya
+                                                </Badge>
+                                                <span v-else class="text-muted-foreground text-sm">-</span>
                                             </TableCell>
 
                                             <TableCell class="px-1">
@@ -172,6 +186,24 @@ const handleDelete = (paymentId: number) => {
 
                     <InputError :message="addForm.errors.is_active" />
                 </div>
+
+                <div>
+                    <Label class="text-sm mb-1 block">Bisa Piutang?</Label>
+
+                    <Select v-model="addForm.is_debt">
+                        <SelectTrigger class="w-full">
+                            <SelectValue placeholder="Pilih Opsi" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem :value="1">Ya</SelectItem>
+                                <SelectItem :value="0">Tidak</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+
+                    <InputError :message="addForm.errors.is_debt" />
+                </div>
             </div>
 
             <DialogFooter class="gap-2">
@@ -215,6 +247,24 @@ const handleDelete = (paymentId: number) => {
                     </Select>
 
                     <InputError :message="editForm.errors.is_active" />
+                </div>
+
+                <div>
+                    <Label class="text-sm mb-1 block">Bisa Piutang?</Label>
+
+                    <Select v-model="editForm.is_debt">
+                        <SelectTrigger class="w-full">
+                            <SelectValue placeholder="Pilih Opsi" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem :value="1">Ya</SelectItem>
+                                <SelectItem :value="0">Tidak</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+
+                    <InputError :message="editForm.errors.is_debt" />
                 </div>
             </div>
 

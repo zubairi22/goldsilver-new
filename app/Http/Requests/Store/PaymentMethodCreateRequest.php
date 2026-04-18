@@ -17,6 +17,7 @@ class PaymentMethodCreateRequest extends FormRequest
         return [
             'name'      => ['required','string','max:100'],
             'is_active' => ['sometimes','boolean'],
+            'is_debt'   => ['sometimes','boolean'],
         ];
     }
 }
