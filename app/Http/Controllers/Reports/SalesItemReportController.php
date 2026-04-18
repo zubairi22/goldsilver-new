@@ -12,7 +12,7 @@ class SalesItemReportController extends Controller
 {
     public function index(Request $request)
     {
-        return $this->report($request);
+        return $this->report($request, $request['category']);
     }
 
     public function retail(Request $request)
@@ -69,14 +69,14 @@ class SalesItemReportController extends Controller
                         $filters['category'],
                         fn($qq) => $qq->where('category', $filters['category'])
                     )
-                        ->when(
-                            $filters['sale_type'],
-                            fn($qq) => $qq->where('sale_type', $filters['sale_type'])
-                        )
-                        ->when(
-                            $filters['payment_method_id'] && $filters['payment_method_id'] !== 'all',
-                            fn($qq) => $qq->where('payment_method_id', $filters['payment_method_id'])
-                        );
+                    ->when(
+                        $filters['sale_type'],
+                        fn($qq) => $qq->where('sale_type', $filters['sale_type'])
+                    )
+                    ->when(
+                        $filters['payment_method_id'] && $filters['payment_method_id'] !== 'all',
+                        fn($qq) => $qq->where('payment_method_id', $filters['payment_method_id'])
+                    );
             })
             ->when(
                 $filters['search'],
