@@ -303,4 +303,38 @@ class BuybackController extends Controller
             return back();
         }
     }
+    public function destroy(Request $request, string $category, BuybackItem $buybackItem)
+    {
+        if ($buybackItem->buyback->category !== $category) {
+            $this->flashError('Data tidak ditemukan di kategori ini.');
+            return back();
+        }
+
+        $item = $buybackItem->item;
+        $type = $request->input('type', 'delete');
+
+        DB::transaction(function () use ($buybackItem, $item, $type) {
+            if ($item) {
+                if ($type === 'not_ready') {
+                    $item->update(['status' => 'not_ready']);
+                } else {
+                    $item->delete();
+                }
+            }
+
+            $buybackItem->delete();
+        });
+
+        if (!$item) {
+            $this->flashSuccess('Item buyback berhasil dihapus.');
+        } else {
+            if ($type === 'not_ready') {
+                $this->flashSuccess('Item berhasil dipindahkan ke status belum siap.');
+            } else {
+                $this->flashSuccess('Item berhasil dihapus dari sistem.');
+            }
+        }
+
+        return back();
+    }
 }

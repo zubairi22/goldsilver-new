@@ -341,7 +341,20 @@ class SaleController extends Controller
                 ->get(),
             'cashiers' => User::role(
                 $sale->status === 'draft'
-                ? (auth()->user()->hasRole('super-admin') ? ['super-admin', "cashier {$category}"] : ["cashier {$category}"])
+                ? (
+                    auth()->user()->hasRole('super-admin')
+                    ? array_merge(
+                        ['super-admin'],
+                        $category === 'silver'
+                        ? ["cashier silver", "cashier gold"]
+                        : ["cashier {$category}"]
+                    )
+                    : (
+                        $category === 'silver'
+                        ? ["cashier silver", "cashier gold"]
+                        : ["cashier {$category}"]
+                    )
+                )
                 : ['super-admin']
             )
                 ->select('id', 'name', 'qr_token')

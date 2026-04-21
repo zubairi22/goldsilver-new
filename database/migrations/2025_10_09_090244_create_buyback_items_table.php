@@ -25,6 +25,7 @@ return new class extends Migration
             $table->timestamp('label_printed_at')->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

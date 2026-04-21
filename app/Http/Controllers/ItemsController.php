@@ -23,6 +23,7 @@ class ItemsController extends Controller
             'item_type_id' => request('item_type_id'),
             'sort' => request('sort', 'code'),
             'direction' => request('direction', 'desc'),
+            'per_page' => request('per_page', 10),
         ];
 
         $totalWeight = (float) Item::where('category', 'gold')->filters($filters)->sum('weight');
@@ -46,7 +47,7 @@ class ItemsController extends Controller
             ->where('category', 'gold')
             ->filters($filters)
             ->orderBy($filters['sort'], $filters['direction'])
-            ->paginate(10)
+            ->paginate($filters['per_page'])
             ->onEachSide(1)
             ->withQueryString();
 
@@ -182,5 +183,40 @@ class ItemsController extends Controller
         ])->setPaper([0, 0, 226.77, 68.03], 'portrait');
 
         return $pdf->stream('item-label-' . $item->code . '.pdf');
+    }
+
+    public function bulkUpdate(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:items,id',
+            'status' => 'nullable|string',
+            'category' => 'nullable|string|in:gold,silver',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $updateData = [];
+            if ($request->filled('status')) {
+                $updateData['status'] = $request->status;
+            }
+            if ($request->filled('category')) {
+                $updateData['category'] = $request->category;
+            }
+
+            if (!empty($updateData)) {
+                Item::whereIn('id', $data['ids'])->update($updateData);
+            }
+
+            DB::commit();
+
+            $this->flashSuccess('Item berhasil diperbarui secara massal.');
+            return back();
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->flashError('Terjadi kesalahan saat memperbarui item secara massal.', $e);
+            return back();
+        }
     }
 }

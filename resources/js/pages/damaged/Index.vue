@@ -1,18 +1,19 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card, CardContent } from '@/components/ui/card';
+import DeleteButton from '@/components/DeleteButton.vue';
 import Heading from '@/components/Heading.vue';
-import SearchInput from '@/components/SearchInput.vue';
 import PageNav from '@/components/PageNav.vue';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { computed, ref } from 'vue';
+import SearchInput from '@/components/SearchInput.vue';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFormat } from '@/composables/useFormat';
+import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 const { items, filters, category } = defineProps(['items', 'filters', 'category']);
 const { formatRupiah } = useFormat();
@@ -62,6 +63,23 @@ function submitRestore() {
         },
     );
 }
+
+const deleteModal = ref(false);
+const deleteItem = ref<any>(null);
+
+function openDelete(item: any) {
+    deleteItem.value = item;
+    deleteModal.value = true;
+}
+
+const handleDelete = (type: 'delete' | 'not_ready') => {
+    router.delete(route('damaged.destroy', { category, item: deleteItem.value.id }), {
+        data: { type },
+        onSuccess: () => (deleteModal.value = false),
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
 </script>
 
 <template>
@@ -99,20 +117,25 @@ function submitRestore() {
                                         <TableCell>{{ it.name }}</TableCell>
                                         <TableCell>
                                             <div v-if="it.latest_buyback_item?.buyback" class="flex flex-col">
-                                                <span class="font-semibold text-xs">{{ it.latest_buyback_item.buyback.buyback_no }}</span>
-                                                <span class="text-[10px] text-gray-500">{{ it.latest_buyback_item.buyback.customer || 'Tanpa Pelanggan' }}</span>
+                                                <span class="text-xs font-semibold">{{ it.latest_buyback_item.buyback.buyback_no }}</span>
+                                                <span class="text-[10px] text-gray-500">{{ it.latest_buyback_item.buyback.customer || '-' }}</span>
                                             </div>
                                             <span v-else class="text-[10px] text-gray-400">Manual / Migrasi</span>
                                         </TableCell>
                                         <TableCell class="text-right">{{ it.weight }}</TableCell>
                                         <TableCell class="text-right">{{ formatRupiah(it.price_sell) }}</TableCell>
                                         <TableCell class="text-center">
-                                            <Button @click="openRestore(it)"> Pulihkan Stok </Button>
+                                            <div class="flex justify-center gap-2">
+                                                <Button @click="openRestore(it)"> Pulihkan Stok </Button>
+                                                <DeleteButton @confirm="openDelete(it)" title="Hapus" />
+                                            </div>
                                         </TableCell>
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="6" class="py-4 text-center text-gray-500"> Tidak ada data produk rusak ditemukan. </TableCell>
+                                        <TableCell colspan="6" class="py-4 text-center text-gray-500">
+                                            Tidak ada data produk rusak ditemukan.
+                                        </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
@@ -145,6 +168,38 @@ function submitRestore() {
             <DialogFooter>
                 <Button variant="secondary" @click="restoreModal = false">Batal</Button>
                 <Button @click="submitRestore">Simpan</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="deleteModal" @update:open="(v) => (deleteModal = v)">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Opsi Penghapusan</DialogTitle>
+            </DialogHeader>
+
+            <div v-if="deleteItem" class="py-4">
+                <p class="mb-4 text-sm text-gray-600">
+                    Bagaimana Anda ingin menangani item <strong>{{ deleteItem.code }} - {{ deleteItem.name }}</strong> ini?
+                </p>
+                <div class="space-y-3">
+                    <Button variant="outline" class="h-12 w-full justify-start text-left" @click="handleDelete('not_ready')">
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-gray-900">Hapus Pada Produk Rusak</span>
+                            <span class="text-xs text-gray-500">Item akan muncul kembali di daftar barang dengan status 'Belum Siap'.</span>
+                        </div>
+                    </Button>
+                    <Button variant="destructive" class="h-12 w-full justify-start text-left" @click="handleDelete('delete')">
+                        <div class="flex flex-col text-white">
+                            <span class="font-semibold">Hapus Permanen</span>
+                            <span class="text-xs opacity-80">Item akan dihapus dari master item.</span>
+                        </div>
+                    </Button>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="secondary" @click="deleteModal = false">Batal</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

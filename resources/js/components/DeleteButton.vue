@@ -9,43 +9,39 @@
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Tindakan ini tidak dapat dibatalkan. Item ini akan dihapus secara permanen dari sistem.
-                </AlertDialogDescription>
+                <AlertDialogDescription> Tindakan ini tidak dapat dibatalkan. Item ini akan dihapus dari sistem. </AlertDialogDescription>
             </AlertDialogHeader>
 
             <AlertDialogFooter>
                 <AlertDialogCancel>Batal</AlertDialogCancel>
 
-                <AlertDialogAction @click="$emit('confirm')">
-                    Lanjutkan
-                </AlertDialogAction>
+                <AlertDialogAction @click="$emit('confirm')"> Lanjutkan </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
 </template>
 
 <script lang="ts" setup>
-import { Button } from '@/components/ui/button'
-import { Trash } from 'lucide-vue-next'
 import {
     AlertDialog,
-    AlertDialogTrigger,
+    AlertDialogAction,
+    AlertDialogCancel,
     AlertDialogContent,
-    AlertDialogHeader,
-    AlertDialogTitle,
     AlertDialogDescription,
     AlertDialogFooter,
-    AlertDialogCancel,
-    AlertDialogAction
-} from '@/components/ui/alert-dialog'
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Trash } from 'lucide-vue-next';
 
 withDefaults(
     defineProps<{
-        disabled?: boolean
+        disabled?: boolean;
     }>(),
     {
-        disabled: false
-    }
-)
+        disabled: false,
+    },
+);
 </script>

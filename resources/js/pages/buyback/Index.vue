@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import DeleteButton from '@/components/DeleteButton.vue';
 import Heading from '@/components/Heading.vue';
 import Icon from '@/components/Icon.vue';
 import ImageModal from '@/components/ImageModal.vue';
@@ -150,6 +151,29 @@ const applyFilters = () => {
     });
 };
 
+const deleteModal = ref(false);
+const deleteItem = ref<any>(null);
+
+const openDelete = (item: any) => {
+    deleteItem.value = item;
+    deleteModal.value = true;
+};
+
+const handleDelete = (type: 'delete' | 'not_ready') => {
+    router.delete(
+        route('buyback.item.destroy', {
+            category: props.category,
+            buybackItem: deleteItem.value.id,
+        }),
+        {
+            data: { type },
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => (deleteModal.value = false),
+        },
+    );
+};
+
 watch([payment_type, date, qc_status], applyFilters);
 </script>
 
@@ -296,21 +320,24 @@ watch([payment_type, date, qc_status], applyFilters);
                                             <TableCell class="text-right">{{ formatRupiah(it.price) }}</TableCell>
                                             <TableCell class="text-right font-semibold">{{ formatRupiah(it.subtotal) }}</TableCell>
                                             <TableCell class="text-center">
-                                                <div v-if="category === 'silver'" class="flex items-center justify-center gap-2">
-                                                    <Badge> Selesai </Badge>
-                                                </div>
-                                                <template v-else>
-                                                    <div v-if="it.condition === 'good'" class="flex items-center justify-center gap-1">
-                                                        <Button variant="outline" size="sm" @click="printLabel(it, true)" title="Preview Label">
-                                                            <Eye class="h-4 w-4" />
-                                                        </Button>
-                                                        <Button variant="info" size="sm" @click="printLabel(it)" title="Cetak Label">
-                                                            <Printer class="h-4 w-4" />
-                                                        </Button>
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <div v-if="category === 'silver'" class="flex items-center justify-center gap-2">
+                                                        <Badge variant="outline"> Selesai </Badge>
                                                     </div>
-                                                    <Badge v-else-if="it.condition === 'broken'"> Rusak </Badge>
-                                                    <Button v-else size="sm" @click="openQC(it)"> Proses QC </Button>
-                                                </template>
+                                                    <template v-else>
+                                                        <div v-if="it.condition === 'good'" class="flex items-center justify-center gap-1">
+                                                            <Button variant="outline" @click="printLabel(it, true)" title="Preview Label">
+                                                                <Eye class="h-4 w-4" />
+                                                            </Button>
+                                                            <Button variant="info" @click="printLabel(it)" title="Cetak Label">
+                                                                <Printer class="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                        <Badge v-else-if="it.condition === 'broken'" variant="destructive"> Rusak </Badge>
+                                                        <Button v-else @click="openQC(it)"> Proses QC </Button>
+                                                    </template>
+                                                    <DeleteButton @confirm="openDelete(it)" title="Hapus" />
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     </template>
@@ -386,6 +413,38 @@ watch([payment_type, date, qc_status], applyFilters);
                 <Button variant="secondary" :disabled="!labelDateRange" @click="printBulkLabel(true)"> Preview Label </Button>
                 <Button :disabled="!labelDateRange" @click="printBulkLabel(false)"> Tampilkan & Cetak </Button>
             </div>
+        </DialogContent>
+    </Dialog>
+
+    <Dialog :open="deleteModal" @update:open="(v) => (deleteModal = v)">
+        <DialogContent class="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Opsi Penghapusan Buyback</DialogTitle>
+            </DialogHeader>
+
+            <div v-if="deleteItem" class="py-4">
+                <p class="mb-4 text-sm text-gray-600">
+                    Bagaimana Anda ingin menangani item <strong>{{ deleteItem.manual_name || deleteItem.item?.name }}</strong> ini?
+                </p>
+                <div class="space-y-3">
+                    <Button variant="outline" class="h-12 w-full justify-start text-left" @click="handleDelete('not_ready')">
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-gray-900">Hapus Pada Daftar Buyback</span>
+                            <span class="text-xs text-gray-500">Item akan muncul kembali di daftar barang dengan status 'Belum Siap'.</span>
+                        </div>
+                    </Button>
+                    <Button variant="destructive" class="h-12 w-full justify-start text-left" @click="handleDelete('delete')">
+                        <div class="flex flex-col text-white">
+                            <span class="font-semibold">Hapus Permanen</span>
+                            <span class="text-xs opacity-80">Item akan dihapus dari master item.</span>
+                        </div>
+                    </Button>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="secondary" @click="deleteModal = false">Batal</Button>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 </template>

@@ -10,6 +10,7 @@ import SearchInput from '@/components/SearchInput.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Input from '@/components/ui/input/Input.vue';
 import { Label } from '@/components/ui/label';
@@ -50,8 +51,17 @@ const { formatRupiah } = useFormat();
 
 const status = ref(filters.status || 'all');
 const item_type_id = ref(filters.item_type_id || 'all');
+const perPage = ref(filters.per_page || 10);
 const sortBy = ref(filters.sort || 'code');
 const sortDirection = ref(filters.direction || 'desc');
+
+// Reset selection when data changes (e.g. page change)
+watch(
+    () => items.data,
+    () => {
+        selectedIds.value = [];
+    },
+);
 
 const toggleSort = (column: string) => {
     if (sortBy.value === column) {
@@ -111,6 +121,7 @@ const handleEdit = () => {
 const handleDelete = (id: any) => {
     router.delete(route('store.items.destroy', id), {
         preserveScroll: true,
+        preserveState: true,
     });
 };
 
@@ -119,20 +130,17 @@ const applyFilters = () => {
     if (search.value) params.search = search.value;
     if (status.value !== 'all') params.status = status.value;
     if (item_type_id.value !== 'all') params.item_type_id = item_type_id.value;
+    if (perPage.value) params.per_page = perPage.value;
     params.sort = sortBy.value;
     params.direction = sortDirection.value;
 
-    router.get(
-        route('store.items.index', params),
-        {},
-        {
-            preserveScroll: true,
-            preserveState: true,
-        },
-    );
+    router.get(route('store.items.index', params), {
+        preserveScroll: true,
+        preserveState: true,
+    });
 };
 
-watch([status, item_type_id], applyFilters);
+watch([status, item_type_id, perPage], applyFilters);
 
 const labelModal = ref(false);
 const printRange = ref({
@@ -166,6 +174,47 @@ const scanModal = ref(false);
 const onScanned = (code: string) => {
     search.value = code;
     toast.success(`Scan berhasil: ${code}`);
+};
+
+const selectedIds = ref<number[]>([]);
+
+const toggleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        selectedIds.value = items.data.map((i: any) => i.id);
+    } else {
+        selectedIds.value = [];
+    }
+};
+
+const updateSelection = (id: number, checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        if (!selectedIds.value.includes(id)) {
+            selectedIds.value.push(id);
+        }
+    } else {
+        selectedIds.value = selectedIds.value.filter((i) => i !== id);
+    }
+};
+
+const handleBulkUpdate = (data: { status?: string; category?: string }) => {
+    if (selectedIds.value.length === 0) return;
+
+    router.post(
+        route('store.items.bulk-update'),
+        {
+            ids: selectedIds.value,
+            ...data,
+        },
+        {
+            onSuccess: () => {
+                selectedIds.value = [];
+                toast.success('Update massal berhasil');
+            },
+        },
+    );
+};
+const clearSelection = () => {
+    selectedIds.value = [];
 };
 </script>
 
@@ -225,9 +274,10 @@ const onScanned = (code: string) => {
                                         <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="ready">Ready</SelectItem>
-                                            <SelectItem value="sold">Kosong</SelectItem>
+                                            <SelectItem value="ready">Siap Jual</SelectItem>
+                                            <SelectItem value="sold">Terjual</SelectItem>
                                             <SelectItem value="damaged">Rusak</SelectItem>
+                                            <SelectItem value="not_ready">Belum Siap</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -244,6 +294,19 @@ const onScanned = (code: string) => {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                <div class="w-24">
+                                    <Label class="mb-2">Baris</Label>
+                                    <Select v-model="perPage">
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             <div class="flex items-end">
@@ -252,6 +315,18 @@ const onScanned = (code: string) => {
                                     Cetak Label
                                 </Button>
                             </div>
+                        </div>
+
+                        <div v-if="selectedIds.length > 0" class="mb-4 flex items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                            <span class="text-sm font-medium text-blue-700">{{ selectedIds.length }} item terpilih</span>
+                            <div class="h-6 w-px bg-blue-200" />
+                            <Button variant="outline" size="sm" class="bg-white" @click="handleBulkUpdate({ status: 'ready' })">
+                                Set Siap Jual
+                            </Button>
+                            <Button variant="outline" size="sm" class="bg-white" @click="handleBulkUpdate({ category: 'silver' })">
+                                Pindah ke Perak
+                            </Button>
+                            <Button variant="destructive" size="sm" @click="clearSelection">Batal</Button>
                         </div>
 
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
@@ -268,6 +343,12 @@ const onScanned = (code: string) => {
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead class="w-10">
+                                            <Checkbox
+                                                :modelValue="selectedIds.length === items.data.length && items.data.length > 0"
+                                                @update:modelValue="toggleSelectAll"
+                                            />
+                                        </TableHead>
                                         <TableHead>No</TableHead>
                                         <TableHead>Gambar</TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('name')">
@@ -322,6 +403,12 @@ const onScanned = (code: string) => {
 
                                 <TableBody>
                                     <TableRow v-for="item in items.data" :key="item.id">
+                                        <TableCell>
+                                            <Checkbox
+                                                :modelValue="selectedIds.includes(item.id)"
+                                                @update:modelValue="(v) => updateSelection(item.id, v)"
+                                            />
+                                        </TableCell>
                                         <TableCell>{{ item.id }}</TableCell>
                                         <TableCell class="py-1">
                                             <ImageModal
@@ -359,7 +446,7 @@ const onScanned = (code: string) => {
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="9" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
+                                        <TableCell colspan="12" class="text-center text-gray-500"> Item tidak ditemukan </TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>

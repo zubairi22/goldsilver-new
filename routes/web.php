@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
             Route::resource('item-types', ItemTypesController::class)->except(['show', 'create', 'edit']);
             Route::post('item-types/merge', [ItemTypesController::class, 'merge'])->name('item-types.merge');
             Route::resource('items', ItemsController::class)->except(['show', 'create', 'edit']);
+            Route::post('items/bulk-update', [ItemsController::class, 'bulkUpdate'])->name('items.bulk-update');
             Route::get('items/print-label', [ItemsController::class, 'printLabel'])->name('items.print-label');
             Route::get('items/{item}/print-label', [ItemsController::class, 'printSingleLabel'])->name('items.print-single-label');
 
@@ -96,6 +97,7 @@ Route::middleware('auth')->group(function () {
                                 Route::patch('/item/{buybackItem}/qc', [BuybackController::class, 'processQC'])->name('item.qc');
                                 Route::get('/item/{buybackItem}/print-label', [BuybackController::class, 'printLabel'])->name('item.print-label');
                                 Route::get('bulk/print-label', [BuybackController::class, 'printBulkLabel'])->name('bulk.print-label');
+                                Route::delete('/item/{buybackItem}', [BuybackController::class, 'destroy'])->name('item.destroy');
                             }
                         );
 
@@ -105,6 +107,7 @@ Route::middleware('auth')->group(function () {
                             function () {
                                 Route::get('/', [DamagedController::class, 'index'])->name('index');
                                 Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
+                                Route::delete('/{item}', [DamagedController::class, 'destroy'])->name('destroy');
                             }
                         );
 

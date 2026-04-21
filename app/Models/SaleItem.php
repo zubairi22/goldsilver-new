@@ -30,7 +30,7 @@ class SaleItem extends Model implements HasMedia
 
     public function buybackItem()
     {
-        return $this->hasOne(BuybackItem::class);
+        return $this->hasOne(BuybackItem::class)->withTrashed();
     }
 
     public function item()
