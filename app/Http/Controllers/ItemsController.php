@@ -190,32 +190,34 @@ class ItemsController extends Controller
         $data = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:items,id',
-            'status' => 'nullable|string',
-            'category' => 'nullable|string|in:gold,silver',
+            'action' => 'required|string|in:status,item_type,delete',
+            'status' => 'required_if:action,status|string',
+            'item_type_id' => 'required_if:action,item_type|exists:item_types,id',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $updateData = [];
-            if ($request->filled('status')) {
-                $updateData['status'] = $request->status;
-            }
-            if ($request->filled('category')) {
-                $updateData['category'] = $request->category;
-            }
+            $message = 'Aksi massal berhasil dilakukan.';
 
-            if (!empty($updateData)) {
-                Item::whereIn('id', $data['ids'])->update($updateData);
+            if ($data['action'] === 'status') {
+                Item::whereIn('id', $data['ids'])->update(['status' => $data['status']]);
+                $message = 'Status item berhasil diperbarui secara massal.';
+            } elseif ($data['action'] === 'item_type') {
+                Item::whereIn('id', $data['ids'])->update(['item_type_id' => $data['item_type_id']]);
+                $message = 'Tipe item berhasil diperbarui secara massal.';
+            } elseif ($data['action'] === 'delete') {
+                Item::whereIn('id', $data['ids'])->get()->each->delete();
+                $message = 'Item berhasil dihapus secara massal.';
             }
 
             DB::commit();
 
-            $this->flashSuccess('Item berhasil diperbarui secara massal.');
+            $this->flashSuccess($message);
             return back();
         } catch (Throwable $e) {
             DB::rollBack();
-            $this->flashError('Terjadi kesalahan saat memperbarui item secara massal.', $e);
+            $this->flashError('Terjadi kesalahan saat memproses aksi massal.', $e);
             return back();
         }
     }

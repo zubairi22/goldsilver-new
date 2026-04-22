@@ -196,19 +196,23 @@ const updateSelection = (id: number, checked: boolean | 'indeterminate') => {
     }
 };
 
-const handleBulkUpdate = (data: { status?: string; category?: string }) => {
+const handleBulkUpdate = (action: string, extraData: any = {}) => {
     if (selectedIds.value.length === 0) return;
+
+    if (action === 'delete' && !confirm('Apakah Anda yakin ingin menghapus item yang dipilih secara massal?')) {
+        return;
+    }
 
     router.post(
         route('store.items.bulk-update'),
         {
             ids: selectedIds.value,
-            ...data,
+            action,
+            ...extraData,
         },
         {
             onSuccess: () => {
                 selectedIds.value = [];
-                toast.success('Update massal berhasil');
             },
         },
     );
@@ -317,16 +321,40 @@ const clearSelection = () => {
                             </div>
                         </div>
 
-                        <div v-if="selectedIds.length > 0" class="mb-4 flex items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3">
-                            <span class="text-sm font-medium text-blue-700">{{ selectedIds.length }} item terpilih</span>
-                            <div class="h-6 w-px bg-blue-200" />
-                            <Button variant="outline" size="sm" class="bg-white" @click="handleBulkUpdate({ status: 'ready' })">
-                                Set Siap Jual
-                            </Button>
-                            <Button variant="outline" size="sm" class="bg-white" @click="handleBulkUpdate({ category: 'silver' })">
-                                Pindah ke Perak
-                            </Button>
-                            <Button variant="destructive" size="sm" @click="clearSelection">Batal</Button>
+                        <div v-if="selectedIds.length > 0" class="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                            <span class="text-sm font-medium text-blue-700 whitespace-nowrap">{{ selectedIds.length }} item terpilih</span>
+                            <div class="hidden h-6 w-px bg-blue-200 md:block" />
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <Select @update:modelValue="(v) => handleBulkUpdate('status', { status: v })">
+                                    <SelectTrigger class="h-9 w-40 bg-white text-sm">
+                                        <SelectValue placeholder="Ubah Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ready">Siap Jual</SelectItem>
+                                        <SelectItem value="not_ready">Belum Siap</SelectItem>
+                                        <SelectItem value="damaged">Rusak</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select @update:modelValue="(v) => handleBulkUpdate('item_type', { item_type_id: v })">
+                                    <SelectTrigger class="h-9 w-48 bg-white text-sm">
+                                        <SelectValue placeholder="Ubah Tipe" />
+                                    </SelectTrigger>
+                                    <SelectContent class="max-h-72 overflow-y-auto">
+                                        <SelectItem v-for="(name, id) in itemTypes" :key="id" :value="id">
+                                            {{ name }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Button variant="destructive" size="sm" @click="handleBulkUpdate('delete')">
+                                    <Icon name="Trash2" class="mr-1 h-4 w-4" />
+                                    Hapus Massal
+                                </Button>
+                            </div>
+
+                            <Button variant="ghost" size="sm" @click="clearSelection" class="ml-auto text-blue-600 hover:text-blue-700"> Batal </Button>
                         </div>
 
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
