@@ -212,7 +212,7 @@ watch([item_type_id, date, qc_status], applyFilters);
                                             <SelectValue placeholder="Jenis Item" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua Jenis</SelectItem>
+                                            <SelectItem value="all">Semua</SelectItem>
                                             <SelectItem v-for="(name, id) in itemTypes" :key="id" :value="id">
                                                 {{ name }}
                                             </SelectItem>

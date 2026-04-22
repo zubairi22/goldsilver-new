@@ -509,7 +509,7 @@ class SaleController extends Controller
     {
         $user = User::findOrFail($data['cashier_id']);
 
-        if (!$user->hasRole(['super-admin', "cashier {$category}"])) {
+        if (!$user->hasRole(['super-admin', "cashier gold", "cashier {$category}"])) {
             return null;
         }
 
