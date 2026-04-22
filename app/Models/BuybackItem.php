@@ -85,13 +85,14 @@ class BuybackItem extends Model implements HasMedia
         $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where(function ($subQuery) use ($search) {
                 $subQuery->where('manual_name', 'like', "%{$search}%")
+                    ->orWhere('weight', 'like', "%{$search}%")
                     ->orWhereHas('item', function ($i) use ($search) {
                         $i->where('name', 'like', "%{$search}%");
                     })
-                ->orWhereHas('buyback', function ($bb) use ($search) {
-                    $bb->where('buyback_no', 'like', "%{$search}%")
-                        ->orWhere('customer', 'like', "%{$search}%");
-                });
+                    ->orWhereHas('buyback', function ($bb) use ($search) {
+                        $bb->where('buyback_no', 'like', "%{$search}%")
+                            ->orWhere('customer', 'like', "%{$search}%");
+                    });
             });
         });
 
@@ -108,14 +109,20 @@ class BuybackItem extends Model implements HasMedia
             });
         });
 
-        $query->when(($filters['payment_type'] ?? 'all') !== 'all', function ($q) use ($filters) {
-            $q->whereHas('buyback', function ($bb) use ($filters) {
-                $bb->where('payment_type', $filters['payment_type']);
+        $query->when(($filters['item_type_id'] ?? 'all') !== 'all', function ($q) use ($filters) {
+            $q->whereHas('item', function ($i) use ($filters) {
+                $i->where('item_type_id', $filters['item_type_id']);
             });
         });
 
         $query->when(($filters['qc_status'] ?? 'all') === 'pending', function ($q) {
             $q->whereNull('condition');
+        });
+
+        $query->when(($filters['qc_status'] ?? 'all') === 'recent', function ($q) {
+            $q->whereNotNull('condition')
+                ->whereNull('label_printed_at')
+                ->where('updated_at', '>=', now()->subHours(3));
         });
     }
 }

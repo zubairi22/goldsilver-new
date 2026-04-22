@@ -6,6 +6,7 @@ use App\Models\Buyback;
 use App\Models\BuybackItem;
 use App\Models\Item;
 use App\Models\Sale;
+use App\Models\ItemType;
 use App\Models\SaleItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class BuybackController extends Controller
     {
         $filters = [
             'search' => request('search'),
-            'payment_type' => request('payment_type'),
+            'item_type_id' => request('item_type_id'),
             'start' => request('start', now()->toDateString()),
             'end' => request('end', now()->toDateString()),
             'qc_status' => request('qc_status'),
@@ -39,6 +40,7 @@ class BuybackController extends Controller
                 ->onEachSide(2)
                 ->withQueryString(),
             'filters' => $filters,
+            'itemTypes' => ItemType::where('category', $category)->pluck('name', 'id'),
         ]);
     }
 

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import DeleteButton from '@/components/DeleteButton.vue';
 import Heading from '@/components/Heading.vue';
+import ImageModal from '@/components/ImageModal.vue';
 import PageNav from '@/components/PageNav.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import { Button } from '@/components/ui/button';
@@ -102,6 +103,7 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead>Gambar</TableHead>
                                         <TableHead>Kode</TableHead>
                                         <TableHead>Nama Produk</TableHead>
                                         <TableHead>Sumber Buyback</TableHead>
@@ -113,6 +115,9 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
 
                                 <TableBody>
                                     <TableRow v-for="it in items.data" :key="it.id">
+                                        <TableCell>
+                                            <ImageModal v-if="it.image" :src="it.image" trigger />
+                                        </TableCell>
                                         <TableCell>{{ it.code }}</TableCell>
                                         <TableCell>{{ it.name }}</TableCell>
                                         <TableCell>
@@ -133,7 +138,7 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
                                     </TableRow>
 
                                     <TableRow v-if="!items.total">
-                                        <TableCell colspan="6" class="py-4 text-center text-gray-500">
+                                        <TableCell colspan="7" class="py-4 text-center text-gray-500">
                                             Tidak ada data produk rusak ditemukan.
                                         </TableCell>
                                     </TableRow>

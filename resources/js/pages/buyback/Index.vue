@@ -26,7 +26,7 @@ import { Eye, Printer } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-const props = defineProps(['buybacks', 'filters', 'category']);
+const props = defineProps(['buybacks', 'filters', 'category', 'itemTypes']);
 
 const categoryLabel = computed(() => (props.category === 'gold' ? 'Emas' : 'Perak'));
 
@@ -44,7 +44,7 @@ useBarcodeScanner((code: string) => {
     toast.success(`Scan: ${code}`);
 });
 
-const payment_type = ref(props.filters.payment_type ?? 'all');
+const item_type_id = ref(props.filters.item_type_id ?? 'all');
 const date = ref(
     props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : [props.filters.start || '', props.filters.end || ''],
 );
@@ -136,7 +136,7 @@ const applyFilters = () => {
     const params: Record<string, any> = {};
 
     if (search.value) params.search = search.value;
-    if (payment_type.value && payment_type.value !== 'all') params.payment_type = payment_type.value;
+    if (item_type_id.value && item_type_id.value !== 'all') params.item_type_id = item_type_id.value;
     if (qc_status.value && qc_status.value !== 'all') params.qc_status = qc_status.value;
     if (date.value && date.value[0] && date.value[1]) {
         params.start = date.value[0];
@@ -174,7 +174,7 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
     );
 };
 
-watch([payment_type, date, qc_status], applyFilters);
+watch([item_type_id, date, qc_status], applyFilters);
 </script>
 
 <template>
@@ -206,15 +206,16 @@ watch([payment_type, date, qc_status], applyFilters);
                         <!-- FILTERS -->
                         <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
                             <div class="flex flex-wrap items-center gap-4">
-                                <div class="w-40">
-                                    <Select v-model="payment_type">
+                                <div class="w-48">
+                                    <Select v-model="item_type_id">
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Pembayaran" />
+                                            <SelectValue placeholder="Jenis Item" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua</SelectItem>
-                                            <SelectItem value="cash">Cash</SelectItem>
-                                            <SelectItem value="non_cash">Non Cash</SelectItem>
+                                            <SelectItem value="all">Semua Jenis</SelectItem>
+                                            <SelectItem v-for="(name, id) in itemTypes" :key="id" :value="id">
+                                                {{ name }}
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -226,6 +227,7 @@ watch([payment_type, date, qc_status], applyFilters);
                                         <SelectContent>
                                             <SelectItem value="all">Semua</SelectItem>
                                             <SelectItem value="pending">Belum QC</SelectItem>
+                                            <SelectItem value="recent">Selesai QC (3 Jam Terakhir)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -246,7 +248,7 @@ watch([payment_type, date, qc_status], applyFilters);
                         <!-- SEARCH -->
                         <div class="mb-3 flex w-full justify-end">
                             <div class="w-full lg:w-80">
-                                <SearchInput v-model:search="search" placeholder="Cari No. Buyback / Nama Item..." />
+                                <SearchInput v-model:search="search" placeholder="Cari.." />
                             </div>
                         </div>
 

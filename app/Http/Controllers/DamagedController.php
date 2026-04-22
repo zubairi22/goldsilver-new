@@ -14,20 +14,24 @@ class DamagedController extends Controller
             'search' => request('search'),
         ];
 
+        $items = Item::where('category', $category)
+            ->where('status', 'damaged')
+            ->with(['latestBuybackItem.buyback', 'type'])
+            ->when($filters['search'], function ($q, $v) {
+                $q->where(function ($sub) use ($v) {
+                    $sub->where('name', 'like', "%{$v}%")
+                        ->orWhere('code', 'like', "%{$v}%");
+                });
+            })
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $items->each(fn($i) => $i->append('image'));
+
         return inertia('damaged/Index', [
             'category' => $category,
-            'items' => Item::where('category', $category)
-                ->where('status', 'damaged')
-                ->with(['latestBuybackItem.buyback', 'type'])
-                ->when($filters['search'], function ($q, $v) {
-                    $q->where(function ($sub) use ($v) {
-                        $sub->where('name', 'like', "%{$v}%")
-                            ->orWhere('code', 'like', "%{$v}%");
-                    });
-                })
-                ->orderByDesc('id')
-                ->paginate(20)
-                ->withQueryString(),
+            'items' => $items,
             'filters' => $filters,
         ]);
     }
