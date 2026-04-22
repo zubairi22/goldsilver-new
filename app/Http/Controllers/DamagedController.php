@@ -86,4 +86,39 @@ class DamagedController extends Controller
 
         return back();
     }
+
+    public function bulkDestroy(Request $request, string $category)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:items,id',
+            'type' => 'required|string|in:delete,not_ready',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $items = Item::whereIn('id', $data['ids'])
+                ->where('category', $category)
+                ->where('status', 'damaged')
+                ->get();
+
+            if ($data['type'] === 'not_ready') {
+                Item::whereIn('id', $items->pluck('id'))->update(['status' => 'not_ready']);
+                $message = 'Item terpilih berhasil dipindahkan ke status belum siap.';
+            } else {
+                $items->each->delete();
+                $message = 'Item terpilih berhasil dihapus dari sistem.';
+            }
+
+            DB::commit();
+
+            $this->flashSuccess($message);
+            return back();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $this->flashError('Terjadi kesalahan saat memproses aksi massal.', $e);
+            return back();
+        }
+    }
 }

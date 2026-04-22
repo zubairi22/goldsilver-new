@@ -29,7 +29,7 @@ class BuybackController extends Controller
 
         return inertia('buyback/Index', [
             'category' => $category,
-            'buybacks' => BuybackItem::with(['buyback.user', 'item'])
+            'buybacks' => BuybackItem::with(['buyback.user', 'buyback.sale', 'item'])
                 ->filters($filters)
                 ->when(in_array($filters['sort'], ['weight', 'price', 'subtotal', 'created_at']), function ($q) use ($filters) {
                     $q->orderBy($filters['sort'], $filters['direction']);
@@ -182,8 +182,6 @@ class BuybackController extends Controller
             $buybackItem->update([
                 'condition' => $data['condition'],
                 'manual_name' => $data['name'] ?? '',
-                'weight' => $finalWeight,
-                'subtotal' => $data['subtotal'] ?? $buybackItem->price * $finalWeight,
             ]);
 
             $item = $buybackItem->item_id
@@ -312,31 +310,78 @@ class BuybackController extends Controller
             return back();
         }
 
-        $item = $buybackItem->item;
         $type = $request->input('type', 'delete');
 
-        DB::transaction(function () use ($buybackItem, $item, $type) {
-            if ($item) {
-                if ($type === 'not_ready') {
-                    $item->update(['status' => 'not_ready']);
-                } else {
-                    $item->delete();
+        try {
+            DB::transaction(function () use ($buybackItem, $type) {
+                $item = $buybackItem->item;
+                if ($item) {
+                    if ($type === 'not_ready') {
+                        if ($buybackItem->condition) {
+                            $item->update([
+                                'status' => $buybackItem->condition === 'broken' ? 'damaged' : 'ready'
+                            ]);
+                        } else {
+                            $item->update(['status' => 'not_ready']);
+                        }
+                    } else {
+                        $item->delete();
+                    }
                 }
-            }
 
-            $buybackItem->delete();
-        });
+                $buybackItem->delete();
+            });
 
-        if (!$item) {
             $this->flashSuccess('Item buyback berhasil dihapus.');
-        } else {
-            if ($type === 'not_ready') {
-                $this->flashSuccess('Item berhasil dipindahkan ke status belum siap.');
-            } else {
-                $this->flashSuccess('Item berhasil dihapus dari sistem.');
-            }
+            return back();
+        } catch (\Throwable $e) {
+            $this->flashError('Terjadi kesalahan saat menghapus data.', $e);
+            return back();
         }
+    }
 
-        return back();
+    public function bulkDestroy(Request $request, string $category)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:buyback_items,id',
+            'type' => 'required|string|in:delete,not_ready',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $buybackItems = BuybackItem::with('item')
+                ->whereIn('id', $data['ids'])
+                ->whereHas('buyback', fn($q) => $q->where('category', $category))
+                ->get();
+
+            foreach ($buybackItems as $buybackItem) {
+                $item = $buybackItem->item;
+                if ($item) {
+                    if ($data['type'] === 'not_ready') {
+                        if ($buybackItem->condition) {
+                            $item->update([
+                                'status' => $buybackItem->condition === 'broken' ? 'damaged' : 'ready'
+                            ]);
+                        } else {
+                            $item->update(['status' => 'not_ready']);
+                        }
+                    } else {
+                        $item->delete();
+                    }
+                }
+                $buybackItem->delete();
+            }
+
+            DB::commit();
+
+            $this->flashSuccess('Data buyback terpilih berhasil dihapus.');
+            return back();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $this->flashError('Terjadi kesalahan saat memproses aksi massal.', $e);
+            return back();
+        }
     }
 }

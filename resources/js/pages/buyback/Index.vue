@@ -8,6 +8,7 @@ import SearchInput from '@/components/SearchInput.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import DialogDescription from '@/components/ui/dialog/DialogDescription.vue';
 import { Input } from '@/components/ui/input';
@@ -154,24 +155,81 @@ const applyFilters = () => {
 const deleteModal = ref(false);
 const deleteItem = ref<any>(null);
 
+const selectedIds = ref<number[]>([]);
+
+const toggleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        selectedIds.value = props.buybacks.data.map((i: any) => i.id);
+    } else {
+        selectedIds.value = [];
+    }
+};
+
+const updateSelection = (id: number, checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        if (!selectedIds.value.includes(id)) {
+            selectedIds.value.push(id);
+        }
+    } else {
+        selectedIds.value = selectedIds.value.filter((i) => i !== id);
+    }
+};
+
+const clearSelection = () => {
+    selectedIds.value = [];
+};
+
+watch(
+    () => props.buybacks.data,
+    () => {
+        selectedIds.value = [];
+    },
+);
+
+const isBulkDelete = ref(false);
+
 const openDelete = (item: any) => {
     deleteItem.value = item;
+    isBulkDelete.value = false;
+    deleteModal.value = true;
+};
+
+const openBulkDelete = () => {
+    isBulkDelete.value = true;
     deleteModal.value = true;
 };
 
 const handleDelete = (type: 'delete' | 'not_ready') => {
-    router.delete(
-        route('buyback.item.destroy', {
-            category: props.category,
-            buybackItem: deleteItem.value.id,
-        }),
-        {
-            data: { type },
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => (deleteModal.value = false),
-        },
-    );
+    if (isBulkDelete.value) {
+        router.post(
+            route('buyback.bulk-destroy', { category: props.category }),
+            {
+                ids: selectedIds.value,
+                type,
+            },
+            {
+                onSuccess: () => {
+                    deleteModal.value = false;
+                    selectedIds.value = [];
+                },
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    } else {
+        router.delete(
+            route('buyback.item.destroy', {
+                category: props.category,
+                buybackItem: deleteItem.value.id,
+            }),
+            {
+                data: { type },
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => (deleteModal.value = false),
+            },
+        );
+    }
 };
 
 watch([item_type_id, date, qc_status], applyFilters);
@@ -252,11 +310,29 @@ watch([item_type_id, date, qc_status], applyFilters);
                             </div>
                         </div>
 
+                        <div
+                            v-if="selectedIds.length > 0"
+                            class="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3"
+                        >
+                            <span class="text-sm font-medium whitespace-nowrap text-blue-700">{{ selectedIds.length }} item terpilih</span>
+                            <div class="hidden h-6 w-px bg-blue-200 md:block" />
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <DeleteButton text="Hapus Massal" @confirm="openBulkDelete" />
+                            </div>
+                        </div>
+
                         <!-- TABLE -->
                         <div class="overflow-x-auto">
                             <Table class="w-full text-nowrap">
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead class="w-10">
+                                            <Checkbox
+                                                :modelValue="selectedIds.length === buybacks.data.length && buybacks.data.length > 0"
+                                                @update:modelValue="toggleSelectAll"
+                                            />
+                                        </TableHead>
                                         <TableHead class="cursor-pointer select-none" @click="toggleSort('created_at')">
                                             No Buyback
                                             <Icon
@@ -307,7 +383,16 @@ watch([item_type_id, date, qc_status], applyFilters);
                                     <template v-for="it in buybacks.data" :key="it.id">
                                         <TableRow>
                                             <TableCell>
+                                                <Checkbox
+                                                    :modelValue="selectedIds.includes(it.id)"
+                                                    @update:modelValue="(v) => updateSelection(it.id, v)"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
                                                 <div class="font-semibold">{{ it.buyback?.buyback_no }}</div>
+                                                <div class="text-xs text-muted-foreground">
+                                                    {{ it.buyback?.sale.invoice_no || '-' }}
+                                                </div>
                                                 <div class="text-xs text-muted-foreground">
                                                     {{ formatDate(it.buyback?.created_at, 'dd MMM yyyy HH:mm') }}
                                                 </div>
@@ -424,24 +509,25 @@ watch([item_type_id, date, qc_status], applyFilters);
                 <DialogTitle>Opsi Penghapusan Buyback</DialogTitle>
             </DialogHeader>
 
-            <div v-if="deleteItem" class="py-4">
-                <p class="mb-4 text-sm text-gray-600">
-                    Bagaimana Anda ingin menangani item <strong>{{ deleteItem.manual_name || deleteItem.item?.name }}</strong> ini?
-                </p>
-                <div class="space-y-3">
-                    <Button variant="outline" class="h-12 w-full justify-start text-left" @click="handleDelete('not_ready')">
-                        <div class="flex flex-col">
-                            <span class="font-semibold text-gray-900">Hapus Pada Daftar Buyback</span>
-                            <span class="text-xs text-gray-500">Item akan muncul kembali di daftar barang dengan status 'Belum Siap'.</span>
-                        </div>
-                    </Button>
-                    <Button variant="destructive" class="h-12 w-full justify-start text-left" @click="handleDelete('delete')">
-                        <div class="flex flex-col text-white">
-                            <span class="font-semibold">Hapus Permanen</span>
-                            <span class="text-xs opacity-80">Item akan dihapus dari master item.</span>
-                        </div>
-                    </Button>
-                </div>
+            <p v-if="!isBulkDelete" class="mb-4 text-sm text-gray-600">
+                Bagaimana Anda ingin menangani item <strong>{{ deleteItem?.manual_name || deleteItem?.item?.name }}</strong> ini?
+            </p>
+            <p v-else class="mb-4 text-sm text-gray-600">
+                Bagaimana Anda ingin menangani <strong>{{ selectedIds.length }}</strong> item buyback yang dipilih?
+            </p>
+            <div class="space-y-3">
+                <Button variant="outline" class="h-12 w-full justify-start text-left" @click="handleDelete('not_ready')">
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-gray-900">Hapus Pada Daftar Buyback</span>
+                        <span class="text-xs text-gray-500">Item akan muncul kembali di daftar barang.</span>
+                    </div>
+                </Button>
+                <Button variant="destructive" class="h-12 w-full justify-start text-left" @click="handleDelete('delete')">
+                    <div class="flex flex-col text-white">
+                        <span class="font-semibold">Hapus Permanen</span>
+                        <span class="text-xs opacity-80">Item akan dihapus dari master item.</span>
+                    </div>
+                </Button>
             </div>
 
             <DialogFooter>

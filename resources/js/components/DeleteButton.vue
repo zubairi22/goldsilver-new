@@ -3,6 +3,7 @@
         <AlertDialogTrigger as-child>
             <Button class="p-3" variant="destructive" :disabled="disabled">
                 <Trash />
+                {{ text }}
             </Button>
         </AlertDialogTrigger>
 
@@ -39,6 +40,7 @@ import { Trash } from 'lucide-vue-next';
 withDefaults(
     defineProps<{
         disabled?: boolean;
+        text?: string;
     }>(),
     {
         disabled: false,

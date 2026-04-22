@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
                                 Route::get('/item/{buybackItem}/print-label', [BuybackController::class, 'printLabel'])->name('item.print-label');
                                 Route::get('bulk/print-label', [BuybackController::class, 'printBulkLabel'])->name('bulk.print-label');
                                 Route::delete('/item/{buybackItem}', [BuybackController::class, 'destroy'])->name('item.destroy');
+                                Route::post('/bulk-delete', [BuybackController::class, 'bulkDestroy'])->name('bulk-destroy');
                             }
                         );
 
@@ -108,6 +109,7 @@ Route::middleware('auth')->group(function () {
                                 Route::get('/', [DamagedController::class, 'index'])->name('index');
                                 Route::patch('/{item}/restore', [DamagedController::class, 'restoreToStock'])->name('restore');
                                 Route::delete('/{item}', [DamagedController::class, 'destroy'])->name('destroy');
+                                Route::post('/bulk-delete', [DamagedController::class, 'bulkDestroy'])->name('bulk-destroy');
                             }
                         );
 

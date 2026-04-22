@@ -6,6 +6,7 @@ import PageNav from '@/components/PageNav.vue';
 import SearchInput from '@/components/SearchInput.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +15,7 @@ import { useFormat } from '@/composables/useFormat';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const { items, filters, category } = defineProps(['items', 'filters', 'category']);
 const { formatRupiah } = useFormat();
@@ -68,19 +69,72 @@ function submitRestore() {
 const deleteModal = ref(false);
 const deleteItem = ref<any>(null);
 
+const isBulkDelete = ref(false);
+
+function openBulkDelete() {
+    isBulkDelete.value = true;
+    deleteModal.value = true;
+}
+
 function openDelete(item: any) {
     deleteItem.value = item;
+    isBulkDelete.value = false;
     deleteModal.value = true;
 }
 
 const handleDelete = (type: 'delete' | 'not_ready') => {
-    router.delete(route('damaged.destroy', { category, item: deleteItem.value.id }), {
-        data: { type },
-        onSuccess: () => (deleteModal.value = false),
-        preserveScroll: true,
-        preserveState: true,
-    });
+    if (isBulkDelete.value) {
+        router.post(
+            route('damaged.bulk-destroy', { category }),
+            {
+                ids: selectedIds.value,
+                type,
+            },
+            {
+                onSuccess: () => {
+                    deleteModal.value = false;
+                    selectedIds.value = [];
+                },
+                preserveScroll: true,
+                preserveState: true,
+            },
+        );
+    } else {
+        router.delete(route('damaged.destroy', { category, item: deleteItem.value.id }), {
+            data: { type },
+            onSuccess: () => (deleteModal.value = false),
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }
 };
+
+const selectedIds = ref<number[]>([]);
+
+const toggleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        selectedIds.value = items.data.map((i: any) => i.id);
+    } else {
+        selectedIds.value = [];
+    }
+};
+
+const updateSelection = (id: number, checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        if (!selectedIds.value.includes(id)) {
+            selectedIds.value.push(id);
+        }
+    } else {
+        selectedIds.value = selectedIds.value.filter((i) => i !== id);
+    }
+};
+
+watch(
+    () => items.data,
+    () => {
+        selectedIds.value = [];
+    },
+);
 </script>
 
 <template>
@@ -99,10 +153,28 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
                             </div>
                         </div>
 
+                        <div
+                            v-if="selectedIds.length > 0"
+                            class="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3"
+                        >
+                            <span class="text-sm font-medium whitespace-nowrap text-blue-700">{{ selectedIds.length }} item terpilih</span>
+                            <div class="hidden h-6 w-px bg-blue-200 md:block" />
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <DeleteButton text="Hapus Massal" @confirm="openBulkDelete" />
+                            </div>
+                        </div>
+
                         <div class="overflow-x-auto">
                             <Table class="w-full">
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead class="w-10">
+                                            <Checkbox
+                                                :modelValue="selectedIds.length === items.data.length && items.data.length > 0"
+                                                @update:modelValue="toggleSelectAll"
+                                            />
+                                        </TableHead>
                                         <TableHead>Gambar</TableHead>
                                         <TableHead>Kode</TableHead>
                                         <TableHead>Nama Produk</TableHead>
@@ -115,6 +187,12 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
 
                                 <TableBody>
                                     <TableRow v-for="it in items.data" :key="it.id">
+                                        <TableCell>
+                                            <Checkbox
+                                                :modelValue="selectedIds.includes(it.id)"
+                                                @update:modelValue="(v) => updateSelection(it.id, v)"
+                                            />
+                                        </TableCell>
                                         <TableCell>
                                             <ImageModal v-if="it.image" :src="it.image" trigger />
                                         </TableCell>
@@ -183,9 +261,12 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
                 <DialogTitle>Opsi Penghapusan</DialogTitle>
             </DialogHeader>
 
-            <div v-if="deleteItem" class="py-4">
-                <p class="mb-4 text-sm text-gray-600">
-                    Bagaimana Anda ingin menangani item <strong>{{ deleteItem.code }} - {{ deleteItem.name }}</strong> ini?
+            <div class="py-4">
+                <p v-if="!isBulkDelete" class="mb-4 text-sm text-gray-600">
+                    Bagaimana Anda ingin menangani item <strong>{{ deleteItem?.code }} - {{ deleteItem?.name }}</strong> ini?
+                </p>
+                <p v-else class="mb-4 text-sm text-gray-600">
+                    Bagaimana Anda ingin menangani <strong>{{ selectedIds.length }}</strong> item yang dipilih?
                 </p>
                 <div class="space-y-3">
                     <Button variant="outline" class="h-12 w-full justify-start text-left" @click="handleDelete('not_ready')">

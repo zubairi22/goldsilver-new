@@ -199,10 +199,6 @@ const updateSelection = (id: number, checked: boolean | 'indeterminate') => {
 const handleBulkUpdate = (action: string, extraData: any = {}) => {
     if (selectedIds.value.length === 0) return;
 
-    if (action === 'delete' && !confirm('Apakah Anda yakin ingin menghapus item yang dipilih secara massal?')) {
-        return;
-    }
-
     router.post(
         route('store.items.bulk-update'),
         {
@@ -211,14 +207,13 @@ const handleBulkUpdate = (action: string, extraData: any = {}) => {
             ...extraData,
         },
         {
+            preserveState: true,
+            preserveScroll: true,
             onSuccess: () => {
                 selectedIds.value = [];
             },
         },
     );
-};
-const clearSelection = () => {
-    selectedIds.value = [];
 };
 </script>
 
@@ -321,8 +316,11 @@ const clearSelection = () => {
                             </div>
                         </div>
 
-                        <div v-if="selectedIds.length > 0" class="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3">
-                            <span class="text-sm font-medium text-blue-700 whitespace-nowrap">{{ selectedIds.length }} item terpilih</span>
+                        <div
+                            v-if="selectedIds.length > 0"
+                            class="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-blue-100 bg-blue-50 p-3"
+                        >
+                            <span class="text-sm font-medium whitespace-nowrap text-blue-700">{{ selectedIds.length }} item terpilih</span>
                             <div class="hidden h-6 w-px bg-blue-200 md:block" />
 
                             <div class="flex flex-wrap items-center gap-2">
@@ -333,7 +331,6 @@ const clearSelection = () => {
                                     <SelectContent>
                                         <SelectItem value="ready">Siap Jual</SelectItem>
                                         <SelectItem value="not_ready">Belum Siap</SelectItem>
-                                        <SelectItem value="damaged">Rusak</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -348,13 +345,8 @@ const clearSelection = () => {
                                     </SelectContent>
                                 </Select>
 
-                                <Button variant="destructive" size="sm" @click="handleBulkUpdate('delete')">
-                                    <Icon name="Trash2" class="mr-1 h-4 w-4" />
-                                    Hapus Massal
-                                </Button>
+                                <DeleteButton text="Hapus Massal" @confirm="handleBulkUpdate('delete')" />
                             </div>
-
-                            <Button variant="ghost" size="sm" @click="clearSelection" class="ml-auto text-blue-600 hover:text-blue-700"> Batal </Button>
                         </div>
 
                         <div class="mb-2 flex flex-col justify-between md:flex-row">
