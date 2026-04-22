@@ -40,7 +40,7 @@ class BuybackController extends Controller
                 ->onEachSide(2)
                 ->withQueryString(),
             'filters' => $filters,
-            'itemTypes' => ItemType::where('category', $category)->pluck('name', 'id'),
+            'itemTypes' => ItemType::pluck('name', 'id'),
         ]);
     }
 
