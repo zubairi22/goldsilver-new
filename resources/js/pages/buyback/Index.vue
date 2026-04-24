@@ -50,6 +50,7 @@ const date = ref(
     props.filters.start && props.filters.end ? [props.filters.start, props.filters.end] : [props.filters.start || '', props.filters.end || ''],
 );
 const qc_status = ref(props.filters.qc_status ?? 'all');
+const perPage = ref(props.filters.per_page || '25');
 const sortBy = ref(props.filters.sort || 'created_at');
 const sortDirection = ref(props.filters.direction || 'desc');
 
@@ -143,6 +144,7 @@ const applyFilters = () => {
         params.start = date.value[0];
         params.end = date.value[1];
     }
+    if (perPage.value) params.per_page = perPage.value;
     params.sort = sortBy.value;
     params.direction = sortDirection.value;
 
@@ -151,9 +153,6 @@ const applyFilters = () => {
         preserveScroll: true,
     });
 };
-
-const deleteModal = ref(false);
-const deleteItem = ref<any>(null);
 
 const selectedIds = ref<number[]>([]);
 
@@ -196,11 +195,35 @@ const openDelete = (item: any) => {
 
 const openBulkDelete = () => {
     isBulkDelete.value = true;
+    isQCDelete.value = false;
+    deleteModal.value = true;
+};
+
+const isQCDelete = ref(false);
+
+const openQCDelete = () => {
+    isQCDelete.value = true;
+    isBulkDelete.value = false;
     deleteModal.value = true;
 };
 
 const handleDelete = (type: 'delete' | 'not_ready') => {
-    if (isBulkDelete.value) {
+    if (isQCDelete.value) {
+        router.post(
+            route('buyback.bulk-destroy', { category: props.category }),
+            {
+                all_qc: true,
+                start: date.value?.[0],
+                end: date.value?.[1],
+                type,
+            },
+            {
+                onSuccess: () => (deleteModal.value = false),
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    } else if (isBulkDelete.value) {
         router.post(
             route('buyback.bulk-destroy', { category: props.category }),
             {
@@ -232,7 +255,10 @@ const handleDelete = (type: 'delete' | 'not_ready') => {
     }
 };
 
-watch([item_type_id, date, qc_status], applyFilters);
+const deleteModal = ref(false);
+const deleteItem = ref<any>(null);
+
+watch([item_type_id, date, qc_status, perPage], applyFilters);
 </script>
 
 <template>
@@ -243,7 +269,7 @@ watch([item_type_id, date, qc_status], applyFilters);
             <div class="mx-4 flex items-center justify-between">
                 <Heading
                     :title="`Buyback ${categoryLabel}`"
-                    :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()} (Pencarian pakai No Bukti atau Nama Barang)`"
+                    :description="`Daftar transaksi buyback ${categoryLabel.toLowerCase()}`"
                 />
 
                 <div class="flex items-center gap-2">
@@ -251,6 +277,8 @@ watch([item_type_id, date, qc_status], applyFilters);
                         <Printer />
                         Cetak Label
                     </Button>
+
+                    <Button variant="destructive" @click="openQCDelete"> Hapus Semua QC </Button>
 
                     <Button v-if="category === 'silver'" variant="secondary" @click="router.get(route('buyback.create.manual', { category }))">
                         + Buyback Manual
@@ -286,6 +314,19 @@ watch([item_type_id, date, qc_status], applyFilters);
                                             <SelectItem value="all">Semua</SelectItem>
                                             <SelectItem value="pending">Belum QC</SelectItem>
                                             <SelectItem value="recent">Selesai QC (3 Jam Terakhir)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div class="w-24">
+                                    <Select v-model="perPage">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Baris" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -509,7 +550,10 @@ watch([item_type_id, date, qc_status], applyFilters);
                 <DialogTitle>Opsi Penghapusan Buyback</DialogTitle>
             </DialogHeader>
 
-            <p v-if="!isBulkDelete" class="mb-4 text-sm text-gray-600">
+            <p v-if="isQCDelete" class="mb-4 text-sm text-gray-600">
+                Bagaimana Anda ingin menangani <strong>semua</strong> item buyback yang sudah QC dalam rentang tanggal yang dipilih?
+            </p>
+            <p v-else-if="!isBulkDelete" class="mb-4 text-sm text-gray-600">
                 Bagaimana Anda ingin menangani item <strong>{{ deleteItem?.manual_name || deleteItem?.item?.name }}</strong> ini?
             </p>
             <p v-else class="mb-4 text-sm text-gray-600">

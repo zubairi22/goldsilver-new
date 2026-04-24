@@ -21,12 +21,13 @@ class SaleController extends Controller
     {
         $filters = [
             'search' => request('search'),
-            'sale_type' => request('sale_type'),
-            'payment_method_id' => request('payment_method_id'),
+            'sale_type' => request('sale_type', 'all'),
+            'payment_method_id' => request('payment_method_id', 'all'),
             'date' => request('date', now()->toDateString()),
             'category' => $category,
             'sort' => request('sort', 'created_at'),
             'direction' => request('direction', 'desc'),
+            'per_page' => request('per_page', '25'),
         ];
 
         return inertia('sale/Index', [
@@ -44,7 +45,7 @@ class SaleController extends Controller
                 }, function ($q) {
                     $q->latest();
                 })
-                ->paginate(20)
+                ->paginate($filters['per_page'])
                 ->withQueryString(),
             'paymentMethods' => PaymentMethod::active()->get(),
             'filters' => $filters,

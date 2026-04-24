@@ -18,13 +18,21 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const { sales, paymentMethods, category } = defineProps(['sales', 'paymentMethods', 'category']);
 
+const categoryLabel = computed(() => {
+    const map: Record<string, string> = {
+        gold: 'Emas',
+        silver: 'Perak',
+    };
+    return map[category] ?? category;
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: `Piutang (${category.toUpperCase()})`, href: '#' },
+    { title: `Piutang ${categoryLabel.value}`, href: '#' },
 ];
 
 const { formatRupiah, formatDate } = useFormat();
@@ -80,11 +88,11 @@ const handleDueDate = () => {
 </script>
 
 <template>
-    <Head :title="`Piutang - ${category.toUpperCase()}`" />
+    <Head title="Piutang" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Piutang" :description="`Daftar transaksi ${category} yang masih memiliki piutang`" />
+            <Heading class="mx-4" title="Piutang" :description="`Daftar transaksi ${categoryLabel.toLowerCase()} yang masih memiliki piutang`" />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">

@@ -25,6 +25,7 @@ class BuybackController extends Controller
             'category' => $category,
             'sort' => request('sort', 'created_at'),
             'direction' => request('direction', 'desc'),
+            'per_page' => request('per_page', '25'),
         ];
 
         return inertia('buyback/Index', [
@@ -36,7 +37,7 @@ class BuybackController extends Controller
                 }, function ($q) {
                     $q->latest();
                 })
-                ->paginate(20)
+                ->paginate($filters['per_page'])
                 ->onEachSide(2)
                 ->withQueryString(),
             'filters' => $filters,
@@ -343,18 +344,32 @@ class BuybackController extends Controller
     public function bulkDestroy(Request $request, string $category)
     {
         $data = $request->validate([
-            'ids' => 'required|array',
+            'ids' => 'nullable|array',
             'ids.*' => 'exists:buyback_items,id',
             'type' => 'required|string|in:delete,not_ready',
+            'all_qc' => 'nullable|boolean',
+            'start' => 'nullable|date',
+            'end' => 'nullable|date',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $buybackItems = BuybackItem::with('item')
-                ->whereIn('id', $data['ids'])
-                ->whereHas('buyback', fn($q) => $q->where('category', $category))
-                ->get();
+            $query = BuybackItem::with('item');
+
+            if ($request->boolean('all_qc')) {
+                $filters = [
+                    'category' => $category,
+                    'start' => $data['start'] ?? null,
+                    'end' => $data['end'] ?? null,
+                ];
+                $query->filters($filters)->whereNotNull('condition');
+            } else {
+                $query->whereIn('id', $data['ids'] ?? [])
+                    ->whereHas('buyback', fn($q) => $q->where('category', $category));
+            }
+
+            $buybackItems = $query->get();
 
             foreach ($buybackItems as $buybackItem) {
                 $item = $buybackItem->item;
@@ -376,7 +391,7 @@ class BuybackController extends Controller
 
             DB::commit();
 
-            $this->flashSuccess('Data buyback terpilih berhasil dihapus.');
+            $this->flashSuccess('Data buyback berhasil dihapus.');
             return back();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -384,4 +399,5 @@ class BuybackController extends Controller
             return back();
         }
     }
+
 }

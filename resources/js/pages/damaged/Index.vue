@@ -10,11 +10,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFormat } from '@/composables/useFormat';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
+import { Printer } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 const { items, filters, category } = defineProps(['items', 'filters', 'category']);
@@ -32,11 +34,30 @@ const categoryLabel = computed(() => {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: `Produk Rusak (${categoryLabel.value})`, href: '#' },
+    { title: `Produk Rusak ${categoryLabel.value}`, href: '#' },
 ];
 
+const perPage = ref(filters.per_page || '25');
+const sortBy = ref(filters.sort || 'id');
+const sortDirection = ref(filters.direction || 'desc');
+
+function applyFilters() {
+    router.get(
+        route('damaged.index', category),
+        {
+            search: search.value,
+            per_page: perPage.value,
+            sort: sortBy.value,
+            direction: sortDirection.value,
+        },
+        { preserveScroll: true, preserveState: true },
+    );
+}
+
+watch([perPage], applyFilters);
+
 function doSearch() {
-    router.get(route('damaged.index', category), { search: search.value }, { preserveScroll: true, preserveState: true });
+    applyFilters();
 }
 
 const restoreModal = ref(false);
@@ -135,19 +156,39 @@ watch(
         selectedIds.value = [];
     },
 );
+
+const printLabel = (id: number) => {
+    window.open(route('store.items.print-single-label', id), '_blank');
+};
 </script>
 
 <template>
-    <Head :title="`Produk Rusak ${categoryLabel}`" />
+    <Head title="Produk Rusak" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="py-8">
-            <Heading class="mx-4" title="Produk Rusak" :description="`Daftar item ${categoryLabel} hasil buyback yang rusak`" />
+            <Heading class="mx-4" title="Produk Rusak" :description="`Daftar item ${categoryLabel.toLowerCase()} hasil buyback yang rusak`" />
 
             <div class="max-w-8xl mx-auto">
                 <Card class="py-4 md:mx-4">
                     <CardContent>
-                        <div class="mb-4 flex justify-end">
+                        <div class="mb-4 flex flex-wrap items-end justify-between gap-4">
+                            <div class="flex flex-wrap items-center gap-4">
+                                <div class="w-24">
+                                    <Select v-model="perPage">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Baris" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             <div class="w-full lg:w-80">
                                 <SearchInput v-model:search="search" @keyup.enter="doSearch" />
                             </div>
@@ -209,8 +250,15 @@ watch(
                                         <TableCell class="text-right">{{ formatRupiah(it.price_sell) }}</TableCell>
                                         <TableCell class="text-center">
                                             <div class="flex justify-center gap-2">
-                                                <Button @click="openRestore(it)"> Pulihkan Stok </Button>
-                                                <DeleteButton @confirm="openDelete(it)" title="Hapus" />
+                                                <template v-if="it.status === 'damaged'">
+                                                    <Button @click="openRestore(it)"> Pulihkan Stok </Button>
+                                                    <DeleteButton @confirm="openDelete(it)" title="Hapus" />
+                                                </template>
+                                                <template v-else-if="it.status === 'ready'">
+                                                    <Button variant="info" @click="printLabel(it.id)">
+                                                        <Printer class="h-4 w-4" />
+                                                    </Button>
+                                                </template>
                                             </div>
                                         </TableCell>
                                     </TableRow>

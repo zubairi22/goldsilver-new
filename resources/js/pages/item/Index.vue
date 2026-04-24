@@ -51,7 +51,7 @@ const { formatRupiah } = useFormat();
 
 const status = ref(filters.status || 'all');
 const item_type_id = ref(filters.item_type_id || 'all');
-const perPage = ref(filters.per_page || 10);
+const perPage = ref(filters.per_page || '10');
 const sortBy = ref(filters.sort || 'code');
 const sortDirection = ref(filters.direction || 'desc');
 

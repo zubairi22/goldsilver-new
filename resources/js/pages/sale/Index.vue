@@ -64,8 +64,9 @@ const { formatRupiah, formatDate } = useFormat();
 const sale_type = ref(props.filters.sale_type);
 const payment_method_id = ref(props.filters.payment_method_id);
 const date = ref(props.filters.date ?? null);
-const sortBy = ref(props.filters.sort || 'created_at');
-const sortDirection = ref(props.filters.direction || 'desc');
+const sortBy = ref(props.filters.sort);
+const sortDirection = ref(props.filters.direction);
+const perPage = ref(props.filters.per_page);
 
 const toggleSort = (column: string) => {
     if (sortBy.value === column) {
@@ -175,6 +176,7 @@ const applyFilters = () => {
         params.payment_method_id = payment_method_id.value;
     }
     if (date.value) params.date = date.value;
+    if (perPage.value) params.per_page = perPage.value;
     params.sort = sortBy.value;
     params.direction = sortDirection.value;
 
@@ -184,7 +186,7 @@ const applyFilters = () => {
     });
 };
 
-watch([sale_type, payment_method_id, date], applyFilters);
+watch([sale_type, payment_method_id, date, perPage], applyFilters);
 </script>
 
 <template>
@@ -225,6 +227,20 @@ watch([sale_type, payment_method_id, date], applyFilters);
                                                     {{ pm.name }}
                                                 </SelectItem>
                                             </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div class="w-24">
+                                    <Select v-model="perPage">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Baris" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

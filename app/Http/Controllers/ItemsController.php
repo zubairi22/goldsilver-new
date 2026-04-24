@@ -23,7 +23,7 @@ class ItemsController extends Controller
             'item_type_id' => request('item_type_id'),
             'sort' => request('sort', 'code'),
             'direction' => request('direction', 'desc'),
-            'per_page' => request('per_page', 10),
+            'per_page' => request('per_page', '10'),
         ];
 
         $totalWeight = (float) Item::where('category', 'gold')->filters($filters)->sum('weight');
@@ -171,6 +171,12 @@ class ItemsController extends Controller
         if (!$item->qr_path) {
             abort(404, 'QR Code belum di-generate');
         }
+
+        $restoredItems = collect(session('restored_items', []))
+            ->forget($item->id)
+            ->toArray();
+
+        session(['restored_items' => $restoredItems]);
 
         $path = storage_path('app/public/' . $item->qr_path);
 

@@ -12,10 +12,28 @@ class DamagedController extends Controller
     {
         $filters = [
             'search' => request('search'),
+            'per_page' => request('per_page', '25'),
         ];
 
+        $restoredItems = session('restored_items', []);
+
+        $validRestoredIds = [];
+
+        foreach ($restoredItems as $id => $time) {
+            if (now()->diffInHours($time) < 3) {
+                $validRestoredIds[] = $id;
+            } else {
+                unset($restoredItems[$id]);
+            }
+        }
+
+        session(['restored_items' => $restoredItems]);
+
         $items = Item::where('category', $category)
-            ->where('status', 'damaged')
+            ->where(function ($q) use ($validRestoredIds) {
+                $q->where('status', 'damaged')
+                    ->orWhereIn('id', $validRestoredIds);
+            })
             ->with(['latestBuybackItem.buyback', 'type'])
             ->when($filters['search'], function ($q, $v) {
                 $q->where(function ($sub) use ($v) {
@@ -23,8 +41,10 @@ class DamagedController extends Controller
                         ->orWhere('code', 'like', "%{$v}%");
                 });
             })
+            ->orderByRaw("FIELD(status, 'ready') DESC")
             ->orderByDesc('id')
-            ->paginate(20)
+            ->paginate($filters['per_page'])
+            ->onEachSide(2)
             ->withQueryString();
 
         $items->each(fn($i) => $i->append('image'));
@@ -64,6 +84,15 @@ class DamagedController extends Controller
         });
 
         $this->flashSuccess('Item berhasil dipulihkan dan masuk stok.');
+
+        $restoredItems = session('restored_items', []);
+
+        $restoredItems[$item->id] = now();
+
+        session([
+            'restored_items' => $restoredItems
+        ]);
+
         return back();
     }
 
