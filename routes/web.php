@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::post('cashier/add-cash', [CashierController::class, 'addCash'])->name('cashier.add-cash');
     Route::post('cashier/scan', [CashierController::class, 'submitScan'])->name('cashier.scan.submit');
 
-    Route::middleware('role:super-admin')->prefix('store')->name('store.')->group(
+    Route::middleware('role:super-admin|admin gold|admin silver')->prefix('store')->name('store.')->group(
         function () {
             Route::prefix('settings')->name('settings.')->group(
                 function () {
